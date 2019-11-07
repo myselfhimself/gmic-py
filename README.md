@@ -6,6 +6,18 @@ When this matures, running `pip install gmic-py` should be all you need to get r
 
 This project is a work in progress and lives under the CeCILL license (similar to GNU Public License).
 
+# TDD - making sure gmic-py works and keeps working
+Development follows a test-driven development (TDD) methodology.
+
+For now, to hand-test the development you can run a `pytest` suite within `docker`:
+```sh
+# If you do not have docker: sudo apt-get install docker
+cd tests/
+sh run_test_scenario.sh
+```
+
+On November 7th, 2019 all tests fail :) The project is just very fresh :)
+
 ## Roadmap
 
 ### Q4 2019
