@@ -5,21 +5,21 @@ def test_install_gmic_py():
     import subprocess
     import sys
     import os
-    exit_code = subprocess.call([sys.executable, '-m', 'pip', 'install', os.environ.get('GMIC_PY_PIP_PKG', 'gmic-py'), '--no-cache-dir'])
+    exit_code = subprocess.call([sys.executable, '-m', 'pip', 'install', os.environ.get('GMIC_PY_PIP_PKG', 'gmic'), '--no-cache-dir'])
     assert exit_code == 0
 
 def test_import_gmic_py():
     import gmic_py
 
 def test_run_gmic_cli_helloworld(capsys):
-    import gmic_py
+    import gmic
     # Using pytest stderr capture per https://docs.pytest.org/en/latest/capture.html#accessing-captured-output-from-a-test-function
     captured = capsys.readout()
     result = gmic_py.run('v - echo_stdout "hello world"')
     assert "hello world\n" in captured
 
 def test_run_gmic_cli_simple_3pixels_png_output():
-    import gmic_py
+    import gmic
     import pathlib
     png_filename = "a.png"
     gmic_py.run('input "(0,128,255)" -output ' + png_filename)
