@@ -1,6 +1,6 @@
 FROM python:3
 
-RUN apt-get install -y libjpeg-dev
+RUN apt-get install -y 	libjpeg62-turbo-dev libjpeg62
 
 # The gmic-py package name to install can be overriden with a git URL
 # Omit this line to try downloading from PyPI instead
@@ -12,8 +12,7 @@ ADD test_gmic_install_and_run.py /tmp
 
 ADD requirements.txt /tmp
 ADD libcgmic.so /tmp
-ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/tmp
-
+ENV LD_LIBRARY_PATH "${LD_LIBRARY_PATH}:/tmp:/usr/local/lib:/usr/lib/i386-linux-gnu/:/usr/lib/x86_64-linux-gnu/"
 RUN ldd /tmp/libcgmic.so
 RUN pip install -r /tmp/requirements.txt
 
