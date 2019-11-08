@@ -1,5 +1,7 @@
 FROM python:3
 
+RUN apt-get install -y libjpeg-dev
+
 # The gmic-py package name to install can be overriden with a git URL
 # Omit this line to try downloading from PyPI instead
 ENV GMIC_PY_PIP_PKG="git+https://github.com/dtschump/gmic-py.git"
@@ -9,6 +11,10 @@ ENV GMIC_PY_PIP_PKG="git+https://github.com/dtschump/gmic-py.git"
 ADD test_gmic_install_and_run.py /tmp
 
 ADD requirements.txt /tmp
-RUN [ "pip", "install", "-r", "/tmp/requirements.txt" ]
+ADD libcgmic.so /tmp
+ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/tmp
+
+RUN ldd /tmp/libcgmic.so
+RUN pip install -r /tmp/requirements.txt
 
 CMD [ "py.test", "-v", "/tmp/" ]

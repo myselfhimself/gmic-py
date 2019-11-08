@@ -14,7 +14,7 @@ def test_import_gmic():
 def test_run_gmic_cli_helloworld(capsys):
     import gmic
     # Using pytest stderr capture per https://docs.pytest.org/en/latest/capture.html#accessing-captured-output-from-a-test-function
-    gmic.run('v - echo_stdout "hello world"')
+    gmic.run('echo_stdout "hello world"')
     out, err = capsys.readouterr()
     assert "hello world" == out
 
@@ -28,6 +28,19 @@ def test_run_gmic_cli_simple_3pixels_png_output():
     assert a_png.exists()
     assert a.png.stat().st_size > 0
     a_png.unlink()
+
+
+def test_run_gmic_cli_simple_demo_png_output():
+    import gmic
+    import pathlib
+    png_filename = "demo.png"
+    gmic.run('testimage2d 512 -output ' + png_filename)
+    a_png = pathlib.Path(png_filename)
+    # Ensure generated png file exists and is non empty
+    assert a_png.exists()
+    assert a.png.stat().st_size > 0
+    a_png.unlink()
+
 
 # todo: test with an empty input image list
 
