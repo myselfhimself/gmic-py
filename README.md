@@ -11,19 +11,21 @@ This project is a work in progress and lives under the CeCILL license (similar t
 # TDD - making sure gmic-py works and keeps working
 Development follows a test-driven development (TDD) methodology.
 
-For now, to hand-test the development you can run a `pytest` suite within `docker`:
+For now, to test the development manually you can run a `pytest` suite within `docker`:
 ```sh
 # If you do not have docker: sudo apt-get install docker
 cd tests/
 sh run_test_scenario.sh
 ```
 
-On November 7th, 2019 all tests fail :) The project is just very fresh :)
+On November 18th, 2019 `pip install` from Github, `echo`, basic png generation and output tests work, without in-memory buffers I/O yet :) The project is just very fresh :) See [Github Actions CI tests being run here](https://github.com/dtschump/gmic-py/actions).
 
 ## Roadmap
 
 ### Q4 2019
 1. Create a `pip install -e GITHUB_URL` installable Python package for GMIC, with an API very similar to the C++ library: `gmic_instance.run(...)`, `gmic(...)` and matching exception types. Binary dependencies [should be bundled as in this tutorial](https://python-packaging-tutorial.readthedocs.io/en/latest/binaries_dependencies.html).
+  1. Through `Ctypes` dynamic binding on an Ubuntu docker image using Python 2-3. DONE
+  1. Through custom Python/C++ binding
 1. Create documented examples for various application domains.
 
 ### Q1-Q2 2020
