@@ -32,4 +32,3 @@ On November 7th, 2019 all tests fail :) The project is just very fresh :)
 
 ### Q3-Q4 2020
 1. In a separate repository, create a GMIC Inkscape plugin, leveraging the Python library (possibly applying only to image objects, as the Trace bitmap tool does).
-  
