@@ -36,6 +36,10 @@ jobs:
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Test with pytest
+      env:
+        GMIC_PY_PIP_PKG: "git+https://github.com/dtschump/gmic-py.git"
       run: |
+        pwd
+        ls
         pip install pytest
         pytest tests/test_gmic_install_and_run.py
