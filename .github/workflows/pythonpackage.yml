@@ -17,12 +17,10 @@ jobs:
       uses: actions/setup-python@v1
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Get Package
-      uses: mstksg/get-package@v1
-      apt-get: libfftw3-dev
     - name: Install dependencies
       working-directory: tests/
       run: |
+        apt-get install -y libfftw3-dev
         git clone --depth 1 -b master https://github.com/dtschump/gmic.git gmic-src
         cd gmic-src/src
         bash ../../makecustomgmic.sh
