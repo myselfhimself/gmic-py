@@ -1,6 +1,8 @@
 # gmic-py
 Python binding for G'MIC
 
+![](https://github.com/dtschump/gmic-py/workflows/Python%20package/badge.svg)
+
 The aim of this project is to provide an official Python 3 package of the G'MIC image processing library, with its platform-specific binaries bundled or auto-compiled.
 When this matures, running `pip install gmic-py` should be all you need to get ready and use G'MIC within data-science, games, video editing, texture editing etc.. Python scripts.
 
