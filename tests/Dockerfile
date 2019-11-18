@@ -22,6 +22,7 @@ RUN ls /tmp
 
 ENV LD_LIBRARY_PATH "${LD_LIBRARY_PATH}:/tmp:/usr/local/lib:/usr/lib/i386-linux-gnu/:/usr/lib/x86_64-linux-gnu/"
 RUN ldd /tmp/libcgmic.so
+RUN pip install pytest
 RUN pip install -r /tmp/requirements.txt
 
 CMD [ "py.test", "-v", "/tmp/" ]
