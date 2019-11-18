@@ -1,0 +1,41 @@
+name: Python package
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 4
+      matrix:
+        python-version: [2.7, 3.5, 3.6, 3.7]
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v1
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      working-directory: tests/
+      run: |
+        git clone --depth 1 -b master https://github.com/dtschump/gmic.git gmic-src
+        cd gmic-src
+        bash makecustomgmic.sh
+        cd ..
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    - name: Lint with flake8
+      run: |
+        pip install flake8
+        # stop the build if there are Python syntax errors or undefined names
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+    - name: Test with pytest
+      working-directory: tests/
+      run: |
+        LD_LIBRARY_PATH "${LD_LIBRARY_PATH}:gmic-src:/usr/local/lib:/usr/lib/i386-linux-gnu/:/usr/lib/x86_64-linux-gnu/"
+        pip install pytest
+        pytest test_gmic_install_and_run.py
