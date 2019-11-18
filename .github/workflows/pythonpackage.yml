@@ -21,9 +21,9 @@ jobs:
       working-directory: tests/
       run: |
         git clone --depth 1 -b master https://github.com/dtschump/gmic.git gmic-src
-        cd gmic-src
-        bash ../makecustomgmic.sh
-        cd ..
+        cd gmic-src/src
+        bash ../../makecustomgmic.sh
+        cd ../..
         python -m pip install --upgrade pip
         pip install -r requirements.txt
     - name: Lint with flake8
