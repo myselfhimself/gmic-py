@@ -37,6 +37,5 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Test with pytest
       run: |
-        LD_LIBRARY_PATH "${LD_LIBRARY_PATH}:gmic-src:/usr/local/lib:/usr/lib/i386-linux-gnu/:/usr/lib/x86_64-linux-gnu/"
         pip install pytest
         pytest tests/test_gmic_install_and_run.py
