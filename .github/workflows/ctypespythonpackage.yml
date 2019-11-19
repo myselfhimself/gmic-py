@@ -50,4 +50,5 @@ jobs:
         pwd
         ls
         pip install pytest
+        export PYTHONPATH=$PYTHONPATH:`pwd`
         pytest tests/test_gmic_install_and_run.py
