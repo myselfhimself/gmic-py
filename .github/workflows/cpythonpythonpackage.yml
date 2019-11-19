@@ -17,15 +17,14 @@ jobs:
       uses: actions/setup-python@v1
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Install dependencies, compile and place ligbmic.so into tests/ dir
-      working-directory: cpython/tests/
+    - name: Install dependencies, compile and place ligbmic.so into cpython/ dir
+      working-directory: cpython/
       run: |
         sudo apt-get install -y libfftw3-dev
         git clone --depth 1 -b master https://github.com/dtschump/gmic.git gmic-src
         cd gmic-src/src
         bash ../../makecustomgmic.sh
         cp libgmic.so ../../ 
-        cd ../..
         python -m pip install --upgrade pip
         pip install -r requirements.txt
     - name: Install python dev sources
@@ -42,19 +41,22 @@ jobs:
       run: |
         export INCLUDES=`python3-config --includes`
         export LIBS=`python3-config --libs`
-    - name: Compile gmicpy.so and link it to libgmic.so
+    - name: Compile gmicpy.so, move to cpython/ dir and check linking to libgmic.so
+      working-directory: cpython/
       run: |
+        mv makecustomgmic.sh gmic-src/src
+        cd gmic-src/src
         sh makegmicpymodule.sh
-        cd tests/
+        cp gmicpy.so ../..
+        cd ../../
         ln -s libgmic.so libgmic.so.2
-        cp ../gmicpy.so .
         LD_LIBRARY_PATH=. ldd gmicpy.so
     - name: Install pathlib backport for python2
       working-directory: cpython/
       if: matrix.python-version == '2.7'
       run: |
         pip install pathlib 
-    - name: Test with pytest
+    - name: Test gmicpy.so with pytest
       working-directory: cpython/
       env:
         GMIC_PY_PIP_PKG: "git+https://github.com/dtschump/gmic-py.git#egg=pkg&subdirectory=cpython"
@@ -62,4 +64,4 @@ jobs:
         pwd
         ls
         pip install pytest
-        pytest test_gmic_install_and_run.py
+        pytest tests/test_gmic_install_and_run.py
