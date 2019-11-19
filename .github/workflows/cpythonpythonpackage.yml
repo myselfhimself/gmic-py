@@ -43,6 +43,7 @@ jobs:
         export INCLUDES=`python3-config --includes`
         export LIBS=`python3-config --libs`
     - name: Compile gmicpy.so and link it to libgmic.so
+      run: |
         sh makegmicpymodule.sh
         cd tests/
         ln -s libgmic.so libgmic.so.2
