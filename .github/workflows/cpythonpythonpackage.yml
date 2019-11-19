@@ -31,7 +31,7 @@ jobs:
     - name: Compile gmicpy.so and link it to libgmic.so
       working-directory: cpython/
       run: |
-        sudo apt-get install -y python27-dev python37-dev
+        sudo apt-get install -y python-dev
         sh makegmicpymodule.sh
         cd tests/
         ln -s libgmic.so libgmic.so.2
