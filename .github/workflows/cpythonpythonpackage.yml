@@ -46,7 +46,7 @@ jobs:
     - name: Compile gmicpy.so, move to cpython/ dir and check linking to libgmic.so
       working-directory: cpython/
       run: |
-        mv makegmicpymodule.sh gmic-src/src
+        mv makegmicpymodule.sh gmicpy.cpp gmic-src/src
         cd gmic-src/src
         sh makegmicpymodule.sh
         cp gmicpy.so ../..
