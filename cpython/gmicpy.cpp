@@ -5,7 +5,7 @@ using namespace std;
 
 PyObject* run_impl(PyObject*, PyObject* commands_line) 
 {
-  char* c_commands_line = PyUnicode_AsUTF8(commands_line);
+  const char* c_commands_line = PyUnicode_AsUTF8(commands_line);
   //gmic::run(c_commands_line, NULL, NULL, NULL, NULL);
 // template gmic& gmic::run(const char *const commands_line, \
                          gmic_list<pt> &images, gmic_list<char> &images_names, \
