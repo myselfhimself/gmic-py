@@ -25,6 +25,7 @@ jobs:
         cd gmic-src/src
         bash ../../makecustomgmic.sh
         cp libcgmic.so /tmp
+        ldd /tmp/libcgmic.so
         cd ../..
         python -m pip install --upgrade pip
         pip install -r requirements.txt
