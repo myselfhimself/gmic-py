@@ -45,7 +45,7 @@ jobs:
     - name: Test with pytest
       working-directory: cpython/
       env:
-        GMIC_PY_PIP_PKG: "git+https://github.com/dtschump/gmic-py.git"
+        GMIC_PY_PIP_PKG: "git+https://github.com/dtschump/gmic-py.git#egg=pkg&subdirectory=cpython"
       run: |
         pwd
         ls

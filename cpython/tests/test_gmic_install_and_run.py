@@ -5,7 +5,7 @@ def test_install_gmic():
     import subprocess
     import sys
     import os
-    exit_code = subprocess.call([sys.executable, '-m', 'pip', 'install', os.environ.get('GMIC_PY_PIP_PKG', 'gmic'), '--no-cache-dir'])
+    exit_code = subprocess.call([sys.executable, '-m', 'pip', 'install', '-e', os.environ.get('GMIC_PY_PIP_PKG', 'gmic'), '--no-cache-dir'])
     assert exit_code == 0
 
 def test_import_gmic():
