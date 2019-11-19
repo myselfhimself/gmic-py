@@ -37,16 +37,16 @@ jobs:
       working-directory: cpython/
       if: matrix.python-version == '2.7'
       run: |
-        export INCLUDES=`python2-config --includes`
-        export LIBS=`python2-config --libs`
-        echo -e "LIBS=$LIBS\nINCLUDES=$INCLUDES\n$(cat makegmicpymodule.sh)" > makegmicpymodule.sh  
+        export INCLUDES="$(python2-config --includes)"
+        export LIBS="$(python2-config --libs)"
+        echo -e "LIBS=\"$LIBS\"\nINCLUDES=\"$INCLUDES\"\n$(cat makegmicpymodule.sh)" > makegmicpymodule.sh  
     - name: Grab python3 includes and libs for compiling
       working-directory: cpython/
       if: matrix.python-version != '2.7'
       run: |
-        export INCLUDES=`python3-config --includes`
-        export LIBS=`python3-config --libs`
-        echo -e "LIBS=$LIBS\nINCLUDES=$INCLUDES\n$(cat makegmicpymodule.sh)" > makegmicpymodule.sh  
+        export INCLUDES="$(python3-config --includes)"
+        export LIBS="$(python3-config --libs)"
+        echo -e "LIBS=\"$LIBS\"\nINCLUDES=\"$INCLUDES\"\n$(cat makegmicpymodule.sh)" > makegmicpymodule.sh  
     - name: Compile gmicpy.so, move to cpython/ dir and check linking to libgmic.so
       working-directory: cpython/
       run: |
