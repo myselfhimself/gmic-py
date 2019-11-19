@@ -22,8 +22,9 @@ jobs:
       run: |
         sudo apt-get install -y libfftw3-dev
         git clone --depth 1 -b master https://github.com/dtschump/gmic.git gmic-src
+        cp tests/makecustomgmic.sh gmic-src/src
         cd gmic-src/src
-        bash ../../makecustomgmic.sh
+        sh makecustomgmic.sh
         cp libgmic.so ../../ 
         python -m pip install --upgrade pip
         pip install -r requirements.txt
