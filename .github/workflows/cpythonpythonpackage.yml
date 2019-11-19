@@ -27,6 +27,7 @@ jobs:
         sh makecustomgmic.sh
         cp libgmic.so ../../ 
         python -m pip install --upgrade pip
+        cd ../../tests
         pip install -r requirements.txt
     - name: Install python dev sources
       working-directory: cpython/
