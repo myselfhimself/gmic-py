@@ -1,7 +1,8 @@
 # gmic-py
 Python binding for G'MIC
 
-![](https://github.com/dtschump/gmic-py/workflows/Python%20package/badge.svg)
+![](https://github.com/dtschump/gmic-py/workflows/Ctypes%20GMIC%20Python%20package/badge.svg)
+![](https://github.com/dtschump/gmic-py/workflows/CPython%20GMIC%20Python%20package/badge.svg)
 
 The aim of this project is to provide an official Python 3 package of the G'MIC image processing library, with its platform-specific binaries bundled or auto-compiled.
 When this matures, running `pip install gmic-py` should be all you need to get ready and use G'MIC within data-science, games, video editing, texture editing etc.. Python scripts.
@@ -24,8 +25,8 @@ On November 18th, 2019 `pip install` from Github, `echo`, basic png generation a
 
 ### Q4 2019
 1. Create a `pip install -e GITHUB_URL` installable Python package for GMIC, with an API very similar to the C++ library: `gmic_instance.run(...)`, `gmic(...)` and matching exception types. Binary dependencies [should be bundled as in this tutorial](https://python-packaging-tutorial.readthedocs.io/en/latest/binaries_dependencies.html).
-    1. Through `Ctypes` dynamic binding on an Ubuntu docker image using Python 2-3. DONE
-    1. Through custom Python/C++ binding
+    1. Through `Ctypes` dynamic binding on an Ubuntu docker image using Python 2-3. DONE in `ctypes/`
+    1. Through custom Python/C++ binding in `cpython/`
 1. Create documented examples for various application domains.
 
 ### Q1-Q2 2020

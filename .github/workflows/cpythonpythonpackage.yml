@@ -1,4 +1,4 @@
-name: Python package
+name: CPython GMIC Python package
 
 on: [push]
 
@@ -17,33 +17,37 @@ jobs:
       uses: actions/setup-python@v1
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Install dependencies
-      working-directory: tests/
+    - name: Install dependencies, compile and place ligbmic.so into tests/ dir
+      working-directory: cpython/tests/
       run: |
         sudo apt-get install -y libfftw3-dev
         git clone --depth 1 -b master https://github.com/dtschump/gmic.git gmic-src
         cd gmic-src/src
         bash ../../makecustomgmic.sh
-        cp libcgmic.so /tmp
+        cp libgmic.so ../../ 
         cd ../..
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-    - name: Lint with flake8
+    - name: Compile gmicpy.so and link it to libgmic.so
+      working-directory: cpython/
       run: |
-        pip install flake8
-        # stop the build if there are Python syntax errors or undefined names
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+        sudo apt-get install -y python27-dev python37-dev
+        sh makegmicpymodule.sh
+        cd tests/
+        ln -s libgmic.so libgmic.so.2
+        cp ../gmicpy.so .
+        LD_LIBRARY_PATH=. ldd gmicpy.so
     - name: Install pathlib backport for python2
+      working-directory: cpython/
       if: matrix.python-version == '2.7'
       run: |
         pip install pathlib 
     - name: Test with pytest
+      working-directory: cpython/
       env:
         GMIC_PY_PIP_PKG: "git+https://github.com/dtschump/gmic-py.git"
       run: |
         pwd
         ls
         pip install pytest
-        pytest tests/test_gmic_install_and_run.py
+        pytest test_gmic_install_and_run.py
