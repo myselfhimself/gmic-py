@@ -17,7 +17,7 @@ jobs:
       uses: actions/setup-python@v1
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Install dependencies, compile and place ligbmic.so into cpython/ dir
+    - name: Install dependencies, compile and place ligbmic.so into cpython/ dir with symlink fix
       working-directory: cpython/
       run: |
         sudo apt-get install -y libfftw3-dev
@@ -25,9 +25,11 @@ jobs:
         cp tests/makecustomgmic.sh gmic-src/src
         cd gmic-src/src
         sh makecustomgmic.sh
-        cp libgmic.so ../../ 
+        cp libgmic.so ../../
+        cd ../..
+        ln -s libgmic.so libgmic.so.2
         python -m pip install --upgrade pip
-        cd ../../tests
+        cd tests
         pip install -r requirements.txt
     - name: Install python dev sources
       working-directory: cpython/
@@ -71,6 +73,8 @@ jobs:
         pwd
         ls
         export PYTHONPATH=$PYTHONPATH:`pwd`
+        export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`
         echo "we have PYTHONPATH=$PYTHONPATH"
+        echo "we have LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
         pip install pytest
         pytest tests/test_gmic_install_and_run.py
