@@ -25,6 +25,7 @@ jobs:
         cp tests/makecustomgmic.sh gmic-src/src
         cd gmic-src/src
         sh makecustomgmic.sh
+        ls -lhart
         cp libgmic.so ../../
         cd ../..
         ln -s libgmic.so libgmic.so.2
