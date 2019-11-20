@@ -32,7 +32,7 @@ jobs:
     - name: Install python dev sources
       working-directory: cpython/
       run: |
-        sudo apt-get install -y python-dev python3-dev
+        sudo apt-get install -y libpython${{ matrix.python-version }}-dev
     - name: Grab python2 includes and libs for compiling
       working-directory: cpython/
       if: matrix.python-version == '2.7'
