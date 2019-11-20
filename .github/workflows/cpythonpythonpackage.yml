@@ -70,5 +70,7 @@ jobs:
       run: |
         pwd
         ls
+        export PYTHONPATH=$PYTHONPATH:`pwd`
+        echo "we have PYTHONPATH=$PYTHONPATH"
         pip install pytest
         pytest tests/test_gmic_install_and_run.py
