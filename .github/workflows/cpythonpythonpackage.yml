@@ -59,8 +59,7 @@ jobs:
         sh makegmicpymodule.sh
         cp gmicpy.so ../..
         cd ../../
-        ln -s libgmic.so libgmic.so.2
-        LD_LIBRARY_PATH=. ldd gmicpy.so
+        LD_LIBRARY_PATH=$LD_LIBRARY_PATH:. ldd gmicpy.so
     - name: Install pathlib backport for python2
       working-directory: cpython/
       if: matrix.python-version == '2.7'
