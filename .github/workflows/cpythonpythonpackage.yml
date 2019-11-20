@@ -72,8 +72,8 @@ jobs:
       run: |
         pwd
         ls
-        export PYTHONPATH=$PYTHONPATH:`pwd`
-        export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`pwd`
+        export PYTHONPATH=.
+        export LD_LIBRARY_PATH=.
         echo "we have PYTHONPATH=$PYTHONPATH"
         echo "we have LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
         pip install pytest
