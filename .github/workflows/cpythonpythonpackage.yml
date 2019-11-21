@@ -20,7 +20,7 @@ jobs:
     - name: Install dependencies, compile and place ligbmic.so into cpython/ dir with symlink fix
       working-directory: cpython/
       run: |
-        sudo apt-get install -y libfftw3-dev
+        sudo apt-get install -y libfftw3-dev libpng-dev
         git clone --depth 1 -b master https://github.com/dtschump/gmic.git gmic-src
         cp tests/makecustomgmic.sh gmic-src/src
         cd gmic-src/src
