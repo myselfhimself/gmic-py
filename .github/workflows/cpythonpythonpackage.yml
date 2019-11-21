@@ -72,11 +72,8 @@ jobs:
       run: |
         pwd
         ls
-        python quickpy.py || echo "la vie continue"
         export PYTHONPATH=.
         export LD_LIBRARY_PATH=.
-        echo "we have PYTHONPATH=$PYTHONPATH"
-        echo "we have LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
         pip install pytest
-        python quickpy.py || echo "la vie continue2"
+        python quickpy.py
         pytest tests/test_gmic_install_and_run.py
