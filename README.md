@@ -37,3 +37,57 @@ On November 18th, 2019 `pip install` from Github, `echo`, basic png generation a
 
 ### Q3-Q4 2020
 1. In a separate repository, create a GMIC Inkscape plugin, leveraging the Python library (possibly applying only to image objects, as the Trace bitmap tool does).
+
+## Binding blueprint
+This is an overview of how we want the gmic binding inner working:
+```python3
+from gmic import Gmic, run, Image, GmicException
+#we give up the Gmic native List
+
+class GmicException:
+   def __init__(self, command, message):
+       self.command = command
+       self.message = message
+   def what(self):
+       pass
+   def command_help(self):
+       pass
+
+class Gmic:
+    def __init__(self, images=[]|tuple|iterable[Image], image_names=[]|tuple|iterable, include_stdlib=True, progress=None, is_abort=None):
+        self._status = None
+        self.include_stdlib = include_stdlib
+        # TODO V2 = progress, is_abort
+        if all params were given:
+           self.run(images, image_names, include_stdlib, progress, is_abort)
+
+    @throws GmicException
+    def run(self, images=[], images_names=[], progress=None, abort=None):
+        ....
+        self._status = ""
+        return self
+
+    def _build_lists(self):
+        self._build_gmic_images_list(self.images)
+        self._build_gmic_images_names_list(self.image_names)
+
+    def _build_gmic_images_list(self):
+        """Convert and store to Gmic builtin C++ type"""
+        pass
+
+    def _build_gmic_images_names_list(self):
+        """Convert and store to Gmic builtin C++ type"""
+        pass
+
+    @property
+    def status(self):
+       """ string result of last operation, or exception text if was raised, or user-entered text through a gmic command. 
+       This is a read-only attribute, starting with underscore. See https://stackoverflow.com/a/15812738/420684
+       :return str
+       """
+       return self._status
+
+
+def run(images=[]|tuple|iterable[Image], image_names=[]|tuple|iterable[Image], include_stdlib=True, progress=None, is_abort=None):
+    return Gmic(images, images_names, include_stdlib, progress, is_abort).run()
+```
