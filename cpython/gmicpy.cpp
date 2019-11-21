@@ -7,8 +7,14 @@ PyObject* run_impl(PyObject*, PyObject* commands_line)
 {
   const char* c_commands_line = PyUnicode_AsUTF8(commands_line);
 	cout << "about to pipe this string into gmic from a python module:" << c_commands_line << endl;
-	//gmic(c_commands_line, NULL, NULL);
-	gmic(c_commands_line, NULL, NULL, NULL, true, NULL, NULL);
+	/*
+	  gmic(const char *const commands_line,
+       const char *const custom_commands=0,
+       const bool include_stdlib=true,
+       float *const p_progress=0, bool *const p_is_abort=0,
+       const T& pixel_type=(T)0);
+       */
+	gmic(c_commands_line, 0, true);
   return Py_True;
 }
 
