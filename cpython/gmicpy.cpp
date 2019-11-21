@@ -6,13 +6,9 @@ using namespace std;
 PyObject* run_impl(PyObject*, PyObject* commands_line) 
 {
   const char* c_commands_line = PyUnicode_AsUTF8(commands_line);
-  //gmic::run(c_commands_line, NULL, NULL, NULL, NULL);
-// template gmic& gmic::run(const char *const commands_line, \
-                         gmic_list<pt> &images, gmic_list<char> &images_names, \
-                         float *const p_progress, bool *const p_is_abort); \
-t
 	cout << "about to pipe this string into gmic from a python module:" << c_commands_line << endl;
-        gmic(c_commands_line, NULL, NULL);
+	//gmic(c_commands_line, NULL, NULL);
+	gmic(c_commands_line, NULL, NULL, NULL, true, NULL, NULL);
   return Py_True;
 }
 
