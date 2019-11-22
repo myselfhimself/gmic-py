@@ -51,15 +51,15 @@ jobs:
         export INCLUDES="$(python3-config --includes)"
         export LIBS="$(python3-config --libs)"
         echo -e "LIBS=\"$LIBS\"\nINCLUDES=\"$INCLUDES\"\n$(cat makegmicpymodule.sh)" > makegmicpymodule.sh  
-    - name: Compile gmicpy.so, move to cpython/ dir and check linking to libgmic.so
+    - name: Compile gmic.so Python binary module, move to cpython/ dir and check linking to libgmic.so
       working-directory: cpython/
       run: |
         mv makegmicpymodule.sh gmicpy.cpp gmic-src/src
         cd gmic-src/src
         sh makegmicpymodule.sh
-        cp gmicpy.so ../..
+        cp gmic.so ../..
         cd ../../
-        LD_LIBRARY_PATH=$LD_LIBRARY_PATH:. ldd gmicpy.so
+        LD_LIBRARY_PATH=$LD_LIBRARY_PATH:. ldd gmic.so
     - name: Install pathlib backport for python2
       working-directory: cpython/
       if: matrix.python-version == '2.7'
@@ -76,3 +76,9 @@ jobs:
         export LD_LIBRARY_PATH=.
         pip install pytest
         pytest tests/test_gmic_install_and_run.py
+    - name: Build python wheel
+      working-directory: cpython/
+      run: |
+        cp ../README.md .
+        pip install wheel
+        python setup.py bdist_wheel 
