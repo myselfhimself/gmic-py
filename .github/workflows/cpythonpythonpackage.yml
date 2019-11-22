@@ -65,6 +65,12 @@ jobs:
       if: matrix.python-version == '2.7'
       run: |
         pip install pathlib 
+    - name: Build python wheel
+      working-directory: cpython/
+      run: |
+        cp ../README.md .
+        pip install wheel
+        python setup.py bdist_wheel 
     - name: Run pytest module tests
       working-directory: cpython/
       env:
@@ -76,9 +82,3 @@ jobs:
         export LD_LIBRARY_PATH=.
         pip install pytest
         pytest tests/test_gmic_install_and_run.py
-    - name: Build python wheel
-      working-directory: cpython/
-      run: |
-        cp ../README.md .
-        pip install wheel
-        python setup.py bdist_wheel 
