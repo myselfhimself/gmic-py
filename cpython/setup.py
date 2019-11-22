@@ -1,10 +1,20 @@
 """A setuptools based setup module for the Gmic Python bindings binary module.
 """
 
-from setuptools import setup, find_packages
+#from setuptools import setup, find_packages
+from distutils.core import setup, Extension
 from os import path
 
 here = path.abspath(path.dirname(__file__))
+
+
+
+gmic_module = Extension('gmic',
+                    include_dirs = ['.'],
+                    libraries = ['gmic'],
+                    library_dirs = ['/usr/lib/i386-linux-gnu/', '.'],
+                    sources = ['gmicpy.cpp'],
+                    extra_compile_args = ['-std=c++11'])
 
 # Get the long description from the README file
 with open(path.join(here, 'README.md'), encoding='utf-8') as f:
@@ -198,5 +208,7 @@ setup(
         'Say Thanks!': 'https://twitter.com/gmic_ip',
         'Source': 'https://github.com/dtschump/gmic-py',
     },
+
+    ext_modules = [gmic_module]
 )
 

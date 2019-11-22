@@ -65,11 +65,14 @@ jobs:
       if: matrix.python-version == '2.7'
       run: |
         pip install pathlib 
-    - name: Build python wheel
+    - name: Build python module, the python wheel package
       working-directory: cpython/
       run: |
         cp ../README.md .
         pip install wheel
+        cp gmic-src/src/libgmic.so* . # Bring libgmic.so and libgmic.so.2 around
+        mv gmic.so _dont_use_me_for_now.so # We are now testing python's own c++ build system
+        python setup.py build
         python setup.py bdist_wheel 
     - name: Run pytest module tests
       working-directory: cpython/
