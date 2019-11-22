@@ -65,7 +65,7 @@ jobs:
       if: matrix.python-version == '2.7'
       run: |
         pip install pathlib 
-    - name: Test gmicpy.so with pytest
+    - name: Run pytest module tests
       working-directory: cpython/
       env:
         GMIC_PY_PIP_PKG: "git+https://github.com/dtschump/gmic-py.git#egg=pkg&subdirectory=cpython"
@@ -75,5 +75,4 @@ jobs:
         export PYTHONPATH=.
         export LD_LIBRARY_PATH=.
         pip install pytest
-        python quickpy.py
         pytest tests/test_gmic_install_and_run.py
