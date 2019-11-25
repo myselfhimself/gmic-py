@@ -1,7 +1,7 @@
 """A setuptools based setup module for the Gmic Python bindings binary module.
 """
 
-#from setuptools import setup, find_packages
+from setuptools import find_packages
 from distutils.core import setup, Extension
 from os import path
 
@@ -10,9 +10,9 @@ here = path.abspath(path.dirname(__file__))
 
 
 gmic_module = Extension('gmic',
-                    include_dirs = ['.'],
+                    include_dirs = ['.', 'gmic-src/', '/export/home/schrode191/Productions/GMIC/gmic/src'],
                     libraries = ['gmic'],
-                    library_dirs = ['/usr/lib/i386-linux-gnu/', '.'],
+                    library_dirs = ['/usr/lib/i386-linux-gnu/', '.', 'gmic-src/', '/export/home/schrode191/Productions/GMIC/gmic/src'],
                     sources = ['gmicpy.cpp'],
                     extra_compile_args = ['-std=c++11'])
 
@@ -101,7 +101,7 @@ setup(
         'Topic :: Artistic Software',
 
         # Pick your license as you wish
-        'License :: CeCILL-B Free Software License Agreement (CECILL-B)',
+        'License :: OSI Approved :: CEA CNRS Inria Logiciel Libre License, version 2.1 (CeCILL-2.1)',
 
         # Specify the Python versions you support here. In particular, ensure
         # that you indicate whether you support Python 2, Python 3 or both.
@@ -122,7 +122,7 @@ setup(
 
     # When your source code is in a subdirectory under the project root, e.g.
     # `src/`, it is necessary to specify the `package_dir` argument.
-    #package_dir={'': 'src'},  # Optional
+    #package_dir={'': ''},  # Optional
 
     # You can just specify package directories manually here if your project is
     # simple. Or you can use find_packages().
