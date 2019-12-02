@@ -1,28 +1,29 @@
 import pytest
 
-def test_install_gmicpy():
+def test_install_gmic():
     # per https://github.com/jgonggrijp/pip-review/issues/44#issuecomment-277720359
     import subprocess
     import sys
     import os
-    exit_code = subprocess.call([sys.executable, '-m', 'pip', 'install', '-e', os.environ.get('GMIC_PY_PIP_PKG', 'gmicpy'), '--no-cache-dir'])
+    exit_code = subprocess.call([sys.executable, '-m', 'pip', 'install', os.environ.get('GMIC_PY_PIP_PKG', './dist/gmic-0.0.1-cp36-cp36m-linux_x86_64.whl'), '--no-cache-dir'])
+    #exit_code = subprocess.call([sys.executable, '-m', 'pip', 'install', '-e', os.environ.get('GMIC_PY_PIP_PKG', 'gmic'), '--no-cache-dir'])
     assert exit_code == 0
 
-def test_import_gmicpy():
-    import gmicpy
+def test_import_gmic():
+    import gmic
 
-def test_run_gmicpy_cli_helloworld(capfd):
-    import gmicpy
+def test_run_gmic_cli_helloworld(capfd):
+    import gmic
     # Using pytest stderr capture per https://docs.pytest.org/en/latest/capture.html#accessing-captured-output-from-a-test-function
-    gmicpy.run('echo_stdout "hello world"')
+    gmic.run('echo_stdout "hello world"')
     outerr = capfd.readouterr()
     assert "hello world\n" == outerr.out
 
-def test_run_gmicpy_cli_simple_3pixels_png_output():
-    import gmicpy
+def test_run_gmic_cli_simple_3pixels_png_output():
+    import gmic
     import pathlib
     png_filename = "a.png"
-    gmicpy.run('input "(0,128,255)" -output ' + png_filename)
+    gmic.run('input "(0,128,255)" -output ' + png_filename)
     a_png = pathlib.Path(png_filename)
     # Ensure generated png file exists and is non empty
     assert a_png.exists()
@@ -30,16 +31,33 @@ def test_run_gmicpy_cli_simple_3pixels_png_output():
     a_png.unlink()
 
 
-def test_run_gmicpy_cli_simple_demo_png_output():
-    import gmicpy
+def test_run_gmic_cli_simple_demo_png_output():
+    """ Ensure that zlib is properly linked and ensures that either
+    the png library used or the 'convert' tool of the imagemagick suite, for saving png"""
+    import gmic
     import pathlib
     png_filename = "demo.png"
-    gmicpy.run('testimage2d 512 -output ' + png_filename)
+    gmic.run('testimage2d 512 -output ' + png_filename)
     a_png = pathlib.Path(png_filename)
     # Ensure generated png file exists and is non empty
     assert a_png.exists()
     assert a_png.stat().st_size > 0
     a_png.unlink()
+
+
+def test_run_gmic_cli_simple_3pixels_bmp_output():
+    """ Ensure that the native bmp file output works"""
+    import gmic
+    import pathlib
+    bmp_filename = "a.bmp"
+    gmic.run('input "(0,128,255)" -output ' + bmp_filename)
+    a_bmp = pathlib.Path(bmp_filename)
+    # Ensure generated bmp file exists and is non empty
+    assert a_bmp.exists()
+    assert a_bmp.stat().st_size > 0
+    a_bmp.unlink()
+
+
 
 
 # todo: test with an empty input image list

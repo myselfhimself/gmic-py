@@ -7,14 +7,28 @@ from os import path
 
 here = path.abspath(path.dirname(__file__))
 
+gmic_src_path = '/export/home/schrode191/Productions/GMIC/gmic-building/gmic-2.7.5/src'
 
-
-gmic_module = Extension('gmic',
-                    include_dirs = ['.', 'gmic-src/', '/export/home/schrode191/Productions/GMIC/gmic/src'],
+# Thin CPython gmic.so linked to libgmic.so.2
+gmic_module_thin = Extension('gmic',
+                    include_dirs = ['.', 'gmic-src/', gmic_src_path],
                     libraries = ['gmic'],
-                    library_dirs = ['/usr/lib/i386-linux-gnu/', '.', 'gmic-src/', '/export/home/schrode191/Productions/GMIC/gmic/src'],
+                    library_dirs = ['/usr/lib/i386-linux-gnu/', '.', gmic_src_path],
                     sources = ['gmicpy.cpp'],
-                    extra_compile_args = ['-std=c++11'])
+                    extra_compile_args = ['-std=c++11'], language='c++')
+
+# Static CPython gmic.so embedding libgmic.so.2
+gmic_module = Extension('gmic',
+                    include_dirs = ['.', gmic_src_path],
+                    #libraries = ['gmic'],
+                    libraries = ['z', 'fftw3', 'fftw3_threads', 'curl', 'png16', 'pthread', 'gomp', 'X11'],
+                    library_dirs = ['/usr/lib/i386-linux-gnu/', '.', gmic_src_path],
+                    sources = ['gmicpy.cpp', gmic_src_path+'/gmic.cpp'],
+                    define_macros=[('gmic_build', None), ('cimg_date', '""'), ('cimg_time', '""'), ('gmic_is_parallel', None), ('cimg_use_zlib', None), ('cimg_display', 1)],
+                    #extra_compile_args = ['-std=c++11'],
+                    #extra_link_args=['-static'],
+                    #extra_objects=[gmic_src_path + '/' + 'libgmic.a'],
+                    language='c++')
 
 # Get the long description from the README file
 with open(path.join(here, 'README.md'), encoding='utf-8') as f:
