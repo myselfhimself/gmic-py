@@ -3,11 +3,11 @@
 
 from setuptools import find_packages
 from distutils.core import setup, Extension
-from os import path
+from os import path, listdir
 
 here = path.abspath(path.dirname(__file__))
 
-gmic_src_path = '/export/home/schrode191/Productions/GMIC/gmic-building/gmic-2.7.5/src'
+gmic_src_path = 'src/gmic/src'
 
 # Static CPython gmic.so embedding libgmic.so.2
 gmic_module = Extension('gmic',
@@ -17,6 +17,7 @@ gmic_module = Extension('gmic',
                     sources = ['gmicpy.cpp', gmic_src_path+'/gmic.cpp'],
                     define_macros=[('gmic_build', None), ('cimg_use_png', None), ('cimg_date', '""'), ('cimg_time', '""'), ('gmic_is_parallel', None), ('cimg_use_zlib', None), ('cimg_display', 1)],
                     extra_compile_args = ['-std=c++11'],
+
                     language='c++')
 
 # Get the long description from the README file
