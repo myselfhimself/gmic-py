@@ -1,14 +1,5 @@
 import pytest
 
-def test_install_gmic():
-    # per https://github.com/jgonggrijp/pip-review/issues/44#issuecomment-277720359
-    import subprocess
-    import sys
-    import os
-    exit_code = subprocess.call([sys.executable, '-m', 'pip', 'install', os.environ.get('GMIC_PY_PIP_PKG', './dist/gmic-0.0.1-cp36-cp36m-linux_x86_64.whl'), '--no-cache-dir'])
-    #exit_code = subprocess.call([sys.executable, '-m', 'pip', 'install', '-e', os.environ.get('GMIC_PY_PIP_PKG', 'gmic'), '--no-cache-dir'])
-    assert exit_code == 0
-
 def test_import_gmic():
     import gmic
 
