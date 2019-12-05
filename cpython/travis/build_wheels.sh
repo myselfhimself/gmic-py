@@ -4,7 +4,7 @@ set -e -x
 
 # Install a system package required by our library
 yum check-update
-yum install fftw-devel curl-devel libpng-devel zlib-devel
+yum install fftw-devel curl-devel libpng-devel zlib-devel -y
 
 # Compile wheels
 for PYBIN in /opt/python/*/bin; do
