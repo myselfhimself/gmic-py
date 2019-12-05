@@ -9,7 +9,7 @@ jobs:
     strategy:
       max-parallel: 4
       matrix:
-        python-version: [3.6, 3.7]
+        python-version: [3.6]
 
     steps:
     - uses: actions/checkout@v1
@@ -17,71 +17,7 @@ jobs:
       uses: actions/setup-python@v1
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Install dependencies, compile and place ligbmic.so into cpython/ dir with symlink fix
+    - name: Compile and run tests within Docker on .so, .whl and source distribution
       working-directory: cpython/
       run: |
-        sudo apt-get install -y libfftw3-dev libpng-dev
-        git clone --depth 1 -b master https://github.com/dtschump/gmic.git gmic-src
-        cp tests/makecustomgmic.sh gmic-src/src
-        cd gmic-src/src
-        sh makecustomgmic.sh
-        ls -lhart
-        cp libgmic.so ../../
-        cd ../..
-        ln -s libgmic.so libgmic.so.2
-        python -m pip install --upgrade pip
-        cd tests
-        pip install -r requirements.txt
-    - name: Install python dev sources
-      working-directory: cpython/
-      run: |
-        sudo apt-get install -y libpython${{ matrix.python-version }}-dev
-    - name: Grab python2 includes and libs for compiling
-      working-directory: cpython/
-      if: matrix.python-version == '2.7'
-      run: |
-        export INCLUDES="$(python2-config --includes)"
-        export LIBS="$(python2-config --libs)"
-        echo -e "LIBS=\"$LIBS\"\nINCLUDES=\"$INCLUDES\"\n$(cat makegmicpymodule.sh)" > makegmicpymodule.sh  
-    - name: Grab python3 includes and libs for compiling
-      working-directory: cpython/
-      if: matrix.python-version != '2.7'
-      run: |
-        find /usr/lib/ -name "*python*.so"
-        export INCLUDES="$(python3-config --includes)"
-        export LIBS="$(python3-config --libs)"
-        echo -e "LIBS=\"$LIBS\"\nINCLUDES=\"$INCLUDES\"\n$(cat makegmicpymodule.sh)" > makegmicpymodule.sh  
-    - name: Compile gmic.so Python binary module, move to cpython/ dir and check linking to libgmic.so
-      working-directory: cpython/
-      run: |
-        mv makegmicpymodule.sh gmicpy.cpp gmic-src/src
-        cd gmic-src/src
-        sh makegmicpymodule.sh
-        cp gmic.so ../..
-        cd ../../
-        LD_LIBRARY_PATH=$LD_LIBRARY_PATH:. ldd gmic.so
-    - name: Install pathlib backport for python2
-      working-directory: cpython/
-      if: matrix.python-version == '2.7'
-      run: |
-        pip install pathlib 
-    - name: Build python module, the python wheel package
-      working-directory: cpython/
-      run: |
-        cp ../README.md .
-        pip install wheel
-        cp gmic-src/src/libgmic.so* . # Bring libgmic.so and libgmic.so.2 around
-        mv gmic.so _dont_use_me_for_now.so # We are now testing python's own c++ build system
-        python setup.py build
-        python setup.py bdist_wheel 
-    - name: Run pytest module tests
-      working-directory: cpython/
-      env:
-        GMIC_PY_PIP_PKG: "git+https://github.com/dtschump/gmic-py.git#egg=pkg&subdirectory=cpython"
-      run: |
-        pwd
-        ls
-        export PYTHONPATH=.
-        export LD_LIBRARY_PATH=.
-        pip install pytest
-        pytest tests/test_gmic_install_and_run.py
+        sh 22_docker_run_all_steps.sh
