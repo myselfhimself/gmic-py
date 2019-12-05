@@ -15,7 +15,7 @@ gmic_module = Extension('gmic',
                     libraries = ['z', 'fftw3', 'fftw3_threads', 'curl', 'png16', 'pthread', 'gomp', 'X11'],
                     library_dirs = ['/usr/lib/i386-linux-gnu/', '.', gmic_src_path],
                     sources = ['gmicpy.cpp', gmic_src_path+'/gmic.cpp'],
-                    define_macros=[('gmic_build', None), ('cimg_use_png', None), ('cimg_date', '""'), ('cimg_time', '""'), ('gmic_is_parallel', None), ('cimg_use_zlib', None), ('cimg_display', 1)],
+                    define_macros=[('gmic_build', None), ('cimg_use_png', None), ('cimg_date', '""'), ('cimg_time', '""'), ('gmic_is_parallel', None), ('cimg_use_zlib', None), ('cimg_display', 1), ('cimg_use_curl', None)],
                     extra_compile_args = ['-std=c++11'],
 
                     language='c++')
@@ -23,6 +23,11 @@ gmic_module = Extension('gmic',
 # Get the long description from the README file
 with open(path.join(here, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
+
+# Grab the version from the VERSION file, which is also include in MANIFEST.in
+# Technique highlighted here: https://packaging.python.org/guides/single-sourcing-package-version/
+with open(path.join('.', 'VERSION')) as version_file:
+    version = version_file.read().strip()
 
 # Arguments marked as "Required" below must be included for upload to PyPI.
 # Fields marked as "Optional" may be commented out.
@@ -47,7 +52,7 @@ setup(
     # For a discussion on single-sourcing the version across setup.py and the
     # project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version='0.0.2',  # Required
+    version = version,
 
     # This is a one-line description or tagline of what your project does. This
     # corresponds to the "Summary" metadata field:
