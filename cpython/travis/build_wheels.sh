@@ -6,8 +6,15 @@ set -e -x
 yum check-update
 yum install fftw-devel curl-devel libpng-devel zlib-devel -y
 
-# Compile wheels
-for PYBIN in /opt/python/*/bin; do
+
+# Compile wheels #Choosing only Python 3 executables
+for PYBIN in /opt/python/cp3*/bin; do
+    # home made patching for our scripts
+    export PIP3="${PYBIN}/pip"
+    export PYTHON3="${PYBIN}/python"
+
+    bash /io/1_clean_and_regrab_gmic_src.sh
+
     "${PYBIN}/pip" install -r /io/dev-requirements.txt
     "${PYBIN}/pip" wheel /io/ -w wheelhouse/
 done
