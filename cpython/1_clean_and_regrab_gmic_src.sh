@@ -6,7 +6,7 @@ GMIC_ARCHIVE_NAME=gmic_2.8.1_pre191205.tar.gz
 rm -rf dist/
 rm -rf src/
 mkdir src -p
-python3 setup.py clean --all
+$PYTHON3 setup.py clean --all
 wget ${GMIC_URL} -P src/ --no-check-certificate
 tar xzvf src/${GMIC_ARCHIVE_NAME} -C src/
 # Keep only gmic source's src directory
