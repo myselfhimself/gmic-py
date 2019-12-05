@@ -7,7 +7,7 @@ rm -rf dist/
 rm -rf src/
 mkdir src -p
 python3 setup.py clean --all
-wget ${GMIC_URL} -P src/
+wget ${GMIC_URL} -P src/ --no-check-certificate
 tar xzvf src/${GMIC_ARCHIVE_NAME} -C src/
 # Keep only gmic source's src directory
 cd src/gmic*/
