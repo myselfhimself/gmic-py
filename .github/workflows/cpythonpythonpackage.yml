@@ -22,5 +22,5 @@ jobs:
       run: |
         sudo apt-get update; sudo apt-get install -y libfftw3-dev libcurl4-openssl-dev libpng-dev zlib1g-dev
         pwd
-        cd cpython/
+        ls
         sh 00_all_steps.sh
