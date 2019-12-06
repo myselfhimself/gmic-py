@@ -6,6 +6,8 @@ set -e -x
 yum check-update
 yum install fftw-devel curl-devel libpng-devel zlib-devel -y
 
+cd /io/
+
 
 # Compile wheels #Choosing only Python 3 executables
 for PYBIN in /opt/python/cp3*/bin; do
