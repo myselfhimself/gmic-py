@@ -1,4 +1,4 @@
-name: CPython GMIC Python package
+name: CPython GMIC Python package (Debian/Ubuntu OS)
 
 on: [push]
 
