@@ -4,17 +4,24 @@
 from setuptools import find_packages
 from distutils.core import setup, Extension
 from os import path, listdir
+import pkgconfig
 
 here = path.abspath(path.dirname(__file__))
+gmic_src_path = path.abspath('src/gmic/src')
 
-gmic_src_path = 'src/gmic/src'
+packages = pkgconfig.parse('zlib fftw3 libcurl libpng')
+libraries = packages['libraries'] + ['pthread', 'gomp', 'X11']
+library_dirs = packages['library_dirs'] + [here, gmic_src_path]
+include_dirs = packages['include_dirs'] + [here, gmic_src_path]
+
+
 
 # Static CPython gmic.so embedding libgmic.so.2
 gmic_module = Extension('gmic',
-                    include_dirs = ['.', gmic_src_path],
-                    libraries = ['z', 'fftw3', 'fftw3_threads', 'curl', 'png16', 'pthread', 'gomp', 'X11'],
-                    library_dirs = ['/usr/lib/i386-linux-gnu/', '.', gmic_src_path],
-                    sources = ['gmicpy.cpp', gmic_src_path+'/gmic.cpp'],
+                    include_dirs = include_dirs,
+                    libraries = libraries,
+                    library_dirs = library_dirs,
+                    sources = ['gmicpy.cpp', path.join(gmic_src_path, 'gmic.cpp')],
                     define_macros=[('gmic_build', None), ('cimg_use_png', None), ('cimg_date', '""'), ('cimg_time', '""'), ('gmic_is_parallel', None), ('cimg_use_zlib', None), ('cimg_display', 1), ('cimg_use_curl', None)],
                     extra_compile_args = ['-std=c++11'],
 
