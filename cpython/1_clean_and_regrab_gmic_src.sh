@@ -6,6 +6,7 @@ GMIC_URL=https://gmic.eu/files/source/gmic_${GMIC_VERSION}.tar.gz
 rm -rf dist/
 rm -rf src/
 mkdir src -p
+$PIP3 install -r dev-requirements.txt
 $PYTHON3 setup.py clean --all
 wget ${GMIC_URL} -P src/ --no-check-certificate
 tar xzvf src/${GMIC_ARCHIVE_NAME} -C src/
