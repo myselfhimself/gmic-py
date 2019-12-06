@@ -19,6 +19,9 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Compile and run tests on .so, .whl and source distribution
       working-directory: cpython/
+      env:
+        PYTHON3: python3
+        PIP3: pip3
       run: |
         sudo apt-get update; sudo apt-get install -y libfftw3-dev libcurl4-openssl-dev libpng-dev zlib1g-dev
         bash 00_all_steps.sh
