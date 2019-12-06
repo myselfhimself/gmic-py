@@ -1,8 +1,8 @@
-GMIC_VERSION=2.8.1
-GMIC_URL=https://gmic.eu/files/prerelease/gmic_2.8.1_pre191205.tar.gz
-GMIC_ARCHIVE_NAME=gmic_2.8.1_pre191205.tar.gz
-#GMIC_ARCHIVE_NAME=gmic_${GMIC_VERSION}.tar.gz
-#GMIC_URL=https://gmic.eu/files/source/gmic_${GMIC_VERSION}.tar.gz
+GMIC_VERSION=2.8.0
+#GMIC_URL=https://gmic.eu/files/prerelease/gmic_2.8.1_pre191205.tar.gz
+#GMIC_ARCHIVE_NAME=gmic_2.8.1_pre191205.tar.gz
+GMIC_ARCHIVE_NAME=gmic_${GMIC_VERSION}.tar.gz
+GMIC_URL=https://gmic.eu/files/source/gmic_${GMIC_VERSION}.tar.gz
 rm -rf dist/
 rm -rf src/
 mkdir src -p
