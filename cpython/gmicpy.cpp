@@ -6,7 +6,14 @@ using namespace std;
 PyObject* run_impl(PyObject*, PyObject* commands_line) 
 {
   const char* c_commands_line = PyUnicode_AsUTF8(commands_line);
-  gmic(c_commands_line, 0, true);
+  try {
+    gmic(c_commands_line, 0, true);
+  } catch (gmic_exception& e) {
+    PyErr_SetString(PyExc_Exception, e.what());
+  } catch (std::exception& e) {
+    PyErr_SetString(PyExc_Exception, e.what());
+    return NULL;
+  }
   return Py_True;
 }
 

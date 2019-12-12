@@ -3,6 +3,15 @@ import pytest
 def test_import_gmic():
     import gmic
 
+def test_catch_exceptions():
+    import gmic
+    try:
+        gmic.run('a badly formatted command')
+    except Exception as e:
+        # For now, all C++ exceptions must be transformed into a SystemError
+        assert type(e) == SystemError
+        assert len(str(e)) > 0
+
 def test_run_gmic_cli_helloworld(capfd):
     import gmic
     # Using pytest stderr capture per https://docs.pytest.org/en/latest/capture.html#accessing-captured-output-from-a-test-function
