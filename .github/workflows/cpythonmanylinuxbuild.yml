@@ -17,6 +17,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: build and run manylinux1 for x86_64
+        working-directory: ./cpython
         run: |
           bash 33_build_manylinux1.sh && bash 11_send_to_pypi.sh
 
