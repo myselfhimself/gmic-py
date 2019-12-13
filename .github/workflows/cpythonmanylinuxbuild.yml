@@ -1,4 +1,4 @@
-name: CPython GMIC Manylinux build
+name: CPython GMIC Manylinux build CentOS x86_64
 # Ugly mix of https://github.com/htm-community/htm.core/blob/master/.github/workflows/build.yml and https://github.com/pypa/python-manylinux-demo
 
 on: [push]
