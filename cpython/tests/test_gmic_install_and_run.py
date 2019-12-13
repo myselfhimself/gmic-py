@@ -12,6 +12,13 @@ def test_catch_exceptions():
         assert type(e) == SystemError
         assert len(str(e)) > 0
 
+@pytest.mark.xfail(raises=AssertionError, reason="If openmp fails to be found, gmic usually falls back and runs more slowly")
+def test_run_gmic_ensure_openmp_linked_and_working(capfd):
+    import gmic
+    gmic.run('sp lena,4096 eval. "begin(N=t);merge(N,max);end(call(\'N=\',t))" echo_stdout[] $N')
+    outerr = capfd.readouterr()
+    assert "0\n" == outerr.out # should show "nan\n" if openmp not linked
+
 def test_run_gmic_cli_helloworld(capfd):
     import gmic
     # Using pytest stderr capture per https://docs.pytest.org/en/latest/capture.html#accessing-captured-output-from-a-test-function
