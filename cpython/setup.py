@@ -13,7 +13,7 @@ packages = pkgconfig.parse('zlib fftw3 libcurl libpng')
 libraries = packages['libraries'] + ['pthread', 'X11'] # removed 'gomp' temporarily
 library_dirs = packages['library_dirs'] + [here, gmic_src_path]
 include_dirs = packages['include_dirs'] + [here, gmic_src_path]
-debugging_args = [] #['-O0', '-g'] # Uncomment this for faster compilation with debug symbols and no optimization
+debugging_args = ['-O0', '-g'] # Uncomment this for faster compilation with debug symbols and no optimization
 extra_compile_args = ['-std=c++11'] + debugging_args
 
 
