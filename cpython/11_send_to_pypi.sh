@@ -7,12 +7,12 @@ TWINE_OPTIONS="--skip-existing"
 
 if [ -d "dist/" ]; then
   for a in `ls dist/`; do
-    $TWINE $TWINE_OPTIONS upload $a
+    $TWINE upload $a $TWINE_OPTIONS
   done
 fi
 
 if [ -d "wheelhouse/" ]; then
   for a in `ls wheelhouse/*manylinux*`; do
-    $TWINE $TWINE_OPTIONS upload $a
+    $TWINE upload $a $TWINE_OPTIONS
   done
 fi
