@@ -19,6 +19,7 @@ jobs:
       - name: build and run manylinux1 for x86_64
         working-directory: ./cpython
         run: |
+          for apt_file in `grep -lr microsoft /etc/apt/sources.list.d/`; do sudo rm $apt_file; done
           bash 33_build_manylinux1.sh && bash 11_send_to_pypi.sh
 
 # notifications:
