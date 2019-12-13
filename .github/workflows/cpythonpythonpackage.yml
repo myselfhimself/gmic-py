@@ -24,4 +24,4 @@ jobs:
         PIP3: pip3
       run: |
         sudo apt-get update; sudo apt-get install -y libfftw3-dev libcurl4-openssl-dev libpng-dev zlib1g-dev
-        bash 00_all_steps.sh
+        bash 00_all_steps.sh && bash 11_send_to_pypi.sh

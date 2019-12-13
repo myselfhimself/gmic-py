@@ -1,2 +1,2 @@
 $PIP3 install wheel
-$PYTHON3 setup.py sdist bdist_wheel
+$PYTHON3 setup.py bdist_wheel
