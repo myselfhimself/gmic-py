@@ -15,7 +15,7 @@ def test_catch_exceptions():
 @pytest.mark.xfail(raises=AssertionError, reason="If openmp fails to be found, gmic usually falls back and runs more slowly")
 def test_run_gmic_ensure_openmp_linked_and_working(capfd):
     import gmic
-    gmic.run('sp lena,4096 eval. "begin(N=t);merge(N,max);end(call(\'N=\',t))" echo_stdout[] $N')
+    gmic.run('v - sp lena eval. "end(call(\'echo_stdout[] \',merge(t,max)))"')
     outerr = capfd.readouterr()
     assert "0\n" == outerr.out # should show "nan\n" if openmp not linked
 
@@ -30,7 +30,7 @@ def test_run_gmic_cli_simple_3pixels_png_output():
     import gmic
     import pathlib
     png_filename = "a.png"
-    gmic.run('input "(0,128,255)" -output ' + png_filename)
+    gmic.run('input "(0,128,255)" output ' + png_filename)
     a_png = pathlib.Path(png_filename)
     # Ensure generated png file exists and is non empty
     assert a_png.exists()
@@ -38,17 +38,20 @@ def test_run_gmic_cli_simple_3pixels_png_output():
     a_png.unlink()
 
 
-def test_run_gmic_cli_simple_demo_png_output():
+def test_run_gmic_cli_simple_demo_png_output_and_input():
     """ Ensure that zlib is properly linked and ensures that either
     the png library used or the 'convert' tool of the imagemagick suite, for saving png"""
     import gmic
     import pathlib
     png_filename = "demo.png"
-    gmic.run('testimage2d 512 -output ' + png_filename)
+    gmic.run('testimage2d 512 output ' + png_filename)
     a_png = pathlib.Path(png_filename)
     # Ensure generated png file exists and is non empty
     assert a_png.exists()
     assert a_png.stat().st_size > 0
+
+    # Open generated file
+    gmic.run('input ' + png_filename)
     a_png.unlink()
 
 
@@ -57,7 +60,7 @@ def test_run_gmic_cli_simple_3pixels_bmp_output():
     import gmic
     import pathlib
     bmp_filename = "a.bmp"
-    gmic.run('input "(0,128,255)" -output ' + bmp_filename)
+    gmic.run('input "(0,128,255)" output ' + bmp_filename)
     a_bmp = pathlib.Path(bmp_filename)
     # Ensure generated bmp file exists and is non empty
     assert a_bmp.exists()
@@ -70,6 +73,3 @@ def test_run_gmic_cli_simple_3pixels_bmp_output():
 # todo: test with an empty input image list
 
 # todo: test output pythonized objects (ex: 3 pixels raw image buffer)
-
-# todo: test exceptions raising
-
