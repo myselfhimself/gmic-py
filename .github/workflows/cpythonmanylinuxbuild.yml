@@ -26,7 +26,7 @@ jobs:
         uses: actions/setup-python@v1
         with:
           python-version: ${{ matrix.python-version }}
-      - name: build and run packages on given manylinux architecture
+      - name: build, run packages on ${{ matrix.plat }} architecture and publish them to PyPI
         working-directory: ./cpython
         env:
           DOCKER_IMAGE: ${{ matrix.docker_image }}
