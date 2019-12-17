@@ -18,7 +18,7 @@ jobs:
       - name: build on macos
         working-directory: ./cpython
         run: |
-          brew install pkg-config
+          brew install pkg-config fftw
           python -m pip install --upgrade pip
           pip install wheel
           pip install -r dev-requirements.txt
