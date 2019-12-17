@@ -1,0 +1,27 @@
+name: CPython GMIC MacOS build
+# Imitating https://github.com/vinecopulib/pyvinecopulib/blob/master/.github/workflows/pypi.yml
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        python-version: [3.5, 3.6, 3.7]
+    steps:
+      - uses: actions/checkout@v1
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v1
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: build on macos
+        working-directory: ./cpython
+        run: |
+          for apt_file in `grep -lr microsoft /etc/apt/sources.list.d/`; do sudo rm $apt_file; done
+          python -m pip install --upgrade pip
+          pip install wheel
+          pip install -r dev-requirements.txt
+          python setup.py bdist_wheel
+          echo "listing directory"
+          find .
