@@ -18,7 +18,7 @@ jobs:
       - name: build on macos
         working-directory: ./cpython
         run: |
-          for apt_file in `grep -lr microsoft /etc/apt/sources.list.d/`; do sudo rm $apt_file; done
+          brew install pkg-config
           python -m pip install --upgrade pip
           pip install wheel
           pip install -r dev-requirements.txt
