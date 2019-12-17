@@ -9,7 +9,6 @@ jobs:
     strategy:
       matrix:
         python-version: [3.7]
-        os: [ubuntu-18.04]
         docker_image: ['quay.io/pypa/manylinux1_x86_64', 'quay.io/pypa/manylinux1_i686', 'quay.io/pypa/manylinux2010_x86_64']
         include:
           - docker_image: 'quay.io/pypa/manylinux1_x86_64'
@@ -27,7 +26,7 @@ jobs:
         uses: actions/setup-python@v1
         with:
           python-version: ${{ matrix.python-version }}
-      - name: build and run manylinux1 for x86_64
+      - name: build and run packages on given manylinux architecture
         working-directory: ./cpython
         env:
           DOCKER_IMAGE: ${{ matrix.docker_image }}
@@ -36,33 +35,3 @@ jobs:
         run: |
           for apt_file in `grep -lr microsoft /etc/apt/sources.list.d/`; do sudo rm $apt_file; done
           bash 33_build_manylinux.sh && bash 11_send_to_pypi.sh
-
-# notifications:
-#   email: false
-# 
-# matrix:
-#   include:
-#     - sudo: required
-#       services:
-#         - docker
-#       env: DOCKER_IMAGE=quay.io/pypa/manylinux1_x86_64
-#            PLAT=manylinux1_x86_64
-#     - sudo: required
-#       services:
-#         - docker
-#       env: DOCKER_IMAGE=quay.io/pypa/manylinux1_i686
-#            PRE_CMD=linux32
-#            PLAT=manylinux1_i686
-#     - sudo: required
-#       services:
-#         - docker
-#       env: DOCKER_IMAGE=quay.io/pypa/manylinux2010_x86_64
-#            PLAT=manylinux2010_x86_64
-# 
-# install:
-#   - docker pull $DOCKER_IMAGE
-# 
-# script:
-#   - docker run --rm -e PLAT=$PLAT -v `pwd`/cpython:/io $DOCKER_IMAGE $PRE_CMD /io/travis/build-wheels.sh
-#   - ls wheelhouse/
-# 
