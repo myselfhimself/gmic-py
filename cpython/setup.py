@@ -12,12 +12,14 @@ here = path.abspath(path.dirname(__file__))
 gmic_src_path = path.abspath('src/gmic/src')
 
 packages = pkgconfig.parse('zlib fftw3 libcurl libpng')
-libraries = packages['libraries'] + ['pthread'] # removed core-dumping 'gomp' temporarily
+libraries = packages['libraries'] + ['pthread'] # removed core-dumping 'gomp' temporarily (for manylinux builds)
 libraries += ['X11'] if sys.platform != 'darwin' else [] # disable X11 linking on MacOS permanently
 library_dirs = packages['library_dirs'] + [here, gmic_src_path]
 include_dirs = packages['include_dirs'] + [here, gmic_src_path]
 debugging_args = ['-O0', '-g'] # Uncomment this for faster compilation with debug symbols and no optimization
 extra_compile_args = ['-std=c++11', '-stdlib=libc++'] + debugging_args
+if sys.platform == 'darwin':
+    extra_compile_args += ['-fopenmp']
 cimg_display_enabled = str(int(sys.platform != 'darwin')) # Disable any X display on MacOS, value is '1' or '0'
 define_macros = [('gmic_build', None), ('cimg_use_png', None), ('cimg_date', '""'), ('cimg_time', '""'), ('gmic_is_parallel', None), ('cimg_use_zlib', None), ('cimg_display', cimg_display_enabled), ('cimg_use_curl', None)]
 print("Define macros:")
