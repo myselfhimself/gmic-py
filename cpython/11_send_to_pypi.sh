@@ -19,7 +19,7 @@ if [ -d "dist/" ]; then
 fi
 
 # Upload binary python wheels if found
-if [ -d "wheelhouse/" ]; then
+if [ -d "wheelhouse/*" ]; then # Keep the * after /, it is very important!
   for a in `ls wheelhouse/ | grep -E 'manylinux|macosx'`; do
     $TWINE upload $a $TWINE_OPTIONS
   done
