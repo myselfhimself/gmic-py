@@ -32,5 +32,5 @@ jobs:
           # Install Github actions branch at https://github.com/mayeut/cibuildwheel/tree/github-workflows
           MACOSX_DEPLOYMENT_TARGET=10.10 pip install git+https://github.com/mayeut/cibuildwheel.git@github-workflows
           MACOSX_DEPLOYMENT_TARGET=10.10 python -m cibuildwheel --output-dir wheelhouse
-          echo "Mac OS wheelhoose after cibuildwheel looks like:"
+          echo "Mac OS wheelhouse after cibuildwheel looks like:"
           bash 11_send_to_pypi.sh
