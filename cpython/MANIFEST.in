@@ -1,2 +1,3 @@
 graft src/gmic/src
 include VERSION
+include README.md
