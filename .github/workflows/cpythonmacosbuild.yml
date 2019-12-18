@@ -21,13 +21,13 @@ jobs:
           PYTHON3: python3
           PIP3: pip3
           CIBW_BUILD: cp3*-*macosx*
+          CIBW_BEFORE_BUILD: pip install -r dev-requirements.txt
         run: |
           brew install pkg-config fftw libpng
           #bash 00_all_steps.sh 
           bash 1_clean_and_regrab_gmic_src.sh
           # Install Github actions branch at https://github.com/mayeut/cibuildwheel/tree/github-workflows
           pip install git+https://github.com/mayeut/cibuildwheel.git@github-workflows
-          pip install -r dev-requirements.txt
           python -m cibuildwheel --output-dir wheelhouse
           echo "Mac OS wheelhoose after cibuildwheel looks like:"
           find wheelhouse
