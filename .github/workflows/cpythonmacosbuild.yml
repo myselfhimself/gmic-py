@@ -30,6 +30,6 @@ jobs:
           bash 1_clean_and_regrab_gmic_src.sh
           # Install Github actions branch at https://github.com/mayeut/cibuildwheel/tree/github-workflows
           MACOSX_DEPLOYMENT_TARGET=10.10 pip install git+https://github.com/mayeut/cibuildwheel.git@github-workflows
-          MACOSX_DEPLOYMENT_TARGET=10.10 CC=/usr/local/clang4/bin/clang CXX=/usr/local/clang4/bin/clang++ LDFLAGS=-L/usr/local/clang4/lib python -m cibuildwheel --output-dir wheelhouse
+          MACOSX_DEPLOYMENT_TARGET=10.10 CC=/usr/local/opt/llvm/bin/clang CXX=/usr/local/opt/llvm/bin/clang++ LDFLAGS=-L/usr/local/clang/lib python -m cibuildwheel --output-dir wheelhouse
           echo "Mac OS wheelhoose after cibuildwheel looks like:"
           bash 11_send_to_pypi.sh
