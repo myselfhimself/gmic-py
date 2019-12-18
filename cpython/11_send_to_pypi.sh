@@ -20,7 +20,7 @@ fi
 
 # Upload binary python wheels if found
 if [ -d "wheelhouse/" ]; then
-  for a in `ls wheelhouse/*manylinux*`; do
+  for a in `ls wheelhouse/ | grep -E 'manylinux|macosx'`; do
     $TWINE upload $a $TWINE_OPTIONS
   done
 fi
