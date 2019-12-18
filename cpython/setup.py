@@ -1,11 +1,10 @@
 """A setuptools based setup module for the Gmic Python bindings binary module.
 """
 
-from distutils.core import setup, Extension
 from os import path, listdir
 import sys
 
-from setuptools import find_packages
+from setuptools import setup, Extension, find_packages
 import pkgconfig
 
 
