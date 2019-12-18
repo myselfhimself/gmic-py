@@ -26,5 +26,7 @@ jobs:
           bash 1_clean_and_regrab_gmic_src.sh
           # Install Github actions branch at https://github.com/mayeut/cibuildwheel/tree/github-workflows
           pip install git+https://github.com/mayeut/cibuildwheel.git@github-workflows
+          python -m cibuildwheel --output-dir wheelhouse
+          echo "Mac OS wheelhoose after cibuildwheel looks like:"
+          find wheelhouse
           echo "shall run 11_send_to_pypi.sh"
-
