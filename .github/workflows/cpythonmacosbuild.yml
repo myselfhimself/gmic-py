@@ -18,8 +18,8 @@ jobs:
       - name: build on macos
         working-directory: ./cpython
         env:
-          PYTHON3=python3
-          PIP3=pip3
+          PYTHON3: python3
+          PIP3: pip3
         run: |
           brew install pkg-config fftw libpng
           bash 00_all_steps.sh 
