@@ -22,6 +22,9 @@ jobs:
           PIP3: pip3
         run: |
           brew install pkg-config fftw libpng
-          bash 00_all_steps.sh 
+          #bash 00_all_steps.sh 
+          1_clean_and_regrab_gmic_src.sh
+          # Install Github actions branch at https://github.com/mayeut/cibuildwheel/tree/github-workflows
+          pip install git+https://github.com/mayeut/cibuildwheel.git@github-workflows
           echo "shall run 11_send_to_pypi.sh"
 
