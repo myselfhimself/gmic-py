@@ -7,9 +7,9 @@ TWINE=twine
 # Do not reupload same-version wheels our source archives
 TWINE_OPTIONS="--skip-existing"
 
-echo "TWINE UPLOAD STEP: Contents of dist/ and wheelhouse are:"
+echo "TWINE UPLOAD STEP: Contents of dist/ and wheelhouse directories are:"
 find dist/
-find wheelhouse/
+find *wheel*
 
 # Upload sdist source tar.gz archive if found
 if [ -d "dist/" ]; then
