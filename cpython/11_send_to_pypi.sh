@@ -22,7 +22,7 @@ fi
 
 # Upload binary python wheels if found
 if [ -d "wheelhouse/" ]; then
-  for a in `ls wheelhouse/ | grep -E 'manylinux|macosx'`; do
+  for a in `ls wheelhouse/* | grep -E 'manylinux|macosx'`; do # Keep /* wildcard for proper relative paths!!
     $TWINE upload $a $TWINE_OPTIONS
   done
 fi
