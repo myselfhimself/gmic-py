@@ -19,7 +19,7 @@ include_dirs = packages['include_dirs'] + [here, gmic_src_path]
 debugging_args = ['-O0', '-g'] # Uncomment this for faster compilation with debug symbols and no optimization
 extra_compile_args = ['-std=c++11'] + debugging_args
 if sys.platform == 'darwin':
-    extra_compile_args += ['-Xpreprocessor -fopenmp', '-stdlib=libc++']
+    extra_compile_args += ['-fopenmp', '-stdlib=libc++']
 cimg_display_enabled = str(int(sys.platform != 'darwin')) # Disable any X display on MacOS, value is '1' or '0'
 define_macros = [('gmic_build', None), ('cimg_use_png', None), ('cimg_date', '""'), ('cimg_time', '""'), ('gmic_is_parallel', None), ('cimg_use_zlib', None), ('cimg_display', cimg_display_enabled), ('cimg_use_curl', None)]
 print("Define macros:")
