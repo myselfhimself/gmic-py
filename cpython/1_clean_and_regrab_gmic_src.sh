@@ -1,7 +1,6 @@
-GMIC_VERSION=2.8.0
-#GMIC_URL=https://gmic.eu/files/prerelease/gmic_2.8.1_pre191205.tar.gz
-#GMIC_ARCHIVE_NAME=gmic_2.8.1_pre191205.tar.gz
-GMIC_ARCHIVE_NAME=gmic_${GMIC_VERSION}.tar.gz
+set -e
+GMIC_VERSION=2.8.1
+GMIC_ARCHIVE_NAME=gmic_${GMIC_VERSION}*.tar.gz
 GMIC_URL=https://gmic.eu/files/source/gmic_${GMIC_VERSION}.tar.gz
 rm -rf dist/
 rm -rf src/
@@ -17,6 +16,9 @@ cd src
 ls | grep -vE "gmic\.cpp|gmic\.h|gmic_stdlib\.h|CImg\.h" | xargs rm -rf
 ls
 cd ../..
-rm -f gmic_${GMIC_VERSION}.tar.gz*
+rm -f ${GMIC_ARCHIVE_NAME}
 mv gmic-${GMIC_VERSION}*/ gmic
 cd ..
+echo
+echo "src/ dir now contains fresh gmic source ($GMIC_VERSION):"
+find src/

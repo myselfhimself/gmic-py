@@ -17,7 +17,7 @@ def test_run_gmic_ensure_openmp_linked_and_working(capfd):
     import gmic
     gmic.run('v - sp lena eval. "end(call(\'echo_stdout[] \',merge(t,max)))"')
     outerr = capfd.readouterr()
-    assert "0\n" == outerr.out # should show "nan\n" if openmp not linked
+    assert int(outerr.out.strip()) > 0 # should show "0\n" if openmp not working
 
 def test_run_gmic_cli_helloworld(capfd):
     import gmic
