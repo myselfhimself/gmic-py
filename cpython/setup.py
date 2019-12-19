@@ -15,6 +15,8 @@ packages = pkgconfig.parse('zlib fftw3 libcurl libpng')
 libraries = packages['libraries'] + ['pthread'] # removed core-dumping 'gomp' temporarily (for manylinux builds)
 libraries += ['X11'] if sys.platform != 'darwin' else [] # disable X11 linking on MacOS permanently
 library_dirs = packages['library_dirs'] + [here, gmic_src_path]
+if sys.platform == 'darwin':
+    library_dirs += ['/usr/local/opt/llvm/lib']
 include_dirs = packages['include_dirs'] + [here, gmic_src_path]
 debugging_args = ['-O0', '-g'] # Uncomment this for faster compilation with debug symbols and no optimization
 extra_compile_args = ['-std=c++11'] + debugging_args
