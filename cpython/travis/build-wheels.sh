@@ -29,5 +29,5 @@ done
 # Install packages and test
 for PYBIN in /opt/python/cp3*/bin; do
     "${PYBIN}/pip" install gmic --no-index -f /io/wheelhouse
-    "${PYBIN}/python" -m pytest tests/test_gmic_install_and_run.py
+    "${PYBIN}/python" -m pytest tests/test_gmic_install_and_run.py -vvv -rxXs
 done
