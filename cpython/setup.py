@@ -18,6 +18,8 @@ library_dirs = packages['library_dirs'] + [here, gmic_src_path]
 if sys.platform == 'darwin':
     library_dirs += ['/usr/local/opt/llvm/lib']
 include_dirs = packages['include_dirs'] + [here, gmic_src_path]
+if sys.platform == 'darwin':
+    include_dirs += ['/usr/local/opt/llvm/include']
 debugging_args = ['-O0', '-g'] # Uncomment this for faster compilation with debug symbols and no optimization
 extra_compile_args = ['-std=c++11'] + debugging_args
 if sys.platform == 'darwin':
