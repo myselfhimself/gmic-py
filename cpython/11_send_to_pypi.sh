@@ -5,7 +5,8 @@ export TWINE_REPOSITORY_URL=https://upload.pypi.org/legacy/
 TWINE=twine
 
 # Do not reupload same-version wheels our source archives
-TWINE_OPTIONS="--skip-existing"
+#TWINE_OPTIONS="--skip-existing --verbose"
+TWINE_OPTIONS="--verbose"
 
 echo "TWINE UPLOAD STEP: Contents of dist/ and wheelhouse directories are:"
 find dist/
