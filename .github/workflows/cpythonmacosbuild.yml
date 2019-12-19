@@ -24,6 +24,7 @@ jobs:
           CIBW_BEFORE_BUILD: pip install -r dev-requirements.txt
           CIBW_TEST_REQUIRES: pytest
           CIBW_TEST_COMMAND: python -W default -m pytest {project}/tests/test_gmic_install_and_run.py -vvv -rxXs
+          CIBW_BUILD_VERBOSITY: 3
           MACOSX_DEPLOYMENT_TARGET: 10.10
         run: |
           brew install pkg-config fftw libpng
