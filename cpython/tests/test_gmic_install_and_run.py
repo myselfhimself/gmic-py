@@ -16,6 +16,7 @@ def test_catch_exceptions():
 def test_run_gmic_ensure_openmp_linked_and_working(capfd):
     import gmic
     import traceback
+    import sys
     gmic.run('v - sp lena eval. "end(call(\'echo_stdout[] \',merge(t,max)))"')
     outerr = capfd.readouterr()
     try:
