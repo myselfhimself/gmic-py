@@ -1,4 +1,4 @@
-set -e
+set -x
 GMIC_VERSION=2.8.1
 GMIC_ARCHIVE_NAME=gmic_${GMIC_VERSION}*.tar.gz
 GMIC_URL=https://gmic.eu/files/source/gmic_${GMIC_VERSION}.tar.gz
