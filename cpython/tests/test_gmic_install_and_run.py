@@ -27,7 +27,7 @@ def test_run_gmic_ensure_openmp_linked_and_working(capfd):
         traceback.print_tb(tb) # Fixed format
         tb_info = traceback.extract_tb(tb)
         filename, line, func, text = tb_info[-1]
-        pytest.xfail('parallel test case fails, OpenMP probably could not link or compile well on this platform, gmic parallelization will not work: ' + text)
+        pytest.xfail('parallel test case fails, OpenMP probably could not link or compile well on this platform, gmic parallelization will not work: stdout: {}; assert check: {}'.format(outerr.out, text))
 
 def test_run_gmic_cli_helloworld(capfd):
     import gmic
