@@ -29,7 +29,7 @@ jobs:
           MACOSX_DEPLOYMENT_TARGET: 10.10
         run: |
           # llvm 9 (latest) might cause issue with c++20 pre-support, see https://trac.macports.org/ticket/59575 and https://github.com/dtschump/gmic-py/commit/618d9d317d55aa7af3f85e92bfd07f06efea491f/checks?check_suite_id=368364476
-          brew install pkg-config fftw libpng libomp llvm@8
+          brew install pkg-config fftw libpng libomp llvm@6
           #bash 00_all_steps.sh 
           bash 1_clean_and_regrab_gmic_src.sh
           # Install Github actions branch at https://github.com/mayeut/cibuildwheel/tree/github-workflows
