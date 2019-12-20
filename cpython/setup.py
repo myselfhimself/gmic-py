@@ -21,9 +21,11 @@ include_dirs = packages['include_dirs'] + [here, gmic_src_path]
 if sys.platform == 'darwin':
     include_dirs += ['/usr/local/opt/llvm/include']
 debugging_args = ['-O0', '-g'] # Uncomment this for faster compilation with debug symbols and no optimization
+extra_link_args = []
 extra_compile_args = ['-std=c++11'] + debugging_args
 if sys.platform == 'darwin':
     extra_compile_args += ['-fopenmp', '-stdlib=libc++']
+    extra_link_args += ['-lomp', '-nodefaultlibs', '-lc++'] #options inspired by https://github.com/explosion/spaCy/blob/master/setup.py
 cimg_display_enabled = str(int(sys.platform != 'darwin')) # Disable any X display on MacOS, value is '1' or '0'
 define_macros = [('gmic_build', None), ('cimg_use_png', None), ('cimg_date', '""'), ('cimg_time', '""'), ('gmic_is_parallel', None), ('cimg_use_zlib', None), ('cimg_display', cimg_display_enabled), ('cimg_use_curl', None)]
 print("Define macros:")
@@ -37,6 +39,7 @@ gmic_module = Extension('gmic',
                     sources = ['gmicpy.cpp', path.join(gmic_src_path, 'gmic.cpp')],
                     define_macros=define_macros,
                     extra_compile_args = extra_compile_args,
+                    extra_link_args = extra_link_args,
                     language='c++')
 
 # Get the long description from the README file
