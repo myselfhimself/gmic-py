@@ -16,10 +16,10 @@ libraries = packages['libraries'] + ['pthread'] # removed core-dumping 'gomp' te
 libraries += ['X11'] if sys.platform != 'darwin' else [] # disable X11 linking on MacOS permanently
 library_dirs = packages['library_dirs'] + [here, gmic_src_path]
 if sys.platform == 'darwin':
-    library_dirs += ['/usr/local/opt/llvm@8/lib']
+    library_dirs += ['/usr/local/opt/llvm@6/lib']
 include_dirs = packages['include_dirs'] + [here, gmic_src_path]
 if sys.platform == 'darwin':
-    include_dirs += ['/usr/local/opt/llvm@8/include']
+    include_dirs += ['/usr/local/opt/llvm@6/include']
 debugging_args = ['-O0', '-g'] # Uncomment this for faster compilation with debug symbols and no optimization
 extra_link_args = []
 extra_compile_args = ['-std=c++11'] + debugging_args

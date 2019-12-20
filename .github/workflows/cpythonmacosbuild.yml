@@ -21,7 +21,7 @@ jobs:
           PYTHON3: python3
           PIP3: pip3
           CIBW_BUILD: cp3*-*macosx*
-          CIBW_ENVIRONMENT: "CC='/usr/local/opt/llvm@8/bin/clang' CXX='/usr/local/opt/llvm@8/bin/clang++' COMPILER_INDEX_STORE_ENABLE='NO'"
+          CIBW_ENVIRONMENT: "CC='/usr/local/opt/llvm@6/bin/clang' CXX='/usr/local/opt/llvm@6/bin/clang++' COMPILER_INDEX_STORE_ENABLE='NO'"
           CIBW_BEFORE_BUILD: pip install -r dev-requirements.txt
           CIBW_TEST_REQUIRES: pytest
           CIBW_TEST_COMMAND: python -W default -m pytest {project}/tests/test_gmic_install_and_run.py -vvv -rxXs
