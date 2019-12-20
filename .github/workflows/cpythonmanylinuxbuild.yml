@@ -9,15 +9,15 @@ jobs:
     strategy:
       matrix:
         python-version: [3.7]
-        docker_image: ['quay.io/pypa/manylinux1_x86_64', 'quay.io/pypa/manylinux1_i686', 'quay.io/pypa/manylinux2010_x86_64']
+        #docker_image: ['quay.io/pypa/manylinux1_x86_64', 'quay.io/pypa/manylinux1_i686', 'quay.io/pypa/manylinux2010_x86_64']
         include:
-          - docker_image: 'quay.io/pypa/manylinux1_x86_64'
+          - docker_image: 'quay.io/pypa/manylinux1_x86_64:latest'
             plat: manylinux1_x86_64
             pre_cmd:
-          - docker_image: 'quay.io/pypa/manylinux1_i686'
+          - docker_image: 'quay.io/pypa/manylinux1_i686:latest'
             plat: manylinux1_i686
             pre_cmd: linux32
-          - docker_image: 'quay.io/pypa/manylinux2010_x86_64'
+          - docker_image: 'quay.io/pypa/manylinux2010_x86_64:latest'
             plat: manylinux2010_x86_64
             pre_cmd:
     steps:
