@@ -21,14 +21,15 @@ jobs:
           PYTHON3: python3
           PIP3: pip3
           CIBW_BUILD: cp3*-*macosx*
-          CIBW_ENVIRONMENT: "CC='/usr/local/opt/llvm/bin/clang' CXX='/usr/local/opt/llvm/bin/clang++'"
+          CIBW_ENVIRONMENT: "CC='/usr/local/opt/llvm/bin/clang' CXX='/usr/local/opt/llvm/bin/clang++' COMPILER_INDEX_STORE_ENABLE='NO'"
           CIBW_BEFORE_BUILD: pip install -r dev-requirements.txt
           CIBW_TEST_REQUIRES: pytest
           CIBW_TEST_COMMAND: python -W default -m pytest {project}/tests/test_gmic_install_and_run.py -vvv -rxXs
           CIBW_BUILD_VERBOSITY: 3
           MACOSX_DEPLOYMENT_TARGET: 10.10
         run: |
-          brew install pkg-config fftw libpng libomp llvm
+          # llvm 9 (latest) might cause issue with c++20 pre-support, see https://trac.macports.org/ticket/59575 and https://github.com/dtschump/gmic-py/commit/618d9d317d55aa7af3f85e92bfd07f06efea491f/checks?check_suite_id=368364476
+          brew install pkg-config fftw libpng libomp llvm@8
           #bash 00_all_steps.sh 
           bash 1_clean_and_regrab_gmic_src.sh
           # Install Github actions branch at https://github.com/mayeut/cibuildwheel/tree/github-workflows
