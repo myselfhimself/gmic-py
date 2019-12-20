@@ -4,7 +4,7 @@ set -e -x
 
 # Install a system package required by our library
 yum check-update
-yum install fftw-devel curl-devel libpng-devel zlib-devel wget -y
+yum install fftw-devel curl-devel libpng-devel zlib-devel libgomp wget -y
 
 cd /io/
 

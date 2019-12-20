@@ -2,7 +2,7 @@
 FROM python:3
 
 # Install dependency for compiling libgmic
-RUN apt-get update; apt-get install -y libfftw3-dev libcurl4-openssl-dev libpng-dev zlib1g-dev
+RUN apt-get update; apt-get install -y libfftw3-dev libcurl4-openssl-dev libpng-dev zlib1g-dev libomp-dev
 ENV PYTHON3 python3
 ENV PIP3 pip3
 
