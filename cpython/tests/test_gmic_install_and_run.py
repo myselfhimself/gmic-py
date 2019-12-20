@@ -12,7 +12,6 @@ def test_catch_exceptions():
         assert type(e) == SystemError
         assert len(str(e)) > 0
 
-@pytest.mark.xfail(raises=AssertionError, reason="If openmp fails to be found, gmic usually falls back and runs more slowly")
 def test_run_gmic_ensure_openmp_linked_and_working(capfd):
     import gmic
     import traceback
@@ -20,14 +19,15 @@ def test_run_gmic_ensure_openmp_linked_and_working(capfd):
     gmic.run('v - sp lena eval. "end(call(\'echo_stdout[] \',merge(t,max)))"')
     outerr = capfd.readouterr()
     try:
-        assert int(outerr.out.strip()) > 0 # should show "0\n" if openmp not working
+        assert int(outerr.out.strip()) > 0 # should be "0\n" or "nan\n" if openmp not working
     except AssertionError:
         # Traceback display code from https://stackoverflow.com/a/11587247/420684
         _, _, tb = sys.exc_info()
         traceback.print_tb(tb) # Fixed format
         tb_info = traceback.extract_tb(tb)
         filename, line, func, text = tb_info[-1]
-        pytest.xfail('parallel test case fails, OpenMP probably could not link or compile well on this platform, gmic parallelization will not work: stdout: {}; assert check: {}'.format(outerr.out, text))
+        # This fail used to be an xfail :) Just more compulsory now :)
+        pytest.fail('parallel test case fails, OpenMP probably could not link or compile well on this platform, gmic parallelization will not work: stdout: {}; assert check: {}'.format(outerr.out, text))
 
 def test_run_gmic_cli_helloworld(capfd):
     import gmic
