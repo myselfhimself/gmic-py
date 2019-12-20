@@ -16,8 +16,9 @@ def test_catch_exceptions():
 
 def test_run_gmic_ensure_openmp_linked_and_working(capfd):
     arch = platform.architecture()
-    if arch[0] != '64bits' or os.environ.get('plat', '') == 'manylinux1_x86_64':
-        pytest.skip('skipping openmp testing for 32bits or old manylinux1_x86_64 architecture :) current architecture: {}'.format(arch))
+    plat = os.environ.get('plat', '')
+    if arch[0] != '64bits' or plat == 'manylinux1_x86_64':
+        pytest.skip('skipping openmp testing for 32bits or old manylinux1_x86_64 architecture :) current architecture: {}; current platform (env: "plat"): {}'.format(arch, plat))
     import gmic
     import traceback
     import sys
