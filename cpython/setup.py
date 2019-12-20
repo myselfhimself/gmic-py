@@ -27,7 +27,7 @@ extra_compile_args = ['-std=c++11'] + debugging_args
 if sys.platform == 'darwin':
     extra_compile_args += ['-fopenmp', '-stdlib=libc++']
     extra_link_args += ['-lomp', '-nodefaultlibs', '-lc++'] #options inspired by https://github.com/explosion/spaCy/blob/master/setup.py
-elif platform.architecture()[0] in == '64bit' and environ.get('plat', '') != 'manylinux1_x86_64': # Skip openmp for 32bits or old 64bits distributions
+elif platform.architecture()[0] == '64bit' and environ.get('plat', '') != 'manylinux1_x86_64': # Skip openmp for 32bits or old 64bits distributions
     extra_compile_args += ['-fopenmp']
     extra_link_args += ['-lgomp']
 
