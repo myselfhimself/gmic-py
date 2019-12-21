@@ -21,8 +21,10 @@ for PYBIN in /opt/python/cp3*/bin; do
     "${PYBIN}/pip" wheel /io/ -w wheelhouse/
 done
 
+find /opt/python -name auditwheel
 # Bundle external shared libraries into the wheels
 for whl in wheelhouse/*.whl; do
+    which auditwheel
     auditwheel repair "$whl" --plat $PLAT -w /io/wheelhouse/
 done
 
