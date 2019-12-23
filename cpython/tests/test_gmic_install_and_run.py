@@ -76,7 +76,11 @@ def test_run_gmic_cli_simple_3pixels_bmp_output():
     assert a_bmp.stat().st_size > 0
     a_bmp.unlink()
 
-
+def test_gmic_image_construct_and_destroy():
+    import gmic
+    i = gmic.GmicImage(300, 500, 0, 3)
+    print(dir(i))
+    i = None
 
 
 # todo: test with an empty input image list
