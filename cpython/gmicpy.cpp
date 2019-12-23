@@ -57,7 +57,7 @@ static void PyGmicImage_dealloc(PyGmicImage * self)
 
 static PyObject * PyGmicImage_from_numpy_array(PyGmicImage * self, PyObject* args)
 {
-
+int retval;
 
 // todo array of floats instead from numpy array
     if (! PyArg_ParseTuple(args, "f", &self->ptrObj->_data))
