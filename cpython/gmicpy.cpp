@@ -60,7 +60,7 @@ static PyObject * PyGmicImage_from_numpy_array(PyGmicImage * self, PyObject* arg
 
 
 // todo array of floats instead from numpy array
-    if (! PyArg_ParseTuple(args, "f", &self->objPtr->_data))
+    if (! PyArg_ParseTuple(args, "f", &self->ptrObj->_data))
         return Py_False;
 
     retval = (self->ptrObj)->_data != NULL;
