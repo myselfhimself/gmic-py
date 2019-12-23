@@ -77,8 +77,10 @@ def test_run_gmic_cli_simple_3pixels_bmp_output():
     a_bmp.unlink()
 
 def test_gmic_image_construct_and_destroy():
+    import re
     import gmic
     i = gmic.GmicImage(300, 500, 0, 3)
+    assert re.compile(r"<GmicImage object at 0x[a-f0-9]+ with _data address 0x[0-9a-z]+, w=300 h=500 d=0 s=3>").match(repr(i))
     print(dir(i))
     i = None
 
