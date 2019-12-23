@@ -20,6 +20,9 @@ jobs:
           - docker_image: 'quay.io/pypa/manylinux2010_x86_64:latest'
             plat: manylinux2010_x86_64
             pre_cmd:
+          - docker_image: 'quay.io/pypa/manylinux2014_x86_64'
+            plat: manylinux2014_x86_64
+            pre_cmd:
     steps:
       - uses: actions/checkout@v1
       - name: Set up Python ${{ matrix.python-version }}
