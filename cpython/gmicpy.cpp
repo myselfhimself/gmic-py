@@ -39,7 +39,7 @@ static int PyGmicImage_init(PyGmicImage *self, PyObject *args, PyObject *kwds)
 }
 
 
-static PyObject* PyGmicImage_repr(PyGmicImage* self)
+static PyObject* PyGmicImage_repr(PyObject* self)
 {
     return PyUnicode_FromFormat("<%s object at %p with _data address %p, w=%d h=%d d=%d s=%d>",
                                     Py_TYPE(self)->tp_name, self, self->ptrObj->_data, self->ptrObj->_width, self->ptrObj->_height, self->ptrObj->_depth, self->ptrObj->_spectrum);
