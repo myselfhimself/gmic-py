@@ -14,7 +14,7 @@ typedef struct {
     gmic_image<T> * ptrObj;
 } PyGmicImage;
 
-static int PyGmicImage_init(PyGmicImage<T> *self, PyObject *args, PyObject *kwds)
+static int PyGmicImage_init(PyGmicImage *self, PyObject *args, PyObject *kwds)
 // initialize PyGmicImage Object
 {
     unsigned int _width;       // Number of image columns (dimension along the X-axis)
@@ -44,7 +44,7 @@ static int PyGmicImage_init(PyGmicImage<T> *self, PyObject *args, PyObject *kwds
 
 
 
-static void PyGmicImage_dealloc(PyGmicImage<T> * self)
+static void PyGmicImage_dealloc(PyGmicImage * self)
 // destruct the object
 {
     free(self->ptrObj->_data);
@@ -55,7 +55,7 @@ static void PyGmicImage_dealloc(PyGmicImage<T> * self)
 
 
 
-static PyObject * PyGmicImage_from_numpy_array(PyGmicImage<T>rray(PyGmicImage<T>* self, PyObject* args)
+static PyObject * PyGmicImage_from_numpy_array(PyGmicImage * self, PyObject* args)
 {
 
 
