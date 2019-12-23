@@ -3,6 +3,11 @@
 #include "gmic.h"
 using namespace std;
 
+typedef struct {
+    PyObject_HEAD
+    gmic_image<T> * ptrObj;
+} PyGmicImage;
+
 PyObject* run_impl(PyObject*, PyObject* commands_line) 
 {
   const char* c_commands_line = PyUnicode_AsUTF8(commands_line);
