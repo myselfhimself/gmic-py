@@ -17,5 +17,5 @@ fi
 
 docker pull $DOCKER_IMAGE
 docker run --rm -e PLAT=$PLAT -v `pwd`:/io $DOCKER_IMAGE find /io
-docker run --rm -e PLAT=$PLAT -v `pwd`:/io $DOCKER_IMAGE $PRE_CMD /bin/bash /io/travis/build-wheels.sh
+docker run --rm -e PLAT=$PLAT -v `pwd`:/io $DOCKER_IMAGE $PRE_CMD /bin/bash /io/manylinux/build-wheels.sh
 ls wheelhouse/
