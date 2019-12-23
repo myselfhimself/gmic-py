@@ -24,7 +24,6 @@ static int PyGmicImage_init(PyGmicImage *self, PyObject *args, PyObject *kwds)
   
     // SKIPPED FOR NOW
     bool _is_shared = false;           // Tells if the data buffer is shared by another structure
-    T *_data;                  // Pointer to the first pixel value
 
 
     if (! PyArg_ParseTuple(args, "IIII", &_width, &_height, &_depth, &_spectrum))
@@ -32,7 +31,7 @@ static int PyGmicImage_init(PyGmicImage *self, PyObject *args, PyObject *kwds)
 
     self->ptrObj=new gmic_image<T>();
     self->ptrObj->_is_shared = _is_shared;
-    self->ptrObj->_data = NULL;
+    self->ptrObj->_data = new float[_width * _height * (_depth>0?_depth:1) * _spectrum * sizeof(T)];
     self->ptrObj->assign(_width, _height, _depth, _spectrum);
 
     return 0;
