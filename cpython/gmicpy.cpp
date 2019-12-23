@@ -39,7 +39,7 @@ static int PyGmicImage_init(PyGmicImage *self, PyObject *args, PyObject *kwds)
 }
 
 
-static PyObject* PyGmicImage_repr(PyObject* self)
+static PyObject* PyGmicImage_repr(PyGmicImage* self)
 {
     return PyUnicode_FromFormat("<%s object at %p with _data address %p, w=%d h=%d d=%d s=%d>",
                                     Py_TYPE(self)->tp_name, self, self->ptrObj->_data, self->ptrObj->_width, self->ptrObj->_height, self->ptrObj->_depth, self->ptrObj->_spectrum);
@@ -127,7 +127,7 @@ PyMODINIT_FUNC PyInit_gmic() {
     PyGmicImageType.tp_dealloc=(destructor) PyGmicImage_dealloc;
     PyGmicImageType.tp_doc="Gmic Image buffer";
     PyGmicImageType.tp_methods=PyGmicImage_methods;
-    PyGmicImageType.tp_repr=PyGmicImage_repr;
+    PyGmicImageType.tp_repr=(reprfunc)PyGmicImage_repr;
     PyGmicImageType.tp_init=(initproc)PyGmicImage_init;
 
     if (PyType_Ready(&PyGmicImageType) < 0)
