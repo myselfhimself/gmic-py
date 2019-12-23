@@ -3,6 +3,12 @@
 #include "gmic.h"
 using namespace std;
 
+// Set T be a float if not platform-overridden
+#ifndef T
+#define T gmic_pixel_type
+#endif
+
+
 typedef struct {
     PyObject_HEAD
     gmic_image<T> * ptrObj;
