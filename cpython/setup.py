@@ -18,8 +18,9 @@ pkgconfig_list = ['zlib', 'fftw3', 'libpng']
 # Disable libcurl and the related compilation macro only on linux 64bits targets
 cimg_use_curl_enabled = None # '1' by default
 if sys.platform == 'linux' and platform.architecture()[0] == '64bit':
-    cimg_use_curl_enabled = '0'
+    cimg_use_curl_enabled = False
 else:
+    cimg_use_curl_enabled = '1'
     pkgconfig_list += ['libcurl']
 
 packages = pkgconfig.parse(" ".join(pkgconfig_list))
@@ -42,7 +43,10 @@ elif platform.architecture()[0] == '64bit' and environ.get('plat', '') != 'manyl
     extra_link_args += ['-lgomp']
 
 cimg_display_enabled = str(int(sys.platform != 'darwin')) # Disable any X display on MacOS, value is '1' or '0'
-define_macros = [('gmic_build', None), ('cimg_use_png', None), ('cimg_date', '""'), ('cimg_time', '""'), ('gmic_is_parallel', None), ('cimg_use_zlib', None), ('cimg_display', cimg_display_enabled), ('cimg_use_curl', cimg_use_curl_enabled)]
+define_macros = [('gmic_build', None), ('cimg_use_png', None), ('cimg_date', '""'), ('cimg_time', '""'), ('gmic_is_parallel', None), ('cimg_use_zlib', None), ('cimg_display', cimg_display_enabled)]
+if cimg_use_curl_enabled is not False:
+    define_macros += [('cimg_use_curl', cimg_use_curl_enabled)]
+
 print("Define macros:")
 print(define_macros)
 
