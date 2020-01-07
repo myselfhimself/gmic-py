@@ -76,14 +76,34 @@ def test_run_gmic_cli_simple_3pixels_bmp_output():
     assert a_bmp.stat().st_size > 0
     a_bmp.unlink()
 
-def test_gmic_image_construct_and_destroy():
+def test_gmic_image_construct_buffer_check_and_destroy():
     import re
     import gmic
-    i = gmic.GmicImage(300, 500, 0, 3)
-    assert re.compile(r"<gmic.GmicImage object at 0x[a-f0-9]+ with _data address 0x[0-9a-z]+, w=300 h=500 d=0 s=3>").match(repr(i))
+    import struct
+    # Function parameter-time bytes generation: with bad reference management, reading the buffer's bytes later should fail
+    i = gmic.GmicImage(struct.pack('8f', 1, 3, 5, 7, 2, 6, 10, 14), 4, 2, 1, 1)
+    assert re.compile(r"<gmic.GmicImage object at 0x[a-f0-9]+ with _data address at 0x[0-9a-z]+, w=4 h=2 d=1 s=1>").match(repr(i))
     print(dir(i))
-    i = None
+    assert i(0) == 1
+    assert type(i(0)) == float
+    assert i(0,1) == 2
+    assert i(3,1) == 14
+    i = None # Tentative reference decrementing for crash
     # gmic.run(buffer, 'print')
+
+
+def test_gmic_image_float_third_dimension_and_precision_conservation():
+    import gmic
+    import struct
+    import re
+    # Creating an GmicImage object with an external reference (ie. the regular case)
+    first_float = 3849.49083988
+    second_float = 848.48383093
+    simple_float_buffer = struct.pack('2f', first_float, second_float)
+    a = gmic.GmicImage(simple_float_buffer, 1, 1, 2, 1)
+    assert re.compile(r"<gmic.GmicImage object at 0x[a-f0-9]+ with _data address at 0x[0-9a-z]+, w=1 h=1 d=2 s=1>").match(repr(a))
+    assert a(0, 0, 0) == first_float
+    assert a(0, 0, 1) == second_float
 
 
 # todo: test with an empty input image list
