@@ -83,6 +83,7 @@ def test_gmic_image_construct_and_destroy():
     assert re.compile(r"<gmic.GmicImage object at 0x[a-f0-9]+ with _data address 0x[0-9a-z]+, w=300 h=500 d=0 s=3>").match(repr(i))
     print(dir(i))
     i = None
+    # gmic.run(buffer, 'print')
 
 
 # todo: test with an empty input image list
