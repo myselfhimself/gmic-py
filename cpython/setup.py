@@ -16,6 +16,7 @@ gmic_src_path = path.abspath('src/gmic/src')
 pkgconfig_list = ['zlib', 'fftw3', 'libpng']
 
 # Disable libcurl and the related compilation macro only on linux 64bits targets
+cimg_use_curl_enabled = None # '1' by default
 if sys.platform == 'linux' and platform.architecture()[0] == '64bit':
     cimg_use_curl_enabled = '0'
 else:
