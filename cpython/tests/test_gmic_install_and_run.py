@@ -76,6 +76,19 @@ def test_run_gmic_cli_simple_3pixels_bmp_output():
     assert a_bmp.stat().st_size > 0
     a_bmp.unlink()
 
+def test_gmic_image_params_fuzzying():
+    import gmic
+    import struct
+    # Fail test if anything else as a TypeError is raised
+    with pytest.raises(TypeError) as excinfo:
+        # This used to segfault / fail with core dump
+        i = gmic.GmicImage(None, 1, 3)
+
+    with pytest.raises(TypeError) as excinfo:
+        # This used to segfault / fail with core dump
+        a = gmic.GmicImage(struct.pack('8f', 1, 3, 5, 7, 2, 6, 10, 14), 4, 2, 1, 1)
+        a('wrong', 'parameters')
+
 def test_gmic_image_construct_buffer_check_and_destroy():
     import re
     import gmic
