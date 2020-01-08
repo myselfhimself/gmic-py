@@ -1,4 +1,4 @@
-name: CPython GMIC Manylinux build CentOS x86_64
+name: CPython GMIC Manylinux 2010 & 2014 i686 & x86_64
 # Ugly mix of https://github.com/htm-community/htm.core/blob/master/.github/workflows/build.yml and https://github.com/pypa/python-manylinux-demo
 
 on: [push]
@@ -9,19 +9,19 @@ jobs:
     strategy:
       matrix:
         python-version: [3.7]
-        docker_image: ['quay.io/pypa/manylinux1_x86_64:latest', 'quay.io/pypa/manylinux1_i686:latest', 'quay.io/pypa/manylinux2010_x86_64:latest', 'quay.io/pypa/manylinux2014_x86_64:latest']
+        plat: ['manylinux2010_x86_64', 'manylinux2010_i686', 'manylinux2014_x86_64', 'manylinux2014_i686']
         include:
-          - docker_image: 'quay.io/pypa/manylinux1_x86_64:latest'
-            plat: manylinux1_x86_64
-            pre_cmd:
-          - docker_image: 'quay.io/pypa/manylinux1_i686:latest'
-            plat: manylinux1_i686
+          - plat: manylinux2010_i686
+            docker_image: 'quay.io/pypa/manylinux2010_x86_64:latest'
             pre_cmd: linux32
-          - docker_image: 'quay.io/pypa/manylinux2010_x86_64:latest'
-            plat: manylinux2010_x86_64
+          - plat: manylinux2010_x86_64
+            docker_image: 'quay.io/pypa/manylinux2010_x86_64:latest'
             pre_cmd:
-          - docker_image: 'quay.io/pypa/manylinux2014_x86_64:latest'
-            plat: manylinux2014_x86_64
+          - plat: manylinux2014_i686
+            docker_image: 'quay.io/pypa/manylinux2014_686:latest'
+            pre_cmd: linux32
+          - plat: manylinux2014_x86_64
+            docker_image: 'quay.io/pypa/manylinux2014_x86_64:latest'
             pre_cmd:
     steps:
       - uses: actions/checkout@v1
