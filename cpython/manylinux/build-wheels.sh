@@ -12,7 +12,7 @@ if [ "1.2.51" \> "$(yum info libpng-devel | grep Version | cut -d':' -f2)" ]; th
     curl -o libpng-1.2.51.tar.gz -s https://master.dl.sourceforge.net/project/libpng/libpng12/older-releases/1.2.51/libpng-1.2.51.tar.gz
     tar xzvf libpng*
     rm libpng*.tar.gz
-    mv libpng libpng12
+    mv libpng* libpng12
     rm -rf /usr/include/libpng12
     mv libpng12 /usr/include/
 fi
