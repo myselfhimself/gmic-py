@@ -109,15 +109,25 @@ def test_gmic_image_float_third_dimension_and_precision_conservation():
     import gmic
     import struct
     import re
+    import decimal
     # Creating an GmicImage object with an external reference (ie. the regular case)
-    first_float = 3849.49083988
+    first_float = 0.12345
     second_float = 848.48383093
     simple_float_buffer = struct.pack('2f', first_float, second_float)
     a = gmic.GmicImage(simple_float_buffer, 1, 1, 2, 1)
     assert re.compile(r"<gmic.GmicImage object at 0x[a-f0-9]+ with _data address at 0x[0-9a-z]+, w=1 h=1 d=2 s=1>").match(repr(a))
-    assert a(0, 0, 0) == first_float
-    assert a(0, 0, 1) == second_float
-
+    first_float_decimal_places = decimal.Decimal(first_float).as_tuple().digits
+    stored_float_decimal_places = decimal.Decimal(a(0, 0, 0)).as_tuple().digits
+    
+    common_first_decimals = 0
+    for i,j in zip(first_float_decimal_places, stored_float_decimal_places):
+        print(i, j)
+        if i==j:
+            common_first_decimals += 1
+        else:
+            break
+    # We want at list the 5 decimal digits of eg. 0.12345 to remain between GmicImage input and output, even though much higher precision happens in background
+    assert common_first_decimals > 5
 
 # todo: test with an empty input image list
 
