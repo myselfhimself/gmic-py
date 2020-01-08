@@ -12,13 +12,13 @@ jobs:
         plat: ['manylinux2010_x86_64', 'manylinux2010_i686', 'manylinux2014_x86_64', 'manylinux2014_i686']
         include:
           - plat: manylinux2010_i686
-            docker_image: 'quay.io/pypa/manylinux2010_x86_64:latest'
+            docker_image: 'quay.io/pypa/manylinux2010_i686:latest'
             pre_cmd: linux32
           - plat: manylinux2010_x86_64
             docker_image: 'quay.io/pypa/manylinux2010_x86_64:latest'
             pre_cmd:
           - plat: manylinux2014_i686
-            docker_image: 'quay.io/pypa/manylinux2014_686:latest'
+            docker_image: 'quay.io/pypa/manylinux2014_i686:latest'
             pre_cmd: linux32
           - plat: manylinux2014_x86_64
             docker_image: 'quay.io/pypa/manylinux2014_x86_64:latest'
