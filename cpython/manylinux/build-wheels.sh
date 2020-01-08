@@ -6,6 +6,17 @@ set -e -x
 yum check-update
 yum install fftw-devel curl-devel libpng-devel zlib-devel libgomp wget -y
 
+# Install slightly newer libpng12 includes if too old, to avoid c++11 problem listed here: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=676157
+if [ "1.2.51" \> "$(yum info | grep Version | cut -d':' -f2)" ]; then
+    cd /tmp/
+    wget https://master.dl.sourceforge.net/project/libpng/libpng12/older-releases/1.2.51/libpng-1.2.51.tar.gz
+    tar xzvf libpng*
+    rm libpng*.tar.gz
+    mv libpng libpng12
+    rm -rf /usr/include/libpng12
+    mv libpng12 /usr/include/
+fi
+
 cd /io/
 
 
