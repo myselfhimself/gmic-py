@@ -15,20 +15,23 @@ typedef struct {
     gmic_image<T> * ptrObj; // G'MIC library's Gmic Image
 } PyGmicImage;
 
-static int PyGmicImage_init(PyGmicImage *self, PyObject *args, PyObject *kwds)
+static int PyGmicImage_init(PyGmicImage *self, PyObject *args, PyObject *kwargs)
 {
     unsigned int _width;       // Number of image columns (dimension along the X-axis)
     unsigned int _height;      // Number of image lines (dimension along the Y-axis)
     unsigned int _depth;       // Number of image slices (dimension along the Z-axis)
     unsigned int _spectrum;    // Number of image channels (dimension along the C-axis)
+    int _is_shared = (int) false; // Whether image should be shared across gmic operations (if true, operations like resize will fail)
     PyObject* bytesObj;        // Incoming bytes buffer object pointer
+    char const* keywords[] = {"data", "width", "height", "depth", "spectrum", "shared", NULL};
+    _width=_height=_depth=_spectrum=1;
 
-    if (! PyArg_ParseTuple(args, "SIIII", &bytesObj, &_width, &_height, &_depth, &_spectrum))
+    if (! PyArg_ParseTupleAndKeywords(args, kwargs, "S|IIIIp", (char**) keywords, &bytesObj, &_width, &_height, &_depth, &_spectrum, &_is_shared))
         return -1;
 
     self->ptrObj=new gmic_image<T>();
     self->ptrObj->assign(_width,_height,_depth,_spectrum);
-    self->ptrObj->_is_shared = false; //Only the gmic_image/CImg destructor will deallocate _data
+    self->ptrObj->_is_shared = _is_shared;
 
     memcpy(self->ptrObj->_data, PyBytes_AsString(bytesObj), PyBytes_Size(bytesObj));
 
@@ -38,13 +41,14 @@ static int PyGmicImage_init(PyGmicImage *self, PyObject *args, PyObject *kwds)
 
 static PyObject* PyGmicImage_repr(PyGmicImage* self)
 {
-    return PyUnicode_FromFormat("<%s object at %p with _data address at %p, w=%d h=%d d=%d s=%d>",
+    return PyUnicode_FromFormat("<%s object at %p with _data address at %p, w=%d h=%d d=%d s=%d shared=%d>",
         Py_TYPE(self)->tp_name,
        	self, self->ptrObj->_data,
        	self->ptrObj->_width,
        	self->ptrObj->_height,
 	self->ptrObj->_depth,
-       	self->ptrObj->_spectrum
+        self->ptrObj->_spectrum,
+        self->ptrObj->_is_shared
     );
 }
 
@@ -90,54 +94,46 @@ static PyTypeObject PyGmicImageType = { PyVarObject_HEAD_INIT(NULL, 0)
                                 };
 
 
-
 static PyMethodDef PyGmicImage_methods[] = {
-    { "from_numpy_array", (PyCFunction)PyGmicImage_from_numpy_array,    METH_VARARGS,       "get numpy array's data" },
+    { "from_numpy_array", (PyCFunction)PyGmicImage_from_numpy_array, METH_VARARGS|METH_KEYWORDS, "get numpy array's data" },
     {NULL}  /* Sentinel */
 };
 
 
-
-
-
-
-static PyObject* run_impl(PyObject*, PyObject* args/*, PyObject* kwargs*/) 
+static PyObject* run_impl(PyObject*, PyObject* args, PyObject* kwargs) 
 {
 
-  //const char* keywords[] = {"image_or_images_list"/*, "commands_line"*/, NULL};
-  PyObject* input_gmic_image_or_list;
-  //char* input_commands_line = NULL;
+  char const* keywords[] = {"commands_line", "image_or_images", NULL};
+  PyObject* input_gmic_image_or_list = NULL;
+  char* commands_line = NULL;
 
-  if(!PyArg_ParseTuple(args, "O!", &PyGmicImageType, &input_gmic_image_or_list)) {
+  if(!PyArg_ParseTupleAndKeywords(args, kwargs, "s|O!", (char**)keywords, &commands_line, &PyGmicImageType, &input_gmic_image_or_list)) {
       return NULL;
   }
 
-//  if(!PyArg_ParseTupleAndKeywords(args, kwargs, "0!", (char**)keywords, &PyGmicImageType, &input_gmic_image_or_list /*, &input_commands_line*/)) {
-//      return NULL;
-//  }
-
-  gmic_list<T> images; //(cimg_library::CImg<float>)((PyGmicImage*)input_gmic_image_or_list)->ptrObj, false);
-
-  gmic_list<char> image_names; // Empty image names
 
   try {
-	  // calling
-	  //   template<typename T>
-//   gmic(const char *const commands_line,
-//        gmic_list<T>& images, gmic_list<char>& images_names, const char *const custom_commands=0,
-//        const bool include_stdlib=true, float *const p_progress=0, bool *const p_is_abort=0);
-//
-    images.assign(1);
-    images[0]._width = ((PyGmicImage*)input_gmic_image_or_list)->ptrObj->_width;
-    images[0]._height = ((PyGmicImage*)input_gmic_image_or_list)->ptrObj->_height;
-    images[0]._depth = ((PyGmicImage*)input_gmic_image_or_list)->ptrObj->_depth;
-    images[0]._spectrum = ((PyGmicImage*)input_gmic_image_or_list)->ptrObj->_spectrum;
-    images[0]._data = ((PyGmicImage*)input_gmic_image_or_list)->ptrObj->_data;
-    images[0]._is_shared = ((PyGmicImage*)input_gmic_image_or_list)->ptrObj->_is_shared;
-  // Prevent CImg deallocationb, let Python free the image in its own deallocation process
-    //((PyGmicImage*)input_gmic_image_or_list)->ptrObj->_data = 0;
+    if (input_gmic_image_or_list != NULL) {
 
-    gmic("print resize 50%,50% print", images, image_names);//, 0, true);
+        Py_INCREF(input_gmic_image_or_list);
+        gmic_list<T> images;
+
+        gmic_list<char> image_names; // Empty image names
+
+        images.assign(1);
+        images[0]._width = ((PyGmicImage*)input_gmic_image_or_list)->ptrObj->_width;
+        images[0]._height = ((PyGmicImage*)input_gmic_image_or_list)->ptrObj->_height;
+        images[0]._depth = ((PyGmicImage*)input_gmic_image_or_list)->ptrObj->_depth;
+        images[0]._spectrum = ((PyGmicImage*)input_gmic_image_or_list)->ptrObj->_spectrum;
+        images[0]._data = ((PyGmicImage*)input_gmic_image_or_list)->ptrObj->_data;
+        images[0]._is_shared = ((PyGmicImage*)input_gmic_image_or_list)->ptrObj->_is_shared;
+
+        gmic(commands_line, images, image_names);
+        Py_DECREF(input_gmic_image_or_list);
+    } else {
+        gmic(commands_line, 0, true);
+    }
+
   } catch (gmic_exception& e) {
     PyErr_SetString(PyExc_Exception, e.what());
   } catch (std::exception& e) {
@@ -148,7 +144,7 @@ static PyObject* run_impl(PyObject*, PyObject* args/*, PyObject* kwargs*/)
 }
 
 static PyMethodDef gmic_methods[] = {
-  {"run", (PyCFunction)run_impl, METH_VARARGS, "Run the Gmic processor on one or more GmicImage(s), following a gmic command string"},
+  {"run", (PyCFunction)run_impl, METH_VARARGS|METH_KEYWORDS, "Run the Gmic processor on one or more GmicImage(s), following a gmic command string"},
   {nullptr, nullptr, 0, nullptr }
 };
 
@@ -161,8 +157,6 @@ PyModuleDef gmic_module = {
 };
 
 PyMODINIT_FUNC PyInit_gmic() {
-  
-    
     PyObject* m;
 
     PyGmicImageType.tp_new = PyType_GenericNew;
@@ -184,5 +178,4 @@ PyMODINIT_FUNC PyInit_gmic() {
     Py_INCREF(&PyGmicImageType);
     PyModule_AddObject(m, "GmicImage", (PyObject *)&PyGmicImageType); // Add GmicImage object to the module
     return m;
-    
 }
