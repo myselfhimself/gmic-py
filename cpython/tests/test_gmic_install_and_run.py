@@ -1,5 +1,7 @@
 import pytest
 
+FLOAT_SIZE_IN_BYTES = 4
+
 def test_import_gmic():
     import gmic
 
@@ -140,26 +142,36 @@ def test_gmic_image_generation_and_shared_multiple_gmic_print_runs():
     shared = True # having shared False is enough for now to have a crash below, let us test something else as crashing: buffer integrity through multiple run's
     i = gmic.GmicImage(struct.pack('8f', 1, 3, 5, 7, 2, 6, 10, 14), 4, 2, 1, 1, shared)
     pixel_before_gmic_run = i(0,0)
-    gmic.run("print", i)
+    gmic.run("print print print", i)
     pixel_after_gmic_run = i(0,0)
     assert pixel_before_gmic_run == pixel_after_gmic_run
+
+def assert_get_proper_print_regex(w,h,scale_divide_factor,search_str):
+    import re
+    import time
+    assert re.compile(r"size = \({},{},1,1\) \[{} b of floats\](.*)\n(.*)\n(.*)min = 0".format(int(w/scale_divide_factor),int(h/scale_divide_factor),int(w*h*FLOAT_SIZE_IN_BYTES/scale_divide_factor)), flags=re.MULTILINE).search(search_str) is not None
 
 def test_gmic_image_generation_and_gmic_multiple_resize_run(capfd):
     import gmic
     import struct
     import re
-    i = gmic.GmicImage(struct.pack('16f', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), 4, 4, 1, 1, shared=False)
-    gmic.run("resize 50%,50% print", i)
+    w = 4
+    h = 4
+    command_to_apply = "blur 0" #resize 50%,50%
+    struct_pack_params = (str(w*h)+'f',) + (0,)*w*h
+    i = gmic.GmicImage(struct.pack(*struct_pack_params), w, h, 1, 1, shared=False)
+    gmic.run("{} print".format(command_to_apply), i)
     outerr = capfd.readouterr()
-    assert re.compile(r"size = \(2,2,1,1\) \[16 b of floats\](.*)\n(.*)\n(.*)min = 0", flags=re.MULTILINE).search(outerr.out) is not None
+    assert_get_proper_print_regex(w, h, scale_divide_factor=1, search_str=outerr.err)
     # This second run should be idempotent in terms of resulting image size.. but if fails for now :-/
-    #outerr = capfd.readouterr()
-    #gmic.run("resize 50%,50% print", i)
-    #assert re.compile(r"(.*)size = (2,2,1,1) [16 b of floats].(.*)min = 0, max = 0, mean = 0, std = 0(.*)", flags=re.MULTILINE).search(outerr.out)
-    ## Multiple inline resizes
-    #outerr = capfd.readouterr()
-    #gmic.run("resize 50%,50% resize 50%,50% print", i)
-    #assert re.compile(r"(.*)size = (1,1,1,1) [8 b of floats].(.*)min = 0, max = 0, mean = 0, std = 0(.*)", flags=re.MULTILINE).search(outerr.out)
+    i = gmic.GmicImage(struct.pack(*struct_pack_params), w, h, 1, 1, shared=False)
+    outerr = capfd.readouterr()
+    gmic.run("{} print".format(command_to_apply), i)
+    assert_get_proper_print_regex(w, h, scale_divide_factor=1, search_str=outerr.err)
+    # Multiple inline resizes
+    outerr = capfd.readouterr()
+    gmic.run("{} {} print".format(command_to_apply, command_to_apply), i)
+    assert_get_proper_print_regex(w, h, scale_divide_factor=16, search_str=outerr.err)
 
 # todo: test with an empty input image list
 
