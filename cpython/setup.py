@@ -27,9 +27,8 @@ if pkgconfig.exists('libpng'):
     pkgconfig_list += ['libpng']
 
 # Only require fftw3 if found (non-2^ size image processing fails without it)
-cimg_use_fftw3_enabled = '0'
+# We do not toggle cimg_use_fftw3, it is buggy
 if pkgconfig.exists('fftw3'):
-    cimg_use_fftw3_enabled = '1'
     pkgconfig_list += ['fftw3']
 
 # Disable libcurl only on manylinuxes, because of a buggy audithweel repair constraint
@@ -61,7 +60,7 @@ elif sys.platform == 'linux': # Enable openmp for 32bit & 64bit linuxes
     extra_compile_args += ['-fopenmp']
     extra_link_args += ['-lgomp']
 
-define_macros = [('gmic_build', None), ('cimg_use_png', cimg_use_png_enabled), ('cimg_date', '""'), ('cimg_time', '""'), ('gmic_is_parallel', None), ('cimg_use_zlib', None), ('cimg_display', cimg_display_enabled), ('cimg_use_curl', cimg_use_curl_enabled), ('cimg_use_fftw3', cimg_use_fftw3_enabled)]
+define_macros = [('gmic_build', None), ('cimg_use_png', cimg_use_png_enabled), ('cimg_date', '""'), ('cimg_time', '""'), ('gmic_is_parallel', None), ('cimg_use_zlib', None), ('cimg_display', cimg_display_enabled), ('cimg_use_curl', cimg_use_curl_enabled)]
 
 print("Define macros:")
 print(define_macros)
