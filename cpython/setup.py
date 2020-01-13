@@ -15,7 +15,7 @@ gmic_src_path = path.abspath('src/gmic/src')
 # List of libs to get include directories and linkable libraries paths from for compiling
 pkgconfig_list = ['zlib']
 # Only require x11 if found
-cimg_use_curl_enabled = '0'
+cimg_display_enabled = '0'
 if pkgconfig.exists('x11'):
     cimg_display_enabled = '1'
     pkgconfig_list += ['x11']
