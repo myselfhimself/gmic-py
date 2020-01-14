@@ -29,7 +29,7 @@ for PYBIN in /opt/python/cp3*/bin; do
     bash /io/1_clean_and_regrab_gmic_src.sh
 
     "${PYBIN}/pip" install -r /io/dev-requirements.txt  || { echo "Fatal pip requirements download error" ; exit 1; }
-    "${PYBIN}/pip" wheel /io/ -w wheelhouse/ || { echo "Fatal wheel build error" ; exit 1; }
+    "${PYBIN}/pip" wheel /io/ -w wheelhouse/ -vvv || { echo "Fatal wheel build error" ; exit 1; }
 done
 
 find /opt/python -name auditwheel
