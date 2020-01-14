@@ -146,32 +146,52 @@ def test_gmic_image_generation_and_shared_multiple_gmic_print_runs():
     pixel_after_gmic_run = i(0,0)
     assert pixel_before_gmic_run == pixel_after_gmic_run
 
-def assert_get_proper_print_regex(w,h,scale_divide_factor,search_str):
+# Per https://stackoverflow.com/a/33024979/420684
+def isclose(a, b, rel_tol=1e-09, abs_tol=0.0):
+    return abs(a-b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)
+
+def assert_get_proper_print_regex(w, h, search_str):
     import re
     import time
-    assert re.compile(r"size = \({},{},1,1\) \[{} b of floats\](.*)\n(.*)\n(.*)min = 0".format(int(w/scale_divide_factor),int(h/scale_divide_factor),int(w*h*FLOAT_SIZE_IN_BYTES/scale_divide_factor)), flags=re.MULTILINE).search(search_str) is not None
+    assert re.compile(r"size = \({},{},1,1\) \[{} b of floats\](.*)\n(.*)\n(.*)min = 0".format(round(w), round(h), int(round(w)*round(h)*FLOAT_SIZE_IN_BYTES)), flags=re.MULTILINE).search(search_str) is not None
+
+def assert_image_is_filled_with(gmic_image, w, h, pixel_value):
+    for x in range(int(w)):
+        for y in range(int(h)):
+            assert isclose(gmic_image(x,y), pixel_value)
 
 def test_gmic_image_generation_and_gmic_multiple_resize_run(capfd):
     import gmic
     import struct
     import re
-    w = 4
-    h = 4
-    command_to_apply = "blur 0" #resize 50%,50%
+    w = 60
+    h = 60
+    command_to_apply = "resize 50%,50%"
+    # Init first 100% size image
     struct_pack_params = (str(w*h)+'f',) + (0,)*w*h
     i = gmic.GmicImage(struct.pack(*struct_pack_params), w, h, 1, 1, shared=False)
+    # Divide original size by 2 and check pixels stability
     gmic.run("{} print".format(command_to_apply), i)
     outerr = capfd.readouterr()
-    assert_get_proper_print_regex(w, h, scale_divide_factor=1, search_str=outerr.err)
-    # This second run should be idempotent in terms of resulting image size.. but if fails for now :-/
-    i = gmic.GmicImage(struct.pack(*struct_pack_params), w, h, 1, 1, shared=False)
-    outerr = capfd.readouterr()
+    w = w/2
+    h = h/2
+    assert_get_proper_print_regex(w, h, search_str=outerr.err)
+    assert_image_is_filled_with(i, w, h, 0)
+    # Divide original size by 4 and check pixels stability
     gmic.run("{} print".format(command_to_apply), i)
-    assert_get_proper_print_regex(w, h, scale_divide_factor=1, search_str=outerr.err)
-    # Multiple inline resizes
     outerr = capfd.readouterr()
+    w = w/2
+    h = h/2
+    assert_get_proper_print_regex(w, h, search_str=outerr.err)
+    assert_image_is_filled_with(i, w, h, 0)
+    # Divide original size by 16 (now twice by 2) and check pixels stability
     gmic.run("{} {} print".format(command_to_apply, command_to_apply), i)
-    assert_get_proper_print_regex(w, h, scale_divide_factor=16, search_str=outerr.err)
+    outerr = capfd.readouterr()
+    w = w/4
+    h = h/4
+    assert_get_proper_print_regex(w, h, search_str=outerr.err)
+    assert_image_is_filled_with(i, w, h, 0)
+
 
 # todo: test with an empty input image list
 
