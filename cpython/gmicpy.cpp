@@ -120,6 +120,7 @@ static PyObject* run_impl(PyObject*, PyObject* args, PyObject* kwargs)
 
         gmic_list<char> image_names; // Empty image names
 
+	// Put our image into a Gmic List, required type for gmic run() 
         images.assign(1);
         images[0]._width = ((PyGmicImage*)input_gmic_image_or_list)->ptrObj->_width;
         images[0]._height = ((PyGmicImage*)input_gmic_image_or_list)->ptrObj->_height;
@@ -129,6 +130,16 @@ static PyObject* run_impl(PyObject*, PyObject* args, PyObject* kwargs)
         images[0]._is_shared = ((PyGmicImage*)input_gmic_image_or_list)->ptrObj->_is_shared;
 
         gmic(commands_line, images, image_names);
+	// Put back the possibly modified reallocated image buffer into the original external GmicImage
+	// Back up the image data into the original external image before it gets freed
+	swap(((PyGmicImage*)input_gmic_image_or_list)->ptrObj->_data, images[0]._data);
+	((PyGmicImage*)input_gmic_image_or_list)->ptrObj->_width = images[0]._width;
+	((PyGmicImage*)input_gmic_image_or_list)->ptrObj->_height = images[0]._height;
+	((PyGmicImage*)input_gmic_image_or_list)->ptrObj->_depth = images[0]._depth;
+	((PyGmicImage*)input_gmic_image_or_list)->ptrObj->_spectrum = images[0]._spectrum;
+	((PyGmicImage*)input_gmic_image_or_list)->ptrObj->_is_shared = images[0]._is_shared;
+	// Prevent freeing the data buffer's pointer now copied into the external image
+	images[0]._data = 0;
         Py_DECREF(input_gmic_image_or_list);
     } else {
         gmic(commands_line, 0, true);
