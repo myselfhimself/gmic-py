@@ -17,16 +17,22 @@ Note that `gmic-py`'s package installer links to your machine's existing `libpng
 
 | Build target | Basic gmic-py<sup>0</sup>  |  libpng I/O| OpenMP | libcURL |
 | ----------------  | -------  | ---------- |------- | --------|
-| Build from source<sup>1</sup> |  ✓  | ✓ <sup>2</sup>|  ✓ | ✓ <sup>2</sup>
-| DIY Linux 32&64bit <sup>1</sup> |  ✓  | ✓ <sup>2</sup>| ✓ | ✓ <sup>2</sup>
-| Pre-compiled Linux i686 & x86\_64 py3.4-3.8 (gcc)<sup>m</sup>|  ✓  | ✓ <sup>2</sup>| ✓ | ✗ <sup>3</sup>
-| Pre-compiled MacOS 64 py3.5-3.8 (clang)     | ✓ | ✓<sup>2</sup>| ✓ |✓<sup>2</sup>
-| Windows (unplanned)<sup>w</sup>| ✗| ✗| ✗ | ✗
+| Build from source<sup>1</sup> |  ✓  | ✓ <sup>2</sup>|  ✓ | ✓ <sup>2</sup> |
+| DIY Linux 32&64bit <sup>1</sup> |  ✓  | ✓ <sup>2</sup>| ✓ | ✓ <sup>2</sup> |
+| Pre-compiled Linux i686 & x86\_64 py3.4-3.8 (gcc)<sup>m</sup>|  ✓  | ✓ <sup>2</sup>| ✓ | ✗ <sup>3</sup> |
+| Pre-compiled MacOS 64 py3.5-3.8 (clang)     | ✓ | ✓<sup>2</sup>| ✓ |✓<sup>2</sup> |
+| Windows (unplanned)<sup>w</sup>| ✗| ✗| ✗ | ✗ |
+
 <sup>0</sup> ie. `gmic.GmicImage(bytes, w, h, d, s)`,  `gmic.run(..., "commands")`
+
 <sup>1</sup> ie. from this project's tarball or using `pip install gmic` with the (possibly default) "from source" option. Hack the setup.py if needed, should work well with just `libz` installed, preferably with `libfftw3` too to support all sizes of images. Compiling with `gcc` or `clang` should work well.
+
 <sup>2</sup> enabled if related library is found at compile time, using found `pkg-config` executable.
-<sup>3</sup> see [this issue](https://github.com/myselfhimself/gmic-py/issues/9) 
+
+<sup>3</sup> see [this issue](https://github.com/myselfhimself/gmic-py/issues/9)
+
 <sup>m</sup> those are actually manylinux2010 and manylinux2014 targets. Manylinux1 has been dropped
+
 <sup>w</sup> you can try building you own gmic-py builds on Windows using [MSYS2](https://www.msys2.org/)
 
 ## Roadmap
