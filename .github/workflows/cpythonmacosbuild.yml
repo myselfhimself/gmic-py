@@ -18,6 +18,7 @@ jobs:
       - name: build on macos
         working-directory: ./cpython
         env:
+          TWINE_PASSWORD_GITHUB_SECRET: ${{ secrets.TWINE_PASSWORD_GITHUB_SECRET }} # For 11_send_to_pypi.sh
           PYTHON3: python3
           PIP3: pip3
           CIBW_BUILD: cp3*-*macosx*
