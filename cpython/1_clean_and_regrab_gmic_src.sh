@@ -7,8 +7,8 @@ rm -rf src/
 mkdir src -p
 $PIP3 install -r dev-requirements.txt
 $PYTHON3 setup.py clean --all
-wget ${GMIC_URL} -P src/ --no-check-certificate || { echo "Fatal gmic src archive download error" ; exit 1 }
-tar xzvf src/${GMIC_ARCHIVE_NAME} -C src/ || { echo "Fatal gmic src archive extracting error" ; exit 1 }
+wget ${GMIC_URL} -P src/ --no-check-certificate || { echo "Fatal gmic src archive download error" ; exit 1; }
+tar xzvf src/${GMIC_ARCHIVE_NAME} -C src/ || { echo "Fatal gmic src archive extracting error" ; exit 1; }
 # Keep only gmic source's src directory
 cd src/gmic*/
 rm -rf $(ls | grep -v src)
