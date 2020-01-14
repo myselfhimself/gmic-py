@@ -1,6 +1,4 @@
 import pytest
-import platform
-import os
 
 FLOAT_SIZE_IN_BYTES = 4
 
@@ -17,10 +15,6 @@ def test_catch_exceptions():
         assert len(str(e)) > 0
 
 def test_run_gmic_ensure_openmp_linked_and_working(capfd):
-    arch = platform.architecture()
-    plat = os.environ.get('plat', '')
-    if arch[0] != '64bit' or plat == 'manylinux1_x86_64':
-        pytest.skip('skipping openmp testing for 32bits or old manylinux1_x86_64 architecture :) current architecture: {}; current platform (env: "plat"): {}'.format(arch, plat))
     import gmic
     import traceback
     import sys
@@ -34,7 +28,6 @@ def test_run_gmic_ensure_openmp_linked_and_working(capfd):
         traceback.print_tb(tb) # Fixed format
         tb_info = traceback.extract_tb(tb)
         filename, line, func, text = tb_info[-1]
-        # This fail used to be an xfail :) Just more compulsory now :)
         pytest.fail('parallel test case fails, OpenMP probably could not link or compile well on this platform, gmic parallelization will not work: stdout: {}; assert check: {}'.format(outerr.out, text))
 
 def test_run_gmic_cli_helloworld(capfd):

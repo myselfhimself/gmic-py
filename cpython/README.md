@@ -10,17 +10,30 @@ When this matures, running `pip install gmic-py` should be all you need to get r
 
 This project is a work in progress and lives under the CeCILL license (similar to GNU Public License).
 
-# TDD - making sure gmic-py works and keeps working
-Development follows a test-driven development (TDD) methodology.
+# Official platform support
+You can build your own Gmic python binding on possibly any platform with a C/C++ compiler.
+Here is what we have managed to build and ship to [Gmic PyPI page](https://pypi.org/project/gmic/), allowing you to `pip install gmic` and use pre-built binaries or build `gmic-py` on the fly.
+Note that `gmic-py`'s package installer links to your machine's existing `libpng`, `OpenMP` and `libcURL` if found.
 
-For now, to test the development manually you can run a `pytest` suite within `docker`:
-```sh
-# If you do not have docker: sudo apt-get install docker
-cd tests/
-sh run_test_scenario.sh
-```
+| Build target | Basic gmic-py<sup>0</sup>  |  libpng I/O| OpenMP | libcURL |
+| ----------------  | -------  | ---------- |------- | --------|
+| Build from source<sup>1</sup> |  ✓  | ✓ <sup>2</sup>|  ✓ | ✓ <sup>2</sup> |
+| DIY Linux 32&64bit <sup>1</sup> |  ✓  | ✓ <sup>2</sup>| ✓ | ✓ <sup>2</sup> |
+| Pre-compiled Linux i686 & x86\_64 py3.4-3.8 (gcc)<sup>m</sup>|  ✓  | ✓ <sup>2</sup>| ✓ | ✗ <sup>3</sup> |
+| Pre-compiled MacOS 64 py3.5-3.8 (clang)     | ✓ | ✓<sup>2</sup>| ✓ |✓<sup>2</sup> |
+| Windows (unplanned)<sup>w</sup>| ✗| ✗| ✗ | ✗ |
 
-On November 18th, 2019 `pip install` from Github, `echo`, basic png generation and output tests work, without in-memory buffers I/O yet :) The project is just very fresh :) See [Github Actions CI tests being run here](https://github.com/dtschump/gmic-py/actions).
+<sup>0</sup> ie. `gmic.GmicImage(bytes, w, h, d, s)`,  `gmic.run(..., "commands")`
+
+<sup>1</sup> ie. from this project's tarball or using `pip install gmic` with the (possibly default) "from source" option. Hack the setup.py if needed, should work well with just `libz` installed, preferably with `libfftw3` too to support all sizes of images. Compiling with `gcc` or `clang` should work well.
+
+<sup>2</sup> enabled if related library is found at compile time, using found `pkg-config` executable.
+
+<sup>3</sup> see [this issue](https://github.com/myselfhimself/gmic-py/issues/9)
+
+<sup>m</sup> those are actually manylinux2010 and manylinux2014 targets. Manylinux1 has been dropped
+
+<sup>w</sup> you can try building you own gmic-py builds on Windows using [MSYS2](https://www.msys2.org/)
 
 ## Roadmap
 
