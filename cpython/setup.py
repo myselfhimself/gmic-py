@@ -12,33 +12,39 @@ import pkgconfig
 here = path.abspath(path.dirname(__file__))
 gmic_src_path = path.abspath('src/gmic/src')
 
+# List of non-standard '-l*' compiler parameters
+extra_link_args = []
+
 # List of libs to get include directories and linkable libraries paths from for compiling
 pkgconfig_list = ['zlib']
+
+# Macros to toggle (gmic or CImg will do C/C++ #ifdef checks on them, testing mostly only their existence)
+# cimg_date and cimg_date are true variables, the value of which is checked in the C/C++ source
+define_macros = [('gmic_build', None), ('cimg_date', '""'), ('cimg_time', '""'), ('gmic_is_parallel', None), ('cimg_use_zlib', None)]
+
 # Only require x11 if found
-cimg_display_enabled = '0'
 if pkgconfig.exists('x11'):
-    cimg_display_enabled = '1'
+    define_macros += [('cimg_display', None)]
     pkgconfig_list += ['x11']
 
 # Only require libpng if found
-cimg_use_png_enabled = '0'
 if pkgconfig.exists('libpng'):
-    cimg_use_png_enabled = '1'
+    define_macros += [('cimg_use_png', None)]
     pkgconfig_list += ['libpng']
 
 # Only require fftw3 if found (non-2^ size image processing fails without it)
 # We do not toggle cimg_use_fftw3, it is buggy
 if pkgconfig.exists('fftw3'):
+    define_macros += [('cimg_use_fftw3', None)]
     pkgconfig_list += ['fftw3']
+    extra_link_args += ['-lfftw3_threads']
+
 
 # Disable libcurl only on manylinuxes, because of a buggy audithweel repair constraint
 # See https://github.com/pypa/manylinux/issues/411
 # On any other platform, use libcurl if installed, else G'MIC falls back nicely to installed curl executable
-cimg_use_curl_enabled = '0'
-if 'manylinux' in environ.get('PLAT',''):
-    cimg_use_curl_enabled = '0'
-elif pkgconfig.exists('libcurl'):
-    cimg_use_curl_enabled = '1'
+if 'manylinux' not in environ.get('PLAT','') and pkgconfig.exists('libcurl'):
+    define_macros += [('cimg_use_curl', None)]
     pkgconfig_list += ['libcurl']
 
 packages = pkgconfig.parse(" ".join(pkgconfig_list))
@@ -51,7 +57,7 @@ include_dirs = packages['include_dirs'] + [here, gmic_src_path]
 if sys.platform == 'darwin':
     include_dirs += ['/usr/local/opt/llvm@6/include']
 debugging_args = ['-O0', '-g'] # Uncomment this for faster compilation with debug symbols and no optimization
-extra_link_args = []
+
 extra_compile_args = ['-std=c++11'] + debugging_args
 if sys.platform == 'darwin':
     extra_compile_args += ['-fopenmp', '-stdlib=libc++']
@@ -59,8 +65,6 @@ if sys.platform == 'darwin':
 elif sys.platform == 'linux': # Enable openmp for 32bit & 64bit linuxes
     extra_compile_args += ['-fopenmp']
     extra_link_args += ['-lgomp']
-
-define_macros = [('gmic_build', None), ('cimg_use_png', cimg_use_png_enabled), ('cimg_date', '""'), ('cimg_time', '""'), ('gmic_is_parallel', None), ('cimg_use_zlib', None), ('cimg_display', cimg_display_enabled), ('cimg_use_curl', cimg_use_curl_enabled)]
 
 print("Define macros:")
 print(define_macros)
