@@ -38,6 +38,36 @@ static int PyGmicImage_init(PyGmicImage *self, PyObject *args, PyObject *kwargs)
     return 0;
 }
 
+static PyObject * PyGmicImage_getattr(PyGmicImage* self, char *name)
+{
+    if (strcmp(name, "_data") == 0)
+    {
+	// TODO The result of this still seems funky with strange ending bytes..
+        return PyBytes_FromStringAndSize((char*)self->ptrObj->_data, sizeof(T)*(self->ptrObj->_width)*(self->ptrObj->_height)*(self->ptrObj->_depth)*(self->ptrObj->_spectrum));
+    }
+    else if (strcmp(name, "_width") == 0)
+    {
+        return PyLong_FromLong((long)self->ptrObj->_width);
+    }
+    else if (strcmp(name, "_height") == 0)
+    {
+        return PyLong_FromLong((long)self->ptrObj->_height);
+    }
+    else if (strcmp(name, "_depth") == 0)
+    {
+        return PyLong_FromLong((long)self->ptrObj->_depth);
+    }
+    else if (strcmp(name, "_spectrum") == 0)
+    {
+        return PyLong_FromLong((long)self->ptrObj->_spectrum);
+    }
+
+    PyErr_Format(PyExc_AttributeError,
+                 "'%.50s' object has no attribute '%.400s'",
+                 Py_TYPE(self)->tp_name, name);
+    return NULL;
+}
+
 
 static PyObject* PyGmicImage_repr(PyGmicImage* self)
 {
@@ -177,6 +207,7 @@ PyMODINIT_FUNC PyInit_gmic() {
     PyGmicImageType.tp_repr=(reprfunc)PyGmicImage_repr;
     PyGmicImageType.tp_init=(initproc)PyGmicImage_init;
     PyGmicImageType.tp_call=(ternaryfunc)PyGmicImage_call;
+    PyGmicImageType.tp_getattr=(getattrfunc)PyGmicImage_getattr;
     PyGmicImageType.tp_doc = "Simplified mapping of the c++ gmic_image type. Stores non-publicly a binary buffer of data, a height, width, depth, spectrum.";
 
     if (PyType_Ready(&PyGmicImageType) < 0)
