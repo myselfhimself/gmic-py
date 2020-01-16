@@ -61,6 +61,10 @@ static PyObject * PyGmicImage_getattr(PyGmicImage* self, char *name)
     {
         return PyLong_FromLong((long)self->ptrObj->_spectrum);
     }
+    else if (strcmp(name, "_is_shared") == 0)
+    {
+        return PyBool_FromLong((long)self->ptrObj->_is_shared);
+    }
 
     PyErr_Format(PyExc_AttributeError,
                  "'%.50s' object has no attribute '%.400s'",
@@ -230,7 +234,7 @@ i # Using GmicImage's repr() string representation\n\
 # Output: <gmic.GmicImage object at 0x7f09bfb504f8 with _data address at 0x22dd5b0, w=1 h=1 d=1 s=1 shared=0>\n\
 i(0,0) == 1.0 # Using GmicImage(x,y,z) pixel reading operator after initialization\n\
 gmic.run('resize 200%,200%', i) # Some G'MIC operations may reallocate the image buffer in place without risk\n\
-i._width == i._height == 2 # Use the _width, _height, _depth, _data attributes read-only");
+i._width == i._height == 2 # Use the _width, _height, _depth, _spectrum, _data, _is_shared read-only attributes");
 
 PyMODINIT_FUNC PyInit_gmic() {
     PyObject* m;
