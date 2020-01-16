@@ -184,18 +184,53 @@ static PyObject* run_impl(PyObject*, PyObject* args, PyObject* kwargs)
   return Py_True;
 }
 
+PyDoc_STRVAR(
+run_impl_doc,
+"run(command: str[, image_or_images: GmicImage]) -> bool)\n\n\
+Run G'MIC interpret following a G'MIC language command(s) string, on 0 or more GmicImage(s).\n\n\
+Example:\n\
+import gmic\n\
+import struct\n\
+import random\n\
+gmic.run('echo_stdout \'hello world\'') # G'MIC command without images parameter\n\
+a = gmic.GmicImage(struct.pack(*('256f',) + tuple([random.random() for a in range(256)])), 16, 16) # Build 16x16 greyscale image\n\
+gmic.run('blur 12,0,1 resize 50%,50%', a) # Blur then resize the image\n\
+a._width == a._height == 8 # The image is half smaller\n\
+gmic.run('display', a) # If you have X11 enabled (linux only), show the image in a window");
+
 static PyMethodDef gmic_methods[] = {
-  {"run", (PyCFunction)run_impl, METH_VARARGS|METH_KEYWORDS, "Run the Gmic processor on one or more GmicImage(s), following a gmic command string"},
+  {"run", (PyCFunction)run_impl, METH_VARARGS|METH_KEYWORDS, run_impl_doc},
   {nullptr, nullptr, 0, nullptr }
 };
+
+PyDoc_STRVAR(
+gmic_module_doc,
+"G'MIC Image Processing library Python binding\n\n\
+Use gmic.run(...), gmic.GmicImage(...), gmic.GmicList(...).\n\
+Make sure to visit https://github.com/myselfhimself/gmic-py for examples and documentation.");
 
 PyModuleDef gmic_module = {
   PyModuleDef_HEAD_INIT,
   "gmic",
-  "Gmic Python binding",
+  gmic_module_doc,
   0,
   gmic_methods
 };
+
+PyDoc_STRVAR(
+GmicImage_doc,
+"GmicImage(data: bytes[, width: int = 1, height: int = 1, depth: int = 1, spectrum: int = 1, shared: bool = False]) -> bool\n\n\
+Simplified mapping of the c++ gmic_image type. Stores non-publicly a binary buffer of data, a height, width, depth, spectrum.\n\n\
+Example:\n\
+import gmic\n\
+import struct\n\
+i = gmic.GmicImage(struct.pack('2f', 0.0, 1.5), 1, 1) # 2D 1x1 image\n\
+gmic.run('add 1', i) # GmicImage injection into G'MIC's interpreter\n\
+i # Using GmicImage's repr() string representation\n\
+# Output: <gmic.GmicImage object at 0x7f09bfb504f8 with _data address at 0x22dd5b0, w=1 h=1 d=1 s=1 shared=0>\n\
+i(0,0) == 1.0 # Using GmicImage(x,y,z) pixel reading operator after initialization\n\
+gmic.run('resize 200%,200%', i) # Some G'MIC operations may reallocate the image buffer in place without risk\n\
+i._width == i._height == 2 # Use the _width, _height, _depth, _data attributes read-only");
 
 PyMODINIT_FUNC PyInit_gmic() {
     PyObject* m;
@@ -208,7 +243,7 @@ PyMODINIT_FUNC PyInit_gmic() {
     PyGmicImageType.tp_init=(initproc)PyGmicImage_init;
     PyGmicImageType.tp_call=(ternaryfunc)PyGmicImage_call;
     PyGmicImageType.tp_getattr=(getattrfunc)PyGmicImage_getattr;
-    PyGmicImageType.tp_doc = "Simplified mapping of the c++ gmic_image type. Stores non-publicly a binary buffer of data, a height, width, depth, spectrum.";
+    PyGmicImageType.tp_doc=GmicImage_doc;
 
     if (PyType_Ready(&PyGmicImageType) < 0)
         return NULL;
