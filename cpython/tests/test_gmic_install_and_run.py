@@ -124,7 +124,7 @@ def test_gmic_image_float_third_dimension_and_precision_conservation():
     assert re.compile(r"<gmic.GmicImage object at 0x[a-f0-9]+ with _data address at 0x[0-9a-z]+, w=1 h=1 d=2 s=1 shared=0>").match(repr(a))
     first_float_decimal_places = decimal.Decimal(first_float).as_tuple().digits
     stored_float_decimal_places = decimal.Decimal(a(0, 0, 0)).as_tuple().digits
-    
+
     common_first_decimals = 0
     for i,j in zip(first_float_decimal_places, stored_float_decimal_places):
         print(i, j)
@@ -147,6 +147,7 @@ def test_gmic_image_generation_and_shared_multiple_gmic_print_runs():
     assert pixel_before_gmic_run == pixel_after_gmic_run
 
 # Per https://stackoverflow.com/a/33024979/420684
+# This starts to be builtin from Python > 3.5
 def isclose(a, b, rel_tol=1e-09, abs_tol=0.0):
     return abs(a-b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)
 
@@ -155,10 +156,13 @@ def assert_get_proper_print_regex(w, h, search_str):
     import time
     assert re.compile(r"size = \({},{},1,1\) \[{} b of floats\](.*)\n(.*)\n(.*)min = 0".format(round(w), round(h), int(round(w)*round(h)*FLOAT_SIZE_IN_BYTES)), flags=re.MULTILINE).search(search_str) is not None
 
-def assert_image_is_filled_with(gmic_image, w, h, pixel_value):
-    for x in range(int(w)):
-        for y in range(int(h)):
-            assert isclose(gmic_image(x,y), pixel_value)
+def assert_image_is_filled_with(gmic_image, w, h, d, s, pixel_value):
+    for spectrum in range(int(s)):
+        for x in range(int(w)):
+            for y in range(int(h)):
+                for z in range(int(d)):
+                    pixel = gmic_image(x, y, z)
+                    assert isclose(pixel, pixel_value)
 
 def test_gmic_image_generation_and_gmic_multiple_resize_run(capfd):
     import gmic
@@ -166,33 +170,82 @@ def test_gmic_image_generation_and_gmic_multiple_resize_run(capfd):
     import re
     w = 60
     h = 60
+    d = 1
+    s = 1
     command_to_apply = "resize 50%,50%"
     # Init first 100% size image
     struct_pack_params = (str(w*h)+'f',) + (0,)*w*h
-    i = gmic.GmicImage(struct.pack(*struct_pack_params), w, h, 1, 1, shared=False)
+    i = gmic.GmicImage(struct.pack(*struct_pack_params), w, h, d, s, shared=False)
     # Divide original size by 2 and check pixels stability
     gmic.run("{} print".format(command_to_apply), i)
     outerr = capfd.readouterr()
     w = w/2
     h = h/2
     assert_get_proper_print_regex(w, h, search_str=outerr.err)
-    assert_image_is_filled_with(i, w, h, 0)
+    assert_image_is_filled_with(i, w, h, d, s, 0)
     # Divide original size by 4 and check pixels stability
     gmic.run("{} print".format(command_to_apply), i)
     outerr = capfd.readouterr()
     w = w/2
     h = h/2
     assert_get_proper_print_regex(w, h, search_str=outerr.err)
-    assert_image_is_filled_with(i, w, h, 0)
+    assert_image_is_filled_with(i, w, h, d, s, 0)
     # Divide original size by 16 (now twice by 2) and check pixels stability
     gmic.run("{} {} print".format(command_to_apply, command_to_apply), i)
     outerr = capfd.readouterr()
     w = w/4
     h = h/4
     assert_get_proper_print_regex(w, h, search_str=outerr.err)
-    assert_image_is_filled_with(i, w, h, 0)
+    assert_image_is_filled_with(i, w, h, d, s, 0)
+
+def test_gmic_image_readonly_attributes_and_bytes_stability():
+    import gmic
+    import struct
+    w = 60
+    h = 80
+    float_array = struct.pack(*((str(w*h)+'f',) + (0,)*w*h))
+
+    # Ensuring GmicImage's parameters stability after initialization
+    i = gmic.GmicImage(float_array, w, h)
+    assert i._width == w
+    assert i._height == h
+    assert i._depth == 1
+    assert i._spectrum == 1
+    assert i._is_shared == False
+    assert i._data == float_array # First bytes array check
+    assert len(i._data) == len(float_array) # Additional bytes array check just in case
+
+    # Ensure GmicImage's parameters stability after a resize operation
+    gmic.run("resize 50%,50%", i)
+    required_floats = int(w*h/4)
+    expected_result_float_array = struct.pack(*((str(required_floats)+'f',) + (0,)*required_floats))
+    assert i._width == w/2
+    assert i._height == h/2
+    assert i._depth == 1
+    assert i._spectrum == 1
+    assert i._is_shared == False
+    assert i._data == expected_result_float_array
+    assert len(i._data) == len(expected_result_float_array)
+
+    # Trying with a shared=True type of GmicImage with all dimensions and spectrum channels used
+    w = 1
+    h = 43
+    d = 37
+    s = 3
+    float_array = struct.pack(*((str(w*h*d*s)+'f',) + (0,)*w*h*d*s))
+    i = gmic.GmicImage(float_array, w, h, d, s, shared=True)
+    gmic.run("add 1", i)
+    required_floats= int(w*h*d*s)
+    expected_uniform_pixel_value = 1.0
+    expected_result_float_array = struct.pack(*((str(required_floats)+'f',) + (expected_uniform_pixel_value,)*required_floats))
+    assert_image_is_filled_with(i, w, h, d, s, expected_uniform_pixel_value)
+    assert i._width == w
+    assert i._height == h
+    assert i._depth == d
+    assert i._spectrum == s
+    assert i._is_shared == True
+    assert i._data == expected_result_float_array # First bytes array check
+    assert len(i._data) == len(expected_result_float_array) # Additional bytes array check just in case
 
 
 # todo: test with an empty input image list
-
-# todo: test output pythonized objects (ex: 3 pixels raw image buffer)
