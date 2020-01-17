@@ -247,5 +247,26 @@ def test_gmic_image_readonly_attributes_and_bytes_stability():
     assert i._data == expected_result_float_array # First bytes array check
     assert len(i._data) == len(expected_result_float_array) # Additional bytes array check just in case
 
+def test_gmic_image_readonly_forbidden_write_attributes():
+    import gmic
+    import struct
+    w = 60
+    h = 80
+    float_array = struct.pack(*((str(w*h)+'f',) + (0,)*w*h))
+
+    # Ensuring GmicImage's parameters stability after initialization
+    i = gmic.GmicImage(float_array, w, h)
+
+    # Ensure unknown attributes fail being read
+    with pytest.raises(AttributeError) as excinfo:
+        getattr(i, "_unkown")
+    assert "no attribute '_unkown'" in str(excinfo.value)
+
+    # Ensure known and unknown attributes fail being set with an error message variant
+    for a in ("_data", "_width", "_height", "_depth", "_spectrum", "_is_shared", "_unkwown"):
+        with pytest.raises(AttributeError) as excinfo:
+            setattr(i, a, "anything")
+        assert "'{}' is read-only".format(a) in str(excinfo.value) if a == "_unkwown" else "no attribute '{}'".format(a) in str(excinfo.value)
+
 
 # todo: test with an empty input image list

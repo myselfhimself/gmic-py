@@ -38,11 +38,30 @@ static int PyGmicImage_init(PyGmicImage *self, PyObject *args, PyObject *kwargs)
     return 0;
 }
 
+// Disallow all gmic_image attributes to be written
+static PyObject * PyGmicImage_setattr(PyGmicImage* self, char* name, PyObject* value)
+{
+    if (strcmp(name, "_data") == 0 || strcmp(name, "_width") == 0 || strcmp(name, "_height") == 0 || strcmp(name, "_depth") == 0 || strcmp(name, "_spectrum") == 0 || strcmp(name, "_is_shared") == 0)
+    {
+        PyErr_Format(PyExc_AttributeError,
+                     "'%.50s' object attribute '%.400s' is read-only",
+                     Py_TYPE(self)->tp_name, name);
+    }
+    else
+    {
+        PyErr_Format(PyExc_AttributeError,
+                     "'%.50s' object has no attribute '%.400s'",
+                     Py_TYPE(self)->tp_name, name);
+    }
+
+    return NULL;
+}
+
+// Allow gmic_image attributes to be read only
 static PyObject * PyGmicImage_getattr(PyGmicImage* self, char *name)
 {
     if (strcmp(name, "_data") == 0)
     {
-	// TODO The result of this still seems funky with strange ending bytes..
         return PyBytes_FromStringAndSize((char*)self->ptrObj->_data, sizeof(T)*(self->ptrObj->_width)*(self->ptrObj->_height)*(self->ptrObj->_depth)*(self->ptrObj->_spectrum));
     }
     else if (strcmp(name, "_width") == 0)
@@ -247,6 +266,7 @@ PyMODINIT_FUNC PyInit_gmic() {
     PyGmicImageType.tp_init=(initproc)PyGmicImage_init;
     PyGmicImageType.tp_call=(ternaryfunc)PyGmicImage_call;
     PyGmicImageType.tp_getattr=(getattrfunc)PyGmicImage_getattr;
+    PyGmicImageType.tp_setattr=(setattrfunc)PyGmicImage_setattr;
     PyGmicImageType.tp_doc=GmicImage_doc;
 
     if (PyType_Ready(&PyGmicImageType) < 0)
