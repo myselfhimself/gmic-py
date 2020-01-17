@@ -200,6 +200,7 @@ static PyObject* run_impl(PyObject*, PyObject* args, PyObject* kwargs)
 
   } catch (gmic_exception& e) {
     PyErr_SetString(PyExc_Exception, e.what());
+    return NULL;
   } catch (std::exception& e) {
     PyErr_SetString(PyExc_Exception, e.what());
     return NULL;
