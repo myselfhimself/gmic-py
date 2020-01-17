@@ -266,5 +266,30 @@ def test_gmic_image_readonly_forbidden_write_attributes():
         assert excinfo.typename == "AttributeError"
         assert "'{}' is read-only".format(a) in str(excinfo.value) if a in real_attributes else "no attribute '{}'".format(a) in str(excinfo.value)
 
+def test_gmic_images_list_with_image_names_multiple_add_filter_run():
+    import gmic
+    import struct
+    w = 60
+    h = 80
+    d = s = 1
+    nb_images = 10
+    base_pixel_multiplicator = 10.0
+
+    image_names = ["some_image_" + str(i) for i in range(nb_images)]
+    untouched_image_names = ["some_image_" + str(i) for i in range(nb_images)]
+    images = [gmic.GmicImage(struct.pack(*((str(w*h)+'f',) + (i*base_pixel_multiplicator,)*w*h)), w, h) for i in range(nb_images)]
+    # First run adding 1 of value to all pixels in all images
+    gmic.run("add 1", images, image_names)
+    for c, image in enumerate(images):
+        assert_image_is_filled_with(images[c], w, h, d, s, c*base_pixel_multiplicator+1)
+    assert untouched_image_names == image_names
+
+    # Second run adding 2 of value to all pixels in all images
+    gmic.run("add 2", images, image_names)
+    for c, image in enumerate(images):
+        assert_image_is_filled_with(images[c], w, h, d, s, c*base_pixel_multiplicator+2+1)
+    assert untouched_image_names == image_names
+
+
 
 # todo: test with an empty input image list
