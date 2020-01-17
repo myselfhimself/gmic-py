@@ -39,8 +39,9 @@ static int PyGmicImage_init(PyGmicImage *self, PyObject *args, PyObject *kwargs)
 }
 
 // Disallow all gmic_image attributes to be written
-static PyObject * PyGmicImage_setattr(PyGmicImage* self, char* name, PyObject* value)
+static int PyGmicImage_setattro(PyGmicImage* self, PyObject* attr, PyObject* value)
 {
+    char* name = PyUnicode_AsUTF8(attr);
     if (strcmp(name, "_data") == 0 || strcmp(name, "_width") == 0 || strcmp(name, "_height") == 0 || strcmp(name, "_depth") == 0 || strcmp(name, "_spectrum") == 0 || strcmp(name, "_is_shared") == 0)
     {
         PyErr_Format(PyExc_AttributeError,
@@ -54,12 +55,14 @@ static PyObject * PyGmicImage_setattr(PyGmicImage* self, char* name, PyObject* v
                      Py_TYPE(self)->tp_name, name);
     }
 
-    return NULL;
+    return -1;
 }
 
 // Allow gmic_image attributes to be read only
-static PyObject * PyGmicImage_getattr(PyGmicImage* self, char *name)
+static PyObject * PyGmicImage_getattro(PyGmicImage* self, PyObject *attr)
 {
+    char* name = PyUnicode_AsUTF8(attr);
+
     if (strcmp(name, "_data") == 0)
     {
         return PyBytes_FromStringAndSize((char*)self->ptrObj->_data, sizeof(T)*(self->ptrObj->_width)*(self->ptrObj->_height)*(self->ptrObj->_depth)*(self->ptrObj->_spectrum));
@@ -199,6 +202,7 @@ static PyObject* run_impl(PyObject*, PyObject* args, PyObject* kwargs)
     }
 
   } catch (gmic_exception& e) {
+    // TODO bind a new GmicException type?
     PyErr_SetString(PyExc_Exception, e.what());
     return NULL;
   } catch (std::exception& e) {
@@ -266,8 +270,8 @@ PyMODINIT_FUNC PyInit_gmic() {
     PyGmicImageType.tp_repr=(reprfunc)PyGmicImage_repr;
     PyGmicImageType.tp_init=(initproc)PyGmicImage_init;
     PyGmicImageType.tp_call=(ternaryfunc)PyGmicImage_call;
-    PyGmicImageType.tp_getattr=(getattrfunc)PyGmicImage_getattr;
-    PyGmicImageType.tp_setattr=(setattrfunc)PyGmicImage_setattr;
+    PyGmicImageType.tp_getattro=(getattrofunc)PyGmicImage_getattro;
+    PyGmicImageType.tp_setattro=(setattrofunc)PyGmicImage_setattro;
     PyGmicImageType.tp_doc=GmicImage_doc;
 
     if (PyType_Ready(&PyGmicImageType) < 0)
