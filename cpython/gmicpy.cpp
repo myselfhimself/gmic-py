@@ -41,7 +41,8 @@ static int PyGmicImage_init(PyGmicImage *self, PyObject *args, PyObject *kwargs)
 // Disallow all gmic_image attributes to be written
 static int PyGmicImage_setattro(PyGmicImage* self, PyObject* attr, PyObject* value)
 {
-    char* name = PyUnicode_AsUTF8(attr);
+    const char* name = PyUnicode_AsUTF8(attr);
+
     if (strcmp(name, "_data") == 0 || strcmp(name, "_width") == 0 || strcmp(name, "_height") == 0 || strcmp(name, "_depth") == 0 || strcmp(name, "_spectrum") == 0 || strcmp(name, "_is_shared") == 0)
     {
         PyErr_Format(PyExc_AttributeError,
@@ -61,7 +62,7 @@ static int PyGmicImage_setattro(PyGmicImage* self, PyObject* attr, PyObject* val
 // Allow gmic_image attributes to be read only
 static PyObject * PyGmicImage_getattro(PyGmicImage* self, PyObject *attr)
 {
-    char* name = PyUnicode_AsUTF8(attr);
+    const char* name = PyUnicode_AsUTF8(attr);
 
     if (strcmp(name, "_data") == 0)
     {
@@ -226,7 +227,7 @@ static PyObject* run_impl(PyObject*, PyObject* args, PyObject* kwargs)
                                          Py_TYPE(current_image_name)->tp_name, image_name_position, PyUnicode_Type.tp_name);
                             return NULL;
                         }
-                        image_names[image_name_position]._data = PyUnicode_AsUTF8(current_image_name);
+                        image_names[image_name_position]._data = (char*) PyUnicode_AsUTF8(current_image_name);
                         image_name_position++;
                     }
                 }
