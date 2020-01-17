@@ -159,47 +159,141 @@ static PyMethodDef PyGmicImage_methods[] = {
 static PyObject* run_impl(PyObject*, PyObject* args, PyObject* kwargs) 
 {
 
-  char const* keywords[] = {"commands_line", "image_or_images", NULL};
-  PyObject* input_gmic_image_or_list = NULL;
+  char const* keywords[] = {"commands_line", "images", "image_names", NULL};
+  PyObject* input_gmic_images = NULL;
+  PyObject* input_gmic_image_names = NULL;
   char* commands_line = NULL;
+  int image_position;
+  int image_name_position;
+  int images_count;
+  int image_names_count;
+  gmic_list<T> images;
+  gmic_list<char> image_names; // Empty image names
+  PyObject* current_image = NULL;
+  PyObject* current_image_name = NULL;
+  PyObject* iter = NULL;
 
-  if(!PyArg_ParseTupleAndKeywords(args, kwargs, "s|O!", (char**)keywords, &commands_line, &PyGmicImageType, &input_gmic_image_or_list)) {
+  if(!PyArg_ParseTupleAndKeywords(args, kwargs, "s|OO", (char**)keywords, &commands_line, &input_gmic_images, &input_gmic_image_names)) {
       return NULL;
   }
 
+// TODO turn image names into a list of char*
 
   try {
-    if (input_gmic_image_or_list != NULL) {
 
-        Py_INCREF(input_gmic_image_or_list);
-        gmic_list<T> images;
+    Py_XINCREF(input_gmic_image_names);
 
-        gmic_list<char> image_names; // Empty image names
+    if (input_gmic_images != NULL) {
+        Py_INCREF(input_gmic_images);
 
-	// Put our image into a Gmic List, required type for gmic run() 
-        images.assign(1);
-        images[0]._width = ((PyGmicImage*)input_gmic_image_or_list)->ptrObj->_width;
-        images[0]._height = ((PyGmicImage*)input_gmic_image_or_list)->ptrObj->_height;
-        images[0]._depth = ((PyGmicImage*)input_gmic_image_or_list)->ptrObj->_depth;
-        images[0]._spectrum = ((PyGmicImage*)input_gmic_image_or_list)->ptrObj->_spectrum;
-        images[0]._data = ((PyGmicImage*)input_gmic_image_or_list)->ptrObj->_data;
-        images[0]._is_shared = ((PyGmicImage*)input_gmic_image_or_list)->ptrObj->_is_shared;
+        // A/ If a list of images was provided
+	if(PyList_Check(input_gmic_images) || PyTuple_Check(input_gmic_images)) {
+            image_position = 0;
+            images_count = Py_SIZE(input_gmic_images);
+            images.assign(images_count);
 
-        gmic(commands_line, images, image_names);
-	// Put back the possibly modified reallocated image buffer into the original external GmicImage
-	// Back up the image data into the original external image before it gets freed
-	swap(((PyGmicImage*)input_gmic_image_or_list)->ptrObj->_data, images[0]._data);
-	((PyGmicImage*)input_gmic_image_or_list)->ptrObj->_width = images[0]._width;
-	((PyGmicImage*)input_gmic_image_or_list)->ptrObj->_height = images[0]._height;
-	((PyGmicImage*)input_gmic_image_or_list)->ptrObj->_depth = images[0]._depth;
-	((PyGmicImage*)input_gmic_image_or_list)->ptrObj->_spectrum = images[0]._spectrum;
-	((PyGmicImage*)input_gmic_image_or_list)->ptrObj->_is_shared = images[0]._is_shared;
-	// Prevent freeing the data buffer's pointer now copied into the external image
-	images[0]._data = 0;
-        Py_DECREF(input_gmic_image_or_list);
+            // Grab images and check their typing
+            iter = PyObject_GetIter(input_gmic_images);
+            while ((current_image = PyIter_Next(iter))) {
+                if (Py_TYPE(current_image) != (PyTypeObject*)&PyGmicImageType) {
+                    PyErr_Format(PyExc_TypeError,
+                                 "'%.50s' input object found at position %d in list/tuple is not a '%.400s'",
+                                 Py_TYPE(current_image)->tp_name, image_position, PyGmicImageType.tp_name);
+                    return NULL;
+                }
+                images[image_position]._width = ((PyGmicImage*)current_image)->ptrObj->_width;
+                images[image_position]._height = ((PyGmicImage*)current_image)->ptrObj->_height;
+                images[image_position]._depth = ((PyGmicImage*)current_image)->ptrObj->_depth;
+                images[image_position]._spectrum = ((PyGmicImage*)current_image)->ptrObj->_spectrum;
+                images[image_position]._data = ((PyGmicImage*)current_image)->ptrObj->_data;
+                images[image_position]._is_shared = ((PyGmicImage*)current_image)->ptrObj->_is_shared;
+
+                image_position++;
+            }
+
+            // Grab image names and check their typings
+            if (input_gmic_image_names != NULL) {
+                if(PyList_Check(input_gmic_image_names) || PyTuple_Check(input_gmic_image_names)) {
+                    PyObject* iter = PyObject_GetIter(input_gmic_image_names);
+                    image_names_count = Py_SIZE(input_gmic_image_names);
+                    image_names.assign(image_names_count);
+                    image_name_position = 0;
+
+                    while ((current_image_name = PyIter_Next(iter))) {
+                        if (!PyUnicode_Check(current_image_name)) {
+                            PyErr_Format(PyExc_TypeError,
+                                         "'%.50s' input element found at position %d in list/tuple is not a '%.400s'",
+                                         Py_TYPE(current_image_name)->tp_name, image_name_position, PyUnicode_Type.tp_name);
+                            return NULL;
+                        }
+                        image_names[image_name_position]._data = PyUnicode_AsUTF8(current_image_name);
+                        image_name_position++;
+                    }
+                }
+            }
+
+            // Process images and names
+            gmic(commands_line, images, image_names);
+
+            // Prevent images auto-deallocation by G'MIC
+            image_position = 0;
+            iter = PyObject_GetIter(input_gmic_images);
+            while ((current_image = PyIter_Next(iter))) {
+                // Put back the possibly modified reallocated image buffer into the original external GmicImage
+                // Back up the image data into the original external image before it gets freed
+                swap(((PyGmicImage*)current_image)->ptrObj->_data, images[image_position]._data);
+                ((PyGmicImage*)current_image)->ptrObj->_width = images[image_position]._width;
+                ((PyGmicImage*)current_image)->ptrObj->_height = images[image_position]._height;
+                ((PyGmicImage*)current_image)->ptrObj->_depth = images[image_position]._depth;
+                ((PyGmicImage*)current_image)->ptrObj->_spectrum = images[image_position]._spectrum;
+                ((PyGmicImage*)current_image)->ptrObj->_is_shared = images[image_position]._is_shared;
+                // Prevent freeing the data buffer's pointer now copied into the external image
+                images[image_position]._data = 0;
+
+                image_position++;
+            }
+
+            // Prevent image names auto-deallocation by G'MIC
+            if (input_gmic_image_names != NULL) {
+                for(image_name_position = 0; image_name_position < image_names_count; image_name_position++) {
+                    image_names[image_name_position]._data = 0;
+                }
+            }
+
+        // B/ Else if a single GmicImage was provided
+	} else if(Py_TYPE(input_gmic_images) == (PyTypeObject*)&PyGmicImageType) {
+            images_count = 1;
+            images.assign(1);
+            image_position = 0;
+
+            images[image_position]._width = ((PyGmicImage*)input_gmic_images)->ptrObj->_width;
+            images[image_position]._height = ((PyGmicImage*)input_gmic_images)->ptrObj->_height;
+            images[image_position]._depth = ((PyGmicImage*)input_gmic_images)->ptrObj->_depth;
+            images[image_position]._spectrum = ((PyGmicImage*)input_gmic_images)->ptrObj->_spectrum;
+            images[image_position]._data = ((PyGmicImage*)input_gmic_images)->ptrObj->_data;
+            images[image_position]._is_shared = ((PyGmicImage*)input_gmic_images)->ptrObj->_is_shared;
+
+            // Pipe the commands, our single image, and no image names
+            gmic(commands_line, images, image_names);
+
+            // Put back the possibly modified reallocated image buffer into the original external GmicImage
+            // Back up the image data into the original external image before it gets freed
+            swap(((PyGmicImage*)input_gmic_images)->ptrObj->_data, images[0]._data);
+            ((PyGmicImage*)input_gmic_images)->ptrObj->_width = images[0]._width;
+            ((PyGmicImage*)input_gmic_images)->ptrObj->_height = images[0]._height;
+            ((PyGmicImage*)input_gmic_images)->ptrObj->_depth = images[0]._depth;
+            ((PyGmicImage*)input_gmic_images)->ptrObj->_spectrum = images[0]._spectrum;
+            ((PyGmicImage*)input_gmic_images)->ptrObj->_is_shared = images[0]._is_shared;
+            // Prevent freeing the data buffer's pointer now copied into the external image
+            images[0]._data = 0;
+        }
+
+        Py_XDECREF(input_gmic_images);
     } else {
         gmic(commands_line, 0, true);
     }
+
+    Py_XDECREF(input_gmic_image_names);
 
   } catch (gmic_exception& e) {
     // TODO bind a new GmicException type?
@@ -214,7 +308,7 @@ static PyObject* run_impl(PyObject*, PyObject* args, PyObject* kwargs)
 
 PyDoc_STRVAR(
 run_impl_doc,
-"run(command: str[, image_or_images: GmicImage]) -> bool)\n\n\
+"run(command: str[, images: GmicImage|list|tuple]), image_names: list|tuple -> bool)\n\n\
 Run G'MIC interpret following a G'MIC language command(s) string, on 0 or more GmicImage(s).\n\n\
 Example:\n\
 import gmic\n\
