@@ -308,7 +308,7 @@ static PyObject* run_impl(PyObject*, PyObject* args, PyObject* kwargs)
 
 PyDoc_STRVAR(
 run_impl_doc,
-"run(command: str[, images: GmicImage|list|tuple]), image_names: list|tuple -> bool)\n\n\
+"run(command: str[, images: GmicImage|list|tuple, image_names: list|tuple]) -> bool)\n\n\
 Run G'MIC interpret following a G'MIC language command(s) string, on 0 or more GmicImage(s).\n\n\
 Example:\n\
 import gmic\n\
@@ -318,7 +318,10 @@ gmic.run('echo_stdout \'hello world\'') # G'MIC command without images parameter
 a = gmic.GmicImage(struct.pack(*('256f',) + tuple([random.random() for a in range(256)])), 16, 16) # Build 16x16 greyscale image\n\
 gmic.run('blur 12,0,1 resize 50%,50%', a) # Blur then resize the image\n\
 a._width == a._height == 8 # The image is half smaller\n\
-gmic.run('display', a) # If you have X11 enabled (linux only), show the image in a window");
+gmic.run('display', a) # If you have X11 enabled (linux only), show the image in a window\n\
+image_names = ['img_' + str(i) for i in range(10)] # You can also name your images if you have several (optional)\n\
+images = [gmic.GmicImage(struct.pack(*((str(w*h)+'f',) + (i*2.0,)*w*h)), w, h) for i in range(10)] # Prepare a list of image\n\
+gmic.run('add 1 print', images, image_names) # And pipe those into the interpret");
 
 static PyMethodDef gmic_methods[] = {
   {"run", (PyCFunction)run_impl, METH_VARARGS|METH_KEYWORDS, run_impl_doc},
