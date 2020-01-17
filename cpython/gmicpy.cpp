@@ -308,7 +308,7 @@ static PyObject* run_impl(PyObject*, PyObject* args, PyObject* kwargs)
 
 PyDoc_STRVAR(
 run_impl_doc,
-"run(command: str[, images: GmicImage|list|tuple, image_names: list|tuple]) -> bool)\n\n\
+"run(command: str[, images: GmicImage|list|tuple, image_names: list|tuple]) -> bool\n\n\
 Run G'MIC interpret following a G'MIC language command(s) string, on 0 or more GmicImage(s).\n\n\
 Example:\n\
 import gmic\n\
