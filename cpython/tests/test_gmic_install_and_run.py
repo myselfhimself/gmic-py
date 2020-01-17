@@ -7,12 +7,8 @@ def test_import_gmic():
 
 def test_catch_exceptions():
     import gmic
-    try:
-        gmic.run('a badly formatted command')
-    except Exception as e:
-        # For now, all C++ exceptions must be transformed into a SystemError
-        assert type(e) == SystemError
-        assert len(str(e)) > 0
+    with pytest.raises(Exception, match=r".*Unknown command or filename.*"):
+        gmic.run('badly formatted command')
 
 def test_run_gmic_ensure_openmp_linked_and_working(capfd):
     import gmic
@@ -253,20 +249,22 @@ def test_gmic_image_readonly_forbidden_write_attributes():
     w = 60
     h = 80
     float_array = struct.pack(*((str(w*h)+'f',) + (0,)*w*h))
+    real_attributes = ("_data", "_width", "_height", "_depth", "_spectrum", "_is_shared")
 
     # Ensuring GmicImage's parameters stability after initialization
     i = gmic.GmicImage(float_array, w, h)
 
     # Ensure unknown attributes fail being read
     with pytest.raises(AttributeError) as excinfo:
-        getattr(i, "_unkown")
-    assert "no attribute '_unkown'" in str(excinfo.value)
+        getattr(i, "unkown")
+    assert "no attribute 'unkown'" in str(excinfo.value)
 
     # Ensure known and unknown attributes fail being set with an error message variant
-    for a in ("_data", "_width", "_height", "_depth", "_spectrum", "_is_shared", "_unkwown"):
+    for a in real_attributes + ("unkwnown", ):
         with pytest.raises(AttributeError) as excinfo:
             setattr(i, a, "anything")
-        assert "'{}' is read-only".format(a) in str(excinfo.value) if a == "_unkwown" else "no attribute '{}'".format(a) in str(excinfo.value)
+        assert excinfo.typename == "AttributeError"
+        assert "'{}' is read-only".format(a) in str(excinfo.value) if a in real_attributes else "no attribute '{}'".format(a) in str(excinfo.value)
 
 
 # todo: test with an empty input image list
