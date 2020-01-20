@@ -39,6 +39,11 @@ if pkgconfig.exists('fftw3'):
     pkgconfig_list += ['fftw3']
     extra_link_args += ['-lfftw3_threads']
 
+# Only compile with OpenCV if exists (nice for the 'camera' G'MIC command :-D )
+if pkgconfig.exists('opencv'):
+    define_macros += [('cimg_use_opencv', None)]
+    pkgconfig_list += ['opencv']
+
 
 # Disable libcurl only on manylinuxes, because of a buggy audithweel repair constraint
 # See https://github.com/pypa/manylinux/issues/411
