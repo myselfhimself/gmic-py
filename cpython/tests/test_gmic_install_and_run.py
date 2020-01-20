@@ -26,14 +26,14 @@ def test_run_gmic_ensure_openmp_linked_and_working(capfd):
         filename, line, func, text = tb_info[-1]
         pytest.fail('parallel test case fails, OpenMP probably could not link or compile well on this platform, gmic parallelization will not work: stdout: {}; assert check: {}'.format(outerr.out, text))
 
-def test_run_gmic_cli_helloworld(capfd):
+def test_run_gmic_run_helloworld(capfd):
     import gmic
     # Using pytest stderr capture per https://docs.pytest.org/en/latest/capture.html#accessing-captured-output-from-a-test-function
     gmic.run('echo_stdout "hello world"')
     outerr = capfd.readouterr()
     assert "hello world\n" == outerr.out
 
-def test_run_gmic_cli_simple_3pixels_png_output():
+def test_run_gmic_run_simple_3pixels_png_output():
     import gmic
     import pathlib
     png_filename = "a.png"
@@ -45,7 +45,7 @@ def test_run_gmic_cli_simple_3pixels_png_output():
     a_png.unlink()
 
 
-def test_run_gmic_cli_simple_demo_png_output_and_input():
+def test_run_gmic_run_simple_demo_png_output_and_input():
     """ Ensure that zlib is properly linked and ensures that either
     the png library used or the 'convert' tool of the imagemagick suite, for saving png"""
     import gmic
@@ -62,7 +62,7 @@ def test_run_gmic_cli_simple_demo_png_output_and_input():
     a_png.unlink()
 
 
-def test_run_gmic_cli_simple_3pixels_bmp_output():
+def test_run_gmic_run_simple_3pixels_bmp_output():
     """ Ensure that the native bmp file output works"""
     import gmic
     import pathlib
