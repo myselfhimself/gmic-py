@@ -21,6 +21,8 @@ static int PyGmicImage_init(PyGmicImage *self, PyObject *args, PyObject *kwargs)
     unsigned int _height;      // Number of image lines (dimension along the Y-axis)
     unsigned int _depth;       // Number of image slices (dimension along the Z-axis)
     unsigned int _spectrum;    // Number of image channels (dimension along the C-axis)
+    Py_ssize_t dimensions_product;    // All integer parameters multiplied together, will help for allocating (ie. assign()ing)
+    Py_ssize_t _data_bytes_size;
     int _is_shared = (int) false; // Whether image should be shared across gmic operations (if true, operations like resize will fail)
     PyObject* bytesObj;        // Incoming bytes buffer object pointer
     char const* keywords[] = {"data", "width", "height", "depth", "spectrum", "shared", NULL};
@@ -29,8 +31,25 @@ static int PyGmicImage_init(PyGmicImage *self, PyObject *args, PyObject *kwargs)
     if (! PyArg_ParseTupleAndKeywords(args, kwargs, "S|IIIIp", (char**) keywords, &bytesObj, &_width, &_height, &_depth, &_spectrum, &_is_shared))
         return -1;
 
+    dimensions_product = _width*_height*_depth*_spectrum;
+    _data_bytes_size = PyBytes_Size(bytesObj);
+    if((Py_ssize_t)(dimensions_product*sizeof(T)) != _data_bytes_size)
+    {
+        PyErr_Format(PyExc_ValueError, "GmicImage dimensions-induced buffer bytes size (%d*%dB=%d) cannot be strictly negative or different than the _data buffer size in bytes (%d)", dimensions_product, sizeof(T), dimensions_product*sizeof(T), _data_bytes_size);
+	return -1;
+    }
+
     self->ptrObj=new gmic_image<T>();
-    self->ptrObj->assign(_width,_height,_depth,_spectrum);
+    try {
+        self->ptrObj->assign(_width,_height,_depth,_spectrum);
+    }
+    // Ugly exception catching, probably to catch a cimg::GmicInstanceException()
+    catch(...)
+    {
+        PyErr_Format(PyExc_MemoryError, "Allocation error in GmicImage::assign(_width=%d,_height=%d,_depth=%d,_spectrum=%d), are you requesting too much memory (%d bytes)?", _width, _height, _depth, _spectrum, _data_bytes_size);
+        return -1;
+    }
+
     self->ptrObj->_is_shared = _is_shared;
 
     memcpy(self->ptrObj->_data, PyBytes_AsString(bytesObj), PyBytes_Size(bytesObj));
