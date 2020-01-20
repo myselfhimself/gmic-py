@@ -290,6 +290,23 @@ def test_gmic_images_list_with_image_names_multiple_add_filter_run():
         assert_image_is_filled_with(images[c], w, h, d, s, c*base_pixel_multiplicator+2+1)
     assert untouched_image_names == image_names
 
+def test_gmic_run_parameters_fuzzying():
+    import gmic
+    import struct
+    w = 60
+    h = 80
+    d = s = 1
+    # 1 correct GmicImage, 1 correct command
+    gmic.run()
 
+    # 1 GmicImage, no command
+
+    # 1 GmicImage, no correct command
+
+    # 1 non-GmicImage, 1 correct command
+
+    # 1 iterable "list" of GmicImages but not tuple/list, 1 correct command
+
+    # 1 tuple/list of GmicImages, 1 correct command
 
 # todo: test with an empty input image list

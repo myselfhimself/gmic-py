@@ -332,7 +332,7 @@ static PyMethodDef gmic_methods[] = {
 PyDoc_STRVAR(
 gmic_module_doc,
 "G'MIC Image Processing library Python binding\n\n\
-Use gmic.run(...), gmic.GmicImage(...), gmic.GmicList(...).\n\
+Use gmic.run(...), gmic.GmicImage(...), gmic.Gmic(...).\n\
 Make sure to visit https://github.com/myselfhimself/gmic-py for examples and documentation.");
 
 PyModuleDef gmic_module = {
@@ -357,6 +357,7 @@ i # Using GmicImage's repr() string representation\n\
 i(0,0) == 1.0 # Using GmicImage(x,y,z) pixel reading operator after initialization\n\
 gmic.run('resize 200%,200%', i) # Some G'MIC operations may reallocate the image buffer in place without risk\n\
 i._width == i._height == 2 # Use the _width, _height, _depth, _spectrum, _data, _is_shared read-only attributes");
+// TODO add gmic.Gmic example
 
 PyMODINIT_FUNC PyInit_gmic() {
     PyObject* m;
