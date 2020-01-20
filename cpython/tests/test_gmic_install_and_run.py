@@ -79,19 +79,31 @@ def test_gmic_image_parameters_fuzzying():
     import struct
     import re
     # Fail test if anything else as a TypeError is raised
-    with pytest.raises(TypeError) as excinfo:
+    with pytest.raises(TypeError):
         # This used to segfault / fail with core dump
         i = gmic.GmicImage(None, 1, 3)
 
-    with pytest.raises(TypeError) as excinfo:
+    with pytest.raises(TypeError):
         # This used to segfault / fail with core dump
         a = gmic.GmicImage(struct.pack('8f', 1, 3, 5, 7, 2, 6, 10, 14), 4, 2, 1, 1)
         a('wrong', 'parameters')
 
-    # # Testing default parameters + 1 keyword
-    # c = gmic.GmicImage(struct.pack('8f', 1, 3, 5, 7, 2, 6, 10, 14), shared=True)
-    # assert "1" == repr(c)
-    # assert re.compile(r"<gmic.GmicImage object at 0x[a-f0-9]+ with _data address at 0x[0-9a-z]+, w=1 h=1 d=1 s=1 shared=1>").match(repr(c))
+    # Gmic Image with unmatching dimensions compared to its buffer
+    with pytest.raises(ValueError) as excinfo:
+        b = gmic.GmicImage(struct.pack('8f', 1, 3, 5, 7, 2, 6, 10, 14), 4, 2, 0)
+    assert "0*" in str(excinfo.value)
+
+    # Gmic Image with negative dimensions
+    with pytest.raises(ValueError) as excinfo:
+        b = gmic.GmicImage(struct.pack('8f', 1, 3, 5, 7, 2, 6, 10, 14), 4, 2, -3)
+    assert "-24*" in str(excinfo.value)
+
+def test_gmic_image_handmade_attributes_copying():
+    import gmic
+    import struct
+    b = gmic.GmicImage(struct.pack('8f', 1, 3, 5, 7, 2, 6, 10, 14), 2,4,1, shared=False)
+    c = gmic.GmicImage(b._data, b._width, b._height, b._depth, b._spectrum, b._is_shared)
+    assert_gmic_images_are_identical(b,c)
 
 def test_gmic_image_construct_buffer_check_and_destroy():
     import re
@@ -152,13 +164,27 @@ def assert_get_proper_print_regex(w, h, search_str):
     import time
     assert re.compile(r"size = \({},{},1,1\) \[{} b of floats\](.*)\n(.*)\n(.*)min = 0".format(round(w), round(h), int(round(w)*round(h)*FLOAT_SIZE_IN_BYTES)), flags=re.MULTILINE).search(search_str) is not None
 
-def assert_image_is_filled_with(gmic_image, w, h, d, s, pixel_value):
+def assert_gmic_images_are_identical(gmic_image1, gmic_image2):
+    assert gmic_image1._width == gmic_image2._width
+    assert gmic_image1._height == gmic_image2._height
+    assert gmic_image1._depth == gmic_image2._depth
+    assert gmic_image1._spectrum == gmic_image2._spectrum
+    assert gmic_image1._data == gmic_image2._data
+    assert gmic_image1._is_shared == gmic_image2._is_shared
+    for x in range(gmic_image1._width):
+        for y in range(gmic_image1._height):
+            for z in range(gmic_image1._depth):
+                for c in range(gmic_image1._spectrum):
+                    assert gmic_image1(x,y,z,c) == gmic_image2(x,y,z,c)
+
+def assert_gmic_image_is_filled_with(gmic_image, w, h, d, s, pixel_value):
     for spectrum in range(int(s)):
         for x in range(int(w)):
             for y in range(int(h)):
                 for z in range(int(d)):
-                    pixel = gmic_image(x, y, z)
-                    assert isclose(pixel, pixel_value)
+                    for c in range(int(s)):
+                        pixel = gmic_image(x, y, z, c)
+                        assert isclose(pixel, pixel_value)
 
 def test_gmic_image_generation_and_gmic_multiple_resize_run(capfd):
     import gmic
@@ -178,21 +204,21 @@ def test_gmic_image_generation_and_gmic_multiple_resize_run(capfd):
     w = w/2
     h = h/2
     assert_get_proper_print_regex(w, h, search_str=outerr.err)
-    assert_image_is_filled_with(i, w, h, d, s, 0)
+    assert_gmic_image_is_filled_with(i, w, h, d, s, 0)
     # Divide original size by 4 and check pixels stability
     gmic.run("{} print".format(command_to_apply), i)
     outerr = capfd.readouterr()
     w = w/2
     h = h/2
     assert_get_proper_print_regex(w, h, search_str=outerr.err)
-    assert_image_is_filled_with(i, w, h, d, s, 0)
+    assert_gmic_image_is_filled_with(i, w, h, d, s, 0)
     # Divide original size by 16 (now twice by 2) and check pixels stability
     gmic.run("{} {} print".format(command_to_apply, command_to_apply), i)
     outerr = capfd.readouterr()
     w = w/4
     h = h/4
     assert_get_proper_print_regex(w, h, search_str=outerr.err)
-    assert_image_is_filled_with(i, w, h, d, s, 0)
+    assert_gmic_image_is_filled_with(i, w, h, d, s, 0)
 
 def test_gmic_image_readonly_attributes_and_bytes_stability():
     import gmic
@@ -234,7 +260,7 @@ def test_gmic_image_readonly_attributes_and_bytes_stability():
     required_floats= int(w*h*d*s)
     expected_uniform_pixel_value = 1.0
     expected_result_float_array = struct.pack(*((str(required_floats)+'f',) + (expected_uniform_pixel_value,)*required_floats))
-    assert_image_is_filled_with(i, w, h, d, s, expected_uniform_pixel_value)
+    assert_gmic_image_is_filled_with(i, w, h, d, s, expected_uniform_pixel_value)
     assert i._width == w
     assert i._height == h
     assert i._depth == d
@@ -281,14 +307,21 @@ def test_gmic_images_list_with_image_names_multiple_add_filter_run():
     # First run adding 1 of value to all pixels in all images
     gmic.run("add 1", images, image_names)
     for c, image in enumerate(images):
-        assert_image_is_filled_with(images[c], w, h, d, s, c*base_pixel_multiplicator+1)
+        assert_gmic_image_is_filled_with(images[c], w, h, d, s, c*base_pixel_multiplicator+1)
     assert untouched_image_names == image_names
 
     # Second run adding 2 of value to all pixels in all images
     gmic.run("add 2", images, image_names)
     for c, image in enumerate(images):
-        assert_image_is_filled_with(images[c], w, h, d, s, c*base_pixel_multiplicator+2+1)
+        assert_gmic_image_is_filled_with(images[c], w, h, d, s, c*base_pixel_multiplicator+2+1)
     assert untouched_image_names == image_names
+
+def test_gmic_image_attributes_visibility():
+    import gmic
+    import struct
+    a = gmic.GmicImage(struct.pack('1f', 1))
+    for required_attribute in ("_width", "_height", "_depth", "_spectrum", "_is_shared", "_data"):
+        assert required_attribute in dir(a)
 
 def test_gmic_run_parameters_fuzzying():
     import gmic
@@ -296,8 +329,23 @@ def test_gmic_run_parameters_fuzzying():
     w = 60
     h = 80
     d = s = 1
+    # 0 parameters
+    with pytest.raises(TypeError):
+        gmic.run()
+
+    # 1 correct command
+    gmic.run("echo_stdout 'bonsoir'")
+
+    # 1 parameters-depending command without an image
+
     # 1 correct GmicImage, 1 correct command
-    gmic.run()
+    #gmic.run()
+
+    # 1 correct GmicImage, 1 correct command, some strange keyword
+
+    # 1 correct GmicImage, 1 correct command with flipped keywords
+
+    # 1 correct list of GmicImages, 1 correct command with flipped keywords
 
     # 1 GmicImage, no command
 
@@ -307,6 +355,20 @@ def test_gmic_run_parameters_fuzzying():
 
     # 1 iterable "list" of GmicImages but not tuple/list, 1 correct command
 
+    # 1 tuple/list of not-only GmicImages, 1 correct command
+
     # 1 tuple/list of GmicImages, 1 correct command
 
+    # 1 tuple/list of GmicImages, no command
+
+    # 1 tuple/list of GmicImages, some bad command
+
+    # out of memory
+    with pytest.raises(MemoryError):
+        gmic.GmicImage(struct.pack('8f', (0.0,)*494949*2000*393938*499449), 494949, 2000, 393938, 499449)
+
+# todo: test existing dict for dir(GmicImage object)
+
 # todo: test with an empty input image list
+
+# todo: test GmicImage to GmicImage copy (several times) and deletion of the first GmicImage and independent buffer and other attributes subsistance
