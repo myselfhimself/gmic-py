@@ -1,4 +1,5 @@
 #include <Python.h>
+#include "structmember.h"
 #include <iostream>
 #include <stdio.h>
 #include "gmic.h"
@@ -12,7 +13,8 @@ using namespace std;
 
 typedef struct {
     PyObject_HEAD
-    gmic_image<T> * ptrObj; // G'MIC library's Gmic Image
+    PyObject* dict;
+    gmic_image<T> ptrObj; // G'MIC library's Gmic Image
 } PyGmicImage;
 
 static int PyGmicImage_init(PyGmicImage *self, PyObject *args, PyObject *kwargs)
@@ -39,9 +41,8 @@ static int PyGmicImage_init(PyGmicImage *self, PyObject *args, PyObject *kwargs)
 	return -1;
     }
 
-    self->ptrObj=new gmic_image<T>();
     try {
-        self->ptrObj->assign(_width,_height,_depth,_spectrum);
+        self->ptrObj.assign(_width,_height,_depth,_spectrum);
     }
     // Ugly exception catching, probably to catch a cimg::GmicInstanceException()
     catch(...)
@@ -50,9 +51,9 @@ static int PyGmicImage_init(PyGmicImage *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
-    self->ptrObj->_is_shared = _is_shared;
+    self->ptrObj._is_shared = _is_shared;
 
-    memcpy(self->ptrObj->_data, PyBytes_AsString(bytesObj), PyBytes_Size(bytesObj));
+    memcpy(self->ptrObj._data, PyBytes_AsString(bytesObj), PyBytes_Size(bytesObj));
 
     return 0;
 }
@@ -78,53 +79,16 @@ static int PyGmicImage_setattro(PyGmicImage* self, PyObject* attr, PyObject* val
     return -1;
 }
 
-// Allow gmic_image attributes to be read only
-static PyObject * PyGmicImage_getattro(PyGmicImage* self, PyObject *attr)
-{
-    const char* name = PyUnicode_AsUTF8(attr);
-
-    if (strcmp(name, "_data") == 0)
-    {
-        return PyBytes_FromStringAndSize((char*)self->ptrObj->_data, sizeof(T)*(self->ptrObj->_width)*(self->ptrObj->_height)*(self->ptrObj->_depth)*(self->ptrObj->_spectrum));
-    }
-    else if (strcmp(name, "_width") == 0)
-    {
-        return PyLong_FromLong((long)self->ptrObj->_width);
-    }
-    else if (strcmp(name, "_height") == 0)
-    {
-        return PyLong_FromLong((long)self->ptrObj->_height);
-    }
-    else if (strcmp(name, "_depth") == 0)
-    {
-        return PyLong_FromLong((long)self->ptrObj->_depth);
-    }
-    else if (strcmp(name, "_spectrum") == 0)
-    {
-        return PyLong_FromLong((long)self->ptrObj->_spectrum);
-    }
-    else if (strcmp(name, "_is_shared") == 0)
-    {
-        return PyBool_FromLong((long)self->ptrObj->_is_shared);
-    }
-
-    PyErr_Format(PyExc_AttributeError,
-                 "'%.50s' object has no attribute '%.400s'",
-                 Py_TYPE(self)->tp_name, name);
-    return NULL;
-}
-
-
 static PyObject* PyGmicImage_repr(PyGmicImage* self)
 {
     return PyUnicode_FromFormat("<%s object at %p with _data address at %p, w=%d h=%d d=%d s=%d shared=%d>",
         Py_TYPE(self)->tp_name,
-       	self, self->ptrObj->_data,
-       	self->ptrObj->_width,
-       	self->ptrObj->_height,
-	self->ptrObj->_depth,
-        self->ptrObj->_spectrum,
-        self->ptrObj->_is_shared
+        self, self->ptrObj._data,
+        self->ptrObj._width,
+        self->ptrObj._height,
+        self->ptrObj._depth,
+        self->ptrObj._spectrum,
+        self->ptrObj._is_shared
     );
 }
 
@@ -138,7 +102,7 @@ static PyObject *PyGmicImage_call(PyObject *self, PyObject *args, PyObject *kwar
         return NULL;
     }
     
-    return PyFloat_FromDouble((*((PyGmicImage*)self)->ptrObj)(x,y,z,c));
+    return PyFloat_FromDouble(((PyGmicImage*)self)->ptrObj(x,y,z,c));
 }
 
 
@@ -155,10 +119,10 @@ static PyObject * PyGmicImage_from_numpy_array(PyGmicImage * self, PyObject* arg
 int retval;
 
 // todo array of floats instead from numpy array
-    if (! PyArg_ParseTuple(args, "f", &self->ptrObj->_data))
+    if (! PyArg_ParseTuple(args, "f", &self->ptrObj._data))
         return Py_False;
 
-    retval = (self->ptrObj)->_data != NULL;
+    retval = (self->ptrObj)._data != NULL;
 
     return Py_BuildValue("i",retval);
 }
@@ -221,12 +185,12 @@ static PyObject* run_impl(PyObject*, PyObject* args, PyObject* kwargs)
                                  Py_TYPE(current_image)->tp_name, image_position, PyGmicImageType.tp_name);
                     return NULL;
                 }
-                images[image_position]._width = ((PyGmicImage*)current_image)->ptrObj->_width;
-                images[image_position]._height = ((PyGmicImage*)current_image)->ptrObj->_height;
-                images[image_position]._depth = ((PyGmicImage*)current_image)->ptrObj->_depth;
-                images[image_position]._spectrum = ((PyGmicImage*)current_image)->ptrObj->_spectrum;
-                images[image_position]._data = ((PyGmicImage*)current_image)->ptrObj->_data;
-                images[image_position]._is_shared = ((PyGmicImage*)current_image)->ptrObj->_is_shared;
+                images[image_position]._width = ((PyGmicImage*)current_image)->ptrObj._width;
+                images[image_position]._height = ((PyGmicImage*)current_image)->ptrObj._height;
+                images[image_position]._depth = ((PyGmicImage*)current_image)->ptrObj._depth;
+                images[image_position]._spectrum = ((PyGmicImage*)current_image)->ptrObj._spectrum;
+                images[image_position]._data = ((PyGmicImage*)current_image)->ptrObj._data;
+                images[image_position]._is_shared = ((PyGmicImage*)current_image)->ptrObj._is_shared;
 
                 image_position++;
             }
@@ -261,12 +225,12 @@ static PyObject* run_impl(PyObject*, PyObject* args, PyObject* kwargs)
             while ((current_image = PyIter_Next(iter))) {
                 // Put back the possibly modified reallocated image buffer into the original external GmicImage
                 // Back up the image data into the original external image before it gets freed
-                swap(((PyGmicImage*)current_image)->ptrObj->_data, images[image_position]._data);
-                ((PyGmicImage*)current_image)->ptrObj->_width = images[image_position]._width;
-                ((PyGmicImage*)current_image)->ptrObj->_height = images[image_position]._height;
-                ((PyGmicImage*)current_image)->ptrObj->_depth = images[image_position]._depth;
-                ((PyGmicImage*)current_image)->ptrObj->_spectrum = images[image_position]._spectrum;
-                ((PyGmicImage*)current_image)->ptrObj->_is_shared = images[image_position]._is_shared;
+                swap(((PyGmicImage*)current_image)->ptrObj._data, images[image_position]._data);
+                ((PyGmicImage*)current_image)->ptrObj._width = images[image_position]._width;
+                ((PyGmicImage*)current_image)->ptrObj._height = images[image_position]._height;
+                ((PyGmicImage*)current_image)->ptrObj._depth = images[image_position]._depth;
+                ((PyGmicImage*)current_image)->ptrObj._spectrum = images[image_position]._spectrum;
+                ((PyGmicImage*)current_image)->ptrObj._is_shared = images[image_position]._is_shared;
                 // Prevent freeing the data buffer's pointer now copied into the external image
                 images[image_position]._data = 0;
 
@@ -286,24 +250,24 @@ static PyObject* run_impl(PyObject*, PyObject* args, PyObject* kwargs)
             images.assign(1);
             image_position = 0;
 
-            images[image_position]._width = ((PyGmicImage*)input_gmic_images)->ptrObj->_width;
-            images[image_position]._height = ((PyGmicImage*)input_gmic_images)->ptrObj->_height;
-            images[image_position]._depth = ((PyGmicImage*)input_gmic_images)->ptrObj->_depth;
-            images[image_position]._spectrum = ((PyGmicImage*)input_gmic_images)->ptrObj->_spectrum;
-            images[image_position]._data = ((PyGmicImage*)input_gmic_images)->ptrObj->_data;
-            images[image_position]._is_shared = ((PyGmicImage*)input_gmic_images)->ptrObj->_is_shared;
+            images[image_position]._width = ((PyGmicImage*)input_gmic_images)->ptrObj._width;
+            images[image_position]._height = ((PyGmicImage*)input_gmic_images)->ptrObj._height;
+            images[image_position]._depth = ((PyGmicImage*)input_gmic_images)->ptrObj._depth;
+            images[image_position]._spectrum = ((PyGmicImage*)input_gmic_images)->ptrObj._spectrum;
+            images[image_position]._data = ((PyGmicImage*)input_gmic_images)->ptrObj._data;
+            images[image_position]._is_shared = ((PyGmicImage*)input_gmic_images)->ptrObj._is_shared;
 
             // Pipe the commands, our single image, and no image names
             gmic(commands_line, images, image_names);
 
             // Put back the possibly modified reallocated image buffer into the original external GmicImage
             // Back up the image data into the original external image before it gets freed
-            swap(((PyGmicImage*)input_gmic_images)->ptrObj->_data, images[0]._data);
-            ((PyGmicImage*)input_gmic_images)->ptrObj->_width = images[0]._width;
-            ((PyGmicImage*)input_gmic_images)->ptrObj->_height = images[0]._height;
-            ((PyGmicImage*)input_gmic_images)->ptrObj->_depth = images[0]._depth;
-            ((PyGmicImage*)input_gmic_images)->ptrObj->_spectrum = images[0]._spectrum;
-            ((PyGmicImage*)input_gmic_images)->ptrObj->_is_shared = images[0]._is_shared;
+            swap(((PyGmicImage*)input_gmic_images)->ptrObj._data, images[0]._data);
+            ((PyGmicImage*)input_gmic_images)->ptrObj._width = images[0]._width;
+            ((PyGmicImage*)input_gmic_images)->ptrObj._height = images[0]._height;
+            ((PyGmicImage*)input_gmic_images)->ptrObj._depth = images[0]._depth;
+            ((PyGmicImage*)input_gmic_images)->ptrObj._spectrum = images[0]._spectrum;
+            ((PyGmicImage*)input_gmic_images)->ptrObj._is_shared = images[0]._is_shared;
             // Prevent freeing the data buffer's pointer now copied into the external image
             images[0]._data = 0;
         }
@@ -363,7 +327,7 @@ PyModuleDef gmic_module = {
 };
 
 PyDoc_STRVAR(
-GmicImage_doc,
+PyGmicImage_doc,
 "GmicImage(data: bytes[, width: int = 1, height: int = 1, depth: int = 1, spectrum: int = 1, shared: bool = False]) -> bool\n\n\
 Simplified mapping of the c++ gmic_image type. Stores non-publicly a binary buffer of data, a height, width, depth, spectrum.\n\n\
 Example:\n\
@@ -378,6 +342,36 @@ gmic.run('resize 200%,200%', i) # Some G'MIC operations may reallocate the image
 i._width == i._height == 2 # Use the _width, _height, _depth, _spectrum, _data, _is_shared read-only attributes");
 // TODO add gmic.Gmic example
 
+
+static PyMemberDef PyGmicImage_members[] = {
+    {(char*)"_width", T_UINT, offsetof(PyGmicImage, ptrObj), READONLY,
+     (char*)"width"},
+    {(char*)"_height", T_UINT, offsetof(PyGmicImage, ptrObj)+sizeof(unsigned int), READONLY,
+     (char*)"height"},
+    {(char*)"_depth", T_UINT, offsetof(PyGmicImage, ptrObj)+2*sizeof(unsigned int), READONLY,
+     (char*)"depth"},
+    {(char*)"_spectrum", T_UINT, offsetof(PyGmicImage, ptrObj)+3*sizeof(unsigned int), READONLY,
+     (char*)"spectrum"},
+    {(char*)"_is_shared", T_BOOL, offsetof(PyGmicImage, ptrObj)+4*sizeof(unsigned int), READONLY,
+     (char*)"_is_shared"},
+    {NULL}  /* Sentinel */
+};
+
+static PyObject*
+PyGmicImage_get__data(PyGmicImage* self, void* closure)
+{
+    return PyBytes_FromStringAndSize((char*)self->ptrObj._data, sizeof(T)*(self->ptrObj._width)*(self->ptrObj._height)*(self->ptrObj._depth)*(self->ptrObj._spectrum));
+}
+
+PyGetSetDef PyGmicImage_getsets[] = {
+    {(char*)"_data",  /* name */
+     (getter) PyGmicImage_get__data,
+     NULL, // no setter
+     NULL,  /* doc */
+     NULL /* closure */},
+    {NULL}
+};
+
 PyMODINIT_FUNC PyInit_gmic() {
     PyObject* m;
 
@@ -388,9 +382,12 @@ PyMODINIT_FUNC PyInit_gmic() {
     PyGmicImageType.tp_repr=(reprfunc)PyGmicImage_repr;
     PyGmicImageType.tp_init=(initproc)PyGmicImage_init;
     PyGmicImageType.tp_call=(ternaryfunc)PyGmicImage_call;
-    PyGmicImageType.tp_getattro=(getattrofunc)PyGmicImage_getattro;
+    PyGmicImageType.tp_getattro=PyObject_GenericGetAttr;
     PyGmicImageType.tp_setattro=(setattrofunc)PyGmicImage_setattro;
-    PyGmicImageType.tp_doc=GmicImage_doc;
+    PyGmicImageType.tp_doc=PyGmicImage_doc;
+    PyGmicImageType.tp_members=PyGmicImage_members;
+    PyGmicImageType.tp_dictoffset = offsetof(PyGmicImage,dict);
+    PyGmicImageType.tp_getset = PyGmicImage_getsets;
 
     if (PyType_Ready(&PyGmicImageType) < 0)
         return NULL;
