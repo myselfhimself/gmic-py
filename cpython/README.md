@@ -1,5 +1,13 @@
+<a href="https://gmic.eu">![G'MIC Logo](https://gmic.eu/img/logo4.jpg)</a>
+<a href="https://www.python.org">![Python Logo](https://www.python.org/static/community_logos/python-logo-master-v3-TM-flattened.png)</a>
+
+#### 
+#### Python binding for G'MIC - A Full-Featured Open-Source Framework for Image Processing
+##### https://gmic.eu
+
+---------------------------
+
 # gmic-py
-Python binding for G'MIC
 
 ![](https://github.com/dtschump/gmic-py/workflows/Ctypes%20GMIC%20Python%20package/badge.svg)
 ![](https://github.com/dtschump/gmic-py/workflows/CPython%20GMIC%20Manylinux%20build%20CentOS%20x86_64/badge.svg)
