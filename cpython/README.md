@@ -1,5 +1,5 @@
-<a href="https://gmic.eu">![G'MIC Logo](https://gmic.eu/img/logo4.jpg)</a>
-<a href="https://www.python.org">![Python Logo](https://www.python.org/static/community_logos/python-logo-master-v3-TM-flattened.png)</a>
+<a href="https://gmic.eu">![G'MIC Logo](https://gmic.eu/img/logo4.jpg){:height="50%" width="50%"}</a>
+<a href="https://www.python.org">![Python Logo](https://www.python.org/static/community_logos/python-logo-master-v3-TM-flattened.png){:height="50%" width="50%"}</a>
 
 #### 
 #### Python binding for G'MIC - A Full-Featured Open-Source Framework for Image Processing
