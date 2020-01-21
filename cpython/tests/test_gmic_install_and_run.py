@@ -323,6 +323,19 @@ def test_gmic_image_attributes_visibility():
     for required_attribute in ("_width", "_height", "_depth", "_spectrum", "_is_shared", "_data"):
         assert required_attribute in dir(a)
 
+def test_gmic_image_object_and_attribute_types():
+    import gmic
+    import struct
+    a = gmic.GmicImage(struct.pack('1f', 1))
+    assert type(a) == gmic.GmicImage
+    assert type(a._width) == int
+    assert type(a._height) == int
+    assert type(a._width) == int
+    assert type(a._depth) == int
+    assert type(a._spectrum) == int
+    assert type(a._is_shared) == bool
+    assert type(a._data) == bytes
+
 def test_gmic_run_parameters_fuzzying():
     import gmic
     import struct
@@ -336,22 +349,40 @@ def test_gmic_run_parameters_fuzzying():
     # 1 correct command
     gmic.run("echo_stdout 'bonsoir'")
 
-    # 1 parameters-depending command without an image
+    # 1 parameters-depending command without an image or with empty list
+    gmic.run("print")
+    gmic.run("print", tuple())
 
-    # 1 correct GmicImage, 1 correct command
-    #gmic.run()
+    # 1 correct GmicImage, 1 correct command, in wrong order
+    with pytest.raises(TypeError, match=r".*argument 1 must be str, not gmic.GmicImage.*"):
+        a = gmic.run(gmic.GmicImage(struct.pack('1f', 1.0)), "print")
 
     # 1 correct GmicImage, 1 correct command, some strange keyword
+    with pytest.raises(TypeError, match=r".*hey.*is an invalid keyword argument.*"):
+        a = gmic.run("print", gmic.GmicImage(struct.pack('1f', 1.0), hey=3))
 
     # 1 correct GmicImage, 1 correct command with flipped keywords
+    gmic.run(images=gmic.GmicImage(struct.pack('1f', 1.0)), command="print")
 
     # 1 correct list of GmicImages, 1 correct command with flipped keywords
+    gmic.run(images=(gmic.GmicImage(struct.pack('1f', 1.0)), gmic.GmicImage(struct.pack('2f', 1.0, 2.0), 2)), command="add 3")
 
     # 1 GmicImage, no command
+    with pytest.raises(TypeError, match=r".*argument 1 must be str, not gmic.GmicImage.*"):
+        gmic.run(gmic.GmicImage(struct.pack('1f', 1.0)))
 
     # 1 GmicImage, no correct command
+    with pytest.raises(Exception, match=r".*Unknown command or filename 'hey'.*"):
+        gmic.run(images=gmic.GmicImage(struct.pack('1f', 1.0)), command="hey")
 
     # 1 non-GmicImage, 1 correct command
+    with pytest.raises(TypeError, match=r".*'int' 'images' parameter must be a .*GmicImage.* or .*list.*"):
+         gmic.run(images=42, command="print")
+
+    # 1 GmicImage, 1 correct command, one non-tuple/list of image names
+    #with pytest.raises(TypeError):
+    with pytest.raises(TypeError, match=r".* 'image_names' parameter must be a list.*str.*"):
+        gmic.run(images=gmic.GmicImage(struct.pack('1f', 1.0)), image_names=3, command="add 4")
 
     # 1 iterable "list" of GmicImages but not tuple/list, 1 correct command
 
@@ -363,6 +394,9 @@ def test_gmic_run_parameters_fuzzying():
 
     # 1 tuple/list of GmicImages, some bad command
 
+def test_gmic_image_memory_exhaustion_initialization_resilience():
+    import gmic
+    import struct
     # out of memory
     with pytest.raises(MemoryError):
         gmic.GmicImage(struct.pack('8f', (0.0,)*494949*2000*393938*499449), 494949, 2000, 393938, 499449)

@@ -143,7 +143,7 @@ static PyMethodDef PyGmicImage_methods[] = {
 static PyObject* run_impl(PyObject*, PyObject* args, PyObject* kwargs) 
 {
 
-  char const* keywords[] = {"commands_line", "images", "image_names", NULL};
+  char const* keywords[] = {"command", "images", "image_names", NULL};
   PyObject* input_gmic_images = NULL;
   PyObject* input_gmic_image_names = NULL;
   char* commands_line = NULL;
@@ -165,11 +165,43 @@ static PyObject* run_impl(PyObject*, PyObject* args, PyObject* kwargs)
 
   try {
 
+    Py_XINCREF(input_gmic_images);
     Py_XINCREF(input_gmic_image_names);
 
-    if (input_gmic_images != NULL) {
-        Py_INCREF(input_gmic_images);
 
+    // Grab image names and check their typings
+    if (input_gmic_image_names != NULL) {
+        if(PyList_Check(input_gmic_image_names) || PyTuple_Check(input_gmic_image_names)) {
+            PyObject* iter = PyObject_GetIter(input_gmic_image_names);
+            image_names_count = Py_SIZE(input_gmic_image_names);
+            image_names.assign(image_names_count);
+            image_name_position = 0;
+
+            while ((current_image_name = PyIter_Next(iter))) {
+                if (!PyUnicode_Check(current_image_name)) {
+                    PyErr_Format(PyExc_TypeError,
+                                 "'%.50s' input element found at position %d in list/tuple is not a '%.400s'",
+                                 Py_TYPE(current_image_name)->tp_name, image_name_position, PyUnicode_Type.tp_name);
+                    Py_XDECREF(input_gmic_images);
+                    Py_XDECREF(input_gmic_image_names);
+
+                    return NULL;
+                }
+                image_names[image_name_position]._data = (char*) PyUnicode_AsUTF8(current_image_name);
+                image_name_position++;
+            }
+        } else {
+            PyErr_Format(PyExc_TypeError,
+                "'%.50s' 'image_names' parameter must be a list/tuple of '%.400s'(s)",
+                Py_TYPE(input_gmic_images)->tp_name, PyUnicode_Type.tp_name);
+            Py_XDECREF(input_gmic_images);
+            Py_XDECREF(input_gmic_image_names);
+
+            return NULL;
+        }
+    }
+
+    if (input_gmic_images != NULL) {
         // A/ If a list of images was provided
 	if(PyList_Check(input_gmic_images) || PyTuple_Check(input_gmic_images)) {
             image_position = 0;
@@ -183,6 +215,10 @@ static PyObject* run_impl(PyObject*, PyObject* args, PyObject* kwargs)
                     PyErr_Format(PyExc_TypeError,
                                  "'%.50s' input object found at position %d in list/tuple is not a '%.400s'",
                                  Py_TYPE(current_image)->tp_name, image_position, PyGmicImageType.tp_name);
+
+                    Py_XDECREF(input_gmic_images);
+                    Py_XDECREF(input_gmic_image_names);
+
                     return NULL;
                 }
                 images[image_position]._width = ((PyGmicImage*)current_image)->ptrObj._width;
@@ -193,27 +229,6 @@ static PyObject* run_impl(PyObject*, PyObject* args, PyObject* kwargs)
                 images[image_position]._is_shared = ((PyGmicImage*)current_image)->ptrObj._is_shared;
 
                 image_position++;
-            }
-
-            // Grab image names and check their typings
-            if (input_gmic_image_names != NULL) {
-                if(PyList_Check(input_gmic_image_names) || PyTuple_Check(input_gmic_image_names)) {
-                    PyObject* iter = PyObject_GetIter(input_gmic_image_names);
-                    image_names_count = Py_SIZE(input_gmic_image_names);
-                    image_names.assign(image_names_count);
-                    image_name_position = 0;
-
-                    while ((current_image_name = PyIter_Next(iter))) {
-                        if (!PyUnicode_Check(current_image_name)) {
-                            PyErr_Format(PyExc_TypeError,
-                                         "'%.50s' input element found at position %d in list/tuple is not a '%.400s'",
-                                         Py_TYPE(current_image_name)->tp_name, image_name_position, PyUnicode_Type.tp_name);
-                            return NULL;
-                        }
-                        image_names[image_name_position]._data = (char*) PyUnicode_AsUTF8(current_image_name);
-                        image_name_position++;
-                    }
-                }
             }
 
             // Process images and names
@@ -270,13 +285,22 @@ static PyObject* run_impl(PyObject*, PyObject* args, PyObject* kwargs)
             ((PyGmicImage*)input_gmic_images)->ptrObj._is_shared = images[0]._is_shared;
             // Prevent freeing the data buffer's pointer now copied into the external image
             images[0]._data = 0;
-        }
+        } else {
+            PyErr_Format(PyExc_TypeError,
+                "'%.50s' 'images' parameter must be a '%.400s' or list/tuple of '%.400s'(s)",
+                Py_TYPE(input_gmic_images)->tp_name, PyGmicImageType.tp_name, PyGmicImageType.tp_name);
+            Py_XDECREF(input_gmic_images);
+            Py_XDECREF(input_gmic_image_names);
 
-        Py_XDECREF(input_gmic_images);
+            return NULL;
+	}
+
+
     } else {
         gmic(commands_line, 0, true);
     }
 
+    Py_XDECREF(input_gmic_images);
     Py_XDECREF(input_gmic_image_names);
 
   } catch (gmic_exception& e) {
