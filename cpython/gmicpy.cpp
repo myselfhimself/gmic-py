@@ -287,7 +287,7 @@ static PyObject* run_impl(PyObject*, PyObject* args, PyObject* kwargs)
     PyErr_SetString(PyExc_Exception, e.what());
     return NULL;
   }
-  return Py_True;
+  Py_RETURN_NONE;
 }
 
 PyDoc_STRVAR(
