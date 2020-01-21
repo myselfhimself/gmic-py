@@ -39,7 +39,9 @@ Note that `gmic-py`'s package installer links to your machine's existing `libpng
 
 ### Using your camera with G'MIC's optional OpenCV linking
 If your machine has `libopencv` installed and your gmic-py was compiled from source (ie. `python setup.py build`), it will be dynamically linked.
+
 [Example script](examples/opencv-camera/gmic-py-opencv-camera.py)
+
 ![Live example](examples/opencv-camera/gmic-py-opencv-camera.gif)
 
 ## Roadmap
