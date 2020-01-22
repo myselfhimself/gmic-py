@@ -141,8 +141,6 @@ static PyObject* run_impl(PyObject*, PyObject* args, PyObject* kwargs)
       return NULL;
   }
 
-// TODO turn image names into a list of char*
-
   try {
 
     Py_XINCREF(input_gmic_images);
@@ -275,6 +273,16 @@ static PyObject* run_impl(PyObject*, PyObject* args, PyObject* kwargs)
 
             return NULL;
 	}
+
+        // If an image names list was provided, even if wrongly typed, let us update its Python object
+        // in place, to mirror any kind of changes that may have taken place in the gmic_list of image names
+        if (input_gmic_image_names != NULL) {
+            // TODO implement copy-back
+            // cimglist_for(image_names,l) {
+            //   strreplace_bw(files[l]);
+            //   files[l].back() = ',';
+            // }
+        }
 
     } else {
         gmic(commands_line, 0, true);

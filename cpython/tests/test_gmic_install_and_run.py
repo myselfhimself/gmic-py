@@ -406,17 +406,25 @@ def test_gmic_run_parameters_fuzzying():
     original_two_images = (gmic.GmicImage(struct.pack('1f', 1.0)), gmic.GmicImage(struct.pack('1f', 1.0)))
     two_image_names = ("a", "b")
     original_two_image_names = ("a", "b")
+
     # 1 tuple/list of correct length string image_names, correct images, 1 correct command
-    gmic.run(images=two_images, images_names=two_images, command="print")
+    gmic.run(images=two_images, image_names=two_image_names, command="print")
+
     # 1 tuple/list of correct length string image_names, no images at all, 1 correct command
     gmic.run(image_names=two_image_names, command="print")
+
     # 1 tuple/list of correct length string image_names, empty images list, 1 correct command
     gmic.run(images=[], image_names=two_image_names, command="print")
-    assert len(two_images_names) == 0
+    # here gmic must have sliced the image_names to make it the same size as the images length
+    # if this fails, this means we did not update the image_names output Python object..
+    assert len(two_image_names) == 0
+
     # empty image_names, empty images list, 1 correct command
     gmic.run(images=[], image_names=[], command="print")
-    # decreasing size of images
+
+    # decreasing size of the images list
     gmic.run(images=two_images, image_names=[], command="rm[0]")
+    # Here G'MIC will remove the first image, so the output two_images should have been changed and be a single-item tuple
     assert len(two_images) == 1 and two_images[0] == original_two_images[0]
 
     # 1 tuple/list of incorrect length string image_names, correct images, 1 correct command
