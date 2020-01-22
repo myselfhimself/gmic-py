@@ -380,19 +380,79 @@ def test_gmic_run_parameters_fuzzying():
          gmic.run(images=42, command="print")
 
     # 1 GmicImage, 1 correct command, one non-tuple/list of image names
-    #with pytest.raises(TypeError):
     with pytest.raises(TypeError, match=r".* 'image_names' parameter must be a list.*str.*"):
         gmic.run(images=gmic.GmicImage(struct.pack('1f', 1.0)), image_names=3, command="add 4")
 
-    # 1 iterable "list" of GmicImages but not tuple/list, 1 correct command
+    # 1 iterable "list" of GmicImages but not tuple/list (here, a str), 1 correct command
+    with pytest.raises(TypeError, match=r".*'str' 'images' parameter must be a .*GmicImage.* or .*list.*"):
+        gmic.run(images="some iterable object", command="print")
 
     # 1 tuple/list of not-only GmicImages, 1 correct command
+    with pytest.raises(TypeError, match=r"'str'.*object found at position 1 in 'images' list.*"):
+        gmic.run(images=(gmic.GmicImage(struct.pack('1f', 1.0)), "not gmic image"), command="print")
 
     # 1 tuple/list of GmicImages, 1 correct command
+    gmic.run(images=(gmic.GmicImage(struct.pack('1f', 1.0)), gmic.GmicImage(struct.pack('1f', 1.0))), command="print")
 
     # 1 tuple/list of GmicImages, no command
+    with pytest.raises(TypeError, match=r".*Required argument 'command'.*not found.*"):
+        gmic.run(images=(gmic.GmicImage(struct.pack('1f', 1.0)), gmic.GmicImage(struct.pack('1f', 1.0))))
 
-    # 1 tuple/list of GmicImages, some bad command
+    # 1 tuple/list of GmicImages, multiline whitespace-bloated correct command
+    # This most probably requires compilation with libgmic>=2.8.3 to work
+    gmic.run(images=(gmic.GmicImage(struct.pack('1f', 1.0)), gmic.GmicImage(struct.pack('1f', 1.0))), command=" \n\n\r\r  print   \n\r   \t print   \n\n\r\t\t    print    \n")
+
+    two_images = (gmic.GmicImage(struct.pack('1f', 1.0)), gmic.GmicImage(struct.pack('1f', 1.0)))
+    original_two_images = (gmic.GmicImage(struct.pack('1f', 1.0)), gmic.GmicImage(struct.pack('1f', 1.0)))
+    two_image_names = ("a", "b")
+    original_two_image_names = ("a", "b")
+    # 1 tuple/list of correct length string image_names, correct images, 1 correct command
+    gmic.run(images=two_images, images_names=two_images, command="print")
+    # 1 tuple/list of correct length string image_names, no images at all, 1 correct command
+    gmic.run(image_names=two_image_names, command="print")
+    # 1 tuple/list of correct length string image_names, empty images list, 1 correct command
+    gmic.run(images=[], image_names=two_image_names, command="print")
+    assert len(two_images_names) == 0
+    # empty image_names, empty images list, 1 correct command
+    gmic.run(images=[], image_names=[], command="print")
+    # decreasing size of images
+    gmic.run(images=two_images, image_names=[], command="rm[0]")
+    assert len(two_images) == 1 and two_images[0] == original_two_images[0]
+
+    # 1 tuple/list of incorrect length string image_names, correct images, 1 correct command
+    # 1 tuple/list of incorrect length string image_names, correct images, 1 correct command
+    # 1 non-tuple/list image_names, correct images, 1 correct command
+    # 1 iterable non-tuple/list image_names, correct images, 1 correct command
+    # 1 empty tuple/list image_names, correct images, 1 correct command
+    # 1 empty tuple/list image_names, correct images, 1 correct command
+    # 1 tuple/list of image_names with not only strings, correct images, 1 correct command
+    # 1 tuple/list of image_names with 'bytes' strings, correct images, 1 correct command
+
+def test_gmic_image_rich_compare():
+    import gmic
+    import struct
+
+    a = gmic.GmicImage(struct.pack('2f', 1.0, 2.0), 2, 1)
+    a2 = gmic.GmicImage(struct.pack('2f', 1.0, 2.0), 2, 1)
+    a3 = gmic.GmicImage(struct.pack('2f', 1.0, 2.0), 1, 2)
+    b = gmic.GmicImage(struct.pack('1f', 3.0))
+    b2 = gmic.GmicImage(struct.pack('1f', 3.0))
+
+    # Trying == operator between GmicImages (the C++ operator just compares buffers, not dimensions)
+    assert a == a2 == a3
+    assert b == b2
+    assert not (b == a)
+
+    # Trying != operator between GmicImages
+    assert b != a
+    assert not (b != b2)
+
+    # Comparing GmicImage with a different type
+    assert b != "b"
+
+    # Trying all operators other than == and !=, they must be "not supported"
+    for operator, representation in zip(['__gt__', '__ge__', '__lt__', '__le__'], ['>', '>=', '<', '<=']):
+        assert getattr(b, operator)(b) == NotImplemented
 
 def test_gmic_image_memory_exhaustion_initialization_resilience():
     import gmic
@@ -400,9 +460,5 @@ def test_gmic_image_memory_exhaustion_initialization_resilience():
     # out of memory
     with pytest.raises(MemoryError):
         gmic.GmicImage(struct.pack('8f', (0.0,)*494949*2000*393938*499449), 494949, 2000, 393938, 499449)
-
-# todo: test existing dict for dir(GmicImage object)
-
-# todo: test with an empty input image list
 
 # todo: test GmicImage to GmicImage copy (several times) and deletion of the first GmicImage and independent buffer and other attributes subsistance
