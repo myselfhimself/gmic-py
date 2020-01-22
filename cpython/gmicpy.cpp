@@ -132,6 +132,7 @@ static PyObject* run_impl(PyObject*, PyObject* args, PyObject* kwargs)
   int image_names_count;
   gmic_list<T> images;
   gmic_list<char> image_names; // Empty image names
+  char* current_image_name_raw;
   PyObject* current_image = NULL;
   PyObject* current_image_name = NULL;
   PyObject* iter = NULL;
@@ -159,16 +160,20 @@ static PyObject* run_impl(PyObject*, PyObject* args, PyObject* kwargs)
             while ((current_image_name = PyIter_Next(iter))) {
                 if (!PyUnicode_Check(current_image_name)) {
                     PyErr_Format(PyExc_TypeError,
-                                 "'%.50s' input element found at position %d in list/tuple is not a '%.400s'",
+                                 "'%.50s' input element found at position %d in 'image_names' list/tuple is not a '%.400s'",
                                  Py_TYPE(current_image_name)->tp_name, image_name_position, PyUnicode_Type.tp_name);
                     Py_XDECREF(input_gmic_images);
                     Py_XDECREF(input_gmic_image_names);
 
                     return NULL;
                 }
-                image_names[image_name_position]._data = (char*) PyUnicode_AsUTF8(current_image_name);
-                image_name_position++;
+
+		current_image_name_raw = (char*) PyUnicode_AsUTF8(current_image_name);
+                image_names[image_name_position].assign(strlen(current_image_name_raw)+1);
+		memcpy(image_names[image_name_position]._data, current_image_name_raw, image_names[image_name_position]._width);
+		image_name_position++;
             }
+
         } else {
             PyErr_Format(PyExc_TypeError,
                 "'%.50s' 'image_names' parameter must be a list/tuple of '%.400s'(s)",
@@ -192,7 +197,7 @@ static PyObject* run_impl(PyObject*, PyObject* args, PyObject* kwargs)
             while ((current_image = PyIter_Next(iter))) {
                 if (Py_TYPE(current_image) != (PyTypeObject*)&PyGmicImageType) {
                     PyErr_Format(PyExc_TypeError,
-                                 "'%.50s' input object found at position %d in list/tuple is not a '%.400s'",
+                                 "'%.50s' input object found at position %d in 'images' list/tuple is not a '%.400s'",
                                  Py_TYPE(current_image)->tp_name, image_position, PyGmicImageType.tp_name);
 
                     Py_XDECREF(input_gmic_images);
@@ -214,6 +219,8 @@ static PyObject* run_impl(PyObject*, PyObject* args, PyObject* kwargs)
             gmic(commands_line, images, image_names);
 
             // Prevent images auto-deallocation by G'MIC
+	    // TODO adapt to new images list size!!! (list.size())
+	    // TODO adapt to new image names list size!!!
             image_position = 0;
             iter = PyObject_GetIter(input_gmic_images);
             while ((current_image = PyIter_Next(iter))) {
@@ -231,13 +238,6 @@ static PyObject* run_impl(PyObject*, PyObject* args, PyObject* kwargs)
                 image_position++;
             }
 
-            // Prevent image names auto-deallocation by G'MIC
-            if (input_gmic_image_names != NULL) {
-                for(image_name_position = 0; image_name_position < image_names_count; image_name_position++) {
-                    image_names[image_name_position]._data = 0;
-                }
-            }
-
         // B/ Else if a single GmicImage was provided
 	} else if(Py_TYPE(input_gmic_images) == (PyTypeObject*)&PyGmicImageType) {
             images_count = 1;
@@ -253,6 +253,8 @@ static PyObject* run_impl(PyObject*, PyObject* args, PyObject* kwargs)
 
             // Pipe the commands, our single image, and no image names
             gmic(commands_line, images, image_names);
+            // TODO adapt to new images list size!!! (list.size())
+            // TODO adapt to new image names list size!!!
 
             // Put back the possibly modified reallocated image buffer into the original external GmicImage
             // Back up the image data into the original external image before it gets freed
@@ -273,7 +275,6 @@ static PyObject* run_impl(PyObject*, PyObject* args, PyObject* kwargs)
 
             return NULL;
 	}
-
 
     } else {
         gmic(commands_line, 0, true);
@@ -375,6 +376,37 @@ PyGetSetDef PyGmicImage_getsets[] = {
     {NULL}
 };
 
+static PyObject *
+PyGmicImage_richcompare(PyObject *self, PyObject *other, int op)
+{
+    PyObject *result = NULL;
+
+    if (Py_TYPE(other) != Py_TYPE(self)) {
+        result = Py_NotImplemented;
+    }
+    else {
+        switch (op) {
+        case Py_LT:
+        case Py_LE:
+        case Py_GT:
+        case Py_GE:
+            result = Py_NotImplemented;
+            break;
+        case Py_EQ:
+            // Leverage the CImg == C++ operator
+            result = ((PyGmicImage*)self)->ptrObj == ((PyGmicImage*)other)->ptrObj ? Py_True : Py_False;
+            break;
+        case Py_NE:
+            // Leverage the CImg != C++ operator
+            result = ((PyGmicImage*)self)->ptrObj != ((PyGmicImage*)other)->ptrObj ? Py_True : Py_False;
+            break;
+        }
+    }
+
+    Py_XINCREF(result);
+    return result;
+}
+
 PyMODINIT_FUNC PyInit_gmic() {
     PyObject* m;
 
@@ -390,6 +422,7 @@ PyMODINIT_FUNC PyInit_gmic() {
     PyGmicImageType.tp_members=PyGmicImage_members;
     PyGmicImageType.tp_dictoffset = offsetof(PyGmicImage,dict);
     PyGmicImageType.tp_getset = PyGmicImage_getsets;
+    PyGmicImageType.tp_richcompare = PyGmicImage_richcompare;
 
     if (PyType_Ready(&PyGmicImageType) < 0)
         return NULL;
