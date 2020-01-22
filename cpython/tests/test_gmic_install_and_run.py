@@ -285,12 +285,12 @@ def test_gmic_image_readonly_forbidden_write_attributes():
         getattr(i, "unkown")
     assert "no attribute 'unkown'" in str(excinfo.value)
 
-    # Ensure known and unknown attributes fail being set with an error message variant
-    for a in real_attributes + ("unkwnown", ):
-        with pytest.raises(AttributeError) as excinfo:
+    # Ensure known attributes fail being set with an error message variant
+    # Note that we do not test setting non-existing attributes
+    # because the pythonic object type allows creating new attributes on the fly by setting them
+    for a in real_attributes:
+        with pytest.raises(AttributeError, match=r".*(readonly|not writable).*"):
             setattr(i, a, "anything")
-        assert excinfo.typename == "AttributeError"
-        assert "'{}' is read-only".format(a) in str(excinfo.value) if a in real_attributes else "no attribute '{}'".format(a) in str(excinfo.value)
 
 def test_gmic_images_list_with_image_names_multiple_add_filter_run():
     import gmic

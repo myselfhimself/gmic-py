@@ -58,27 +58,6 @@ static int PyGmicImage_init(PyGmicImage *self, PyObject *args, PyObject *kwargs)
     return 0;
 }
 
-// Disallow all gmic_image attributes to be written
-static int PyGmicImage_setattro(PyGmicImage* self, PyObject* attr, PyObject* value)
-{
-    const char* name = PyUnicode_AsUTF8(attr);
-
-    if (strcmp(name, "_data") == 0 || strcmp(name, "_width") == 0 || strcmp(name, "_height") == 0 || strcmp(name, "_depth") == 0 || strcmp(name, "_spectrum") == 0 || strcmp(name, "_is_shared") == 0)
-    {
-        PyErr_Format(PyExc_AttributeError,
-                     "'%.50s' object attribute '%.400s' is read-only",
-                     Py_TYPE(self)->tp_name, name);
-    }
-    else
-    {
-        PyErr_Format(PyExc_AttributeError,
-                     "'%.50s' object has no attribute '%.400s'",
-                     Py_TYPE(self)->tp_name, name);
-    }
-
-    return -1;
-}
-
 static PyObject* PyGmicImage_repr(PyGmicImage* self)
 {
     return PyUnicode_FromFormat("<%s object at %p with _data address at %p, w=%d h=%d d=%d s=%d shared=%d>",
@@ -407,7 +386,6 @@ PyMODINIT_FUNC PyInit_gmic() {
     PyGmicImageType.tp_init=(initproc)PyGmicImage_init;
     PyGmicImageType.tp_call=(ternaryfunc)PyGmicImage_call;
     PyGmicImageType.tp_getattro=PyObject_GenericGetAttr;
-    PyGmicImageType.tp_setattro=(setattrofunc)PyGmicImage_setattro;
     PyGmicImageType.tp_doc=PyGmicImage_doc;
     PyGmicImageType.tp_members=PyGmicImage_members;
     PyGmicImageType.tp_dictoffset = offsetof(PyGmicImage,dict);
