@@ -165,6 +165,8 @@ def assert_get_proper_print_regex(w, h, search_str):
     assert re.compile(r"size = \({},{},1,1\) \[{} b of floats\](.*)\n(.*)\n(.*)min = 0".format(round(w), round(h), int(round(w)*round(h)*FLOAT_SIZE_IN_BYTES)), flags=re.MULTILINE).search(search_str) is not None
 
 def assert_gmic_images_are_identical(gmic_image1, gmic_image2):
+    assert gmic_image1 == gmic_image2 # Use of the build __eq__ and __ne__ operators
+    assert not (gmic_image1 != gmic_image2)
     assert gmic_image1._width == gmic_image2._width
     assert gmic_image1._height == gmic_image2._height
     assert gmic_image1._depth == gmic_image2._depth
@@ -336,7 +338,7 @@ def test_gmic_image_object_and_attribute_types():
     assert type(a._is_shared) == bool
     assert type(a._data) == bytes
 
-def test_gmic_run_parameters_fuzzying():
+def test_gmic_run_parameters_fuzzying_basic():
     import gmic
     import struct
     w = 60
@@ -351,7 +353,7 @@ def test_gmic_run_parameters_fuzzying():
 
     # 1 parameters-depending command without an image or with empty list
     gmic.run("print")
-    gmic.run("print", tuple())
+    gmic.run("print", [])
 
     # 1 correct GmicImage, 1 correct command, in wrong order
     with pytest.raises(TypeError, match=r".*argument 1 must be str, not gmic.GmicImage.*"):
@@ -365,7 +367,7 @@ def test_gmic_run_parameters_fuzzying():
     gmic.run(images=gmic.GmicImage(struct.pack('1f', 1.0)), command="print")
 
     # 1 correct list of GmicImages, 1 correct command with flipped keywords
-    gmic.run(images=(gmic.GmicImage(struct.pack('1f', 1.0)), gmic.GmicImage(struct.pack('2f', 1.0, 2.0), 2)), command="add 3")
+    gmic.run(images=[gmic.GmicImage(struct.pack('1f', 1.0)), gmic.GmicImage(struct.pack('2f', 1.0, 2.0), 2)], command="add 3")
 
     # 1 GmicImage, no command
     with pytest.raises(TypeError, match=r".*argument 1 must be str, not gmic.GmicImage.*"):
@@ -379,62 +381,90 @@ def test_gmic_run_parameters_fuzzying():
     with pytest.raises(TypeError, match=r".*'int' 'images' parameter must be a .*GmicImage.* or .*list.*"):
          gmic.run(images=42, command="print")
 
-    # 1 GmicImage, 1 correct command, one non-tuple/list of image names
+    # 1 GmicImage, 1 correct command, one non-list of image names
     with pytest.raises(TypeError, match=r".* 'image_names' parameter must be a list.*str.*"):
         gmic.run(images=gmic.GmicImage(struct.pack('1f', 1.0)), image_names=3, command="add 4")
 
-    # 1 iterable "list" of GmicImages but not tuple/list (here, a str), 1 correct command
+    # 1 iterable "list" for images but not list (here, a str), 1 correct command
     with pytest.raises(TypeError, match=r".*'str' 'images' parameter must be a .*GmicImage.* or .*list.*"):
         gmic.run(images="some iterable object", command="print")
 
-    # 1 tuple/list of not-only GmicImages, 1 correct command
+    # 1 list of not-only GmicImages, 1 correct command
     with pytest.raises(TypeError, match=r"'str'.*object found at position 1 in 'images' list.*"):
-        gmic.run(images=(gmic.GmicImage(struct.pack('1f', 1.0)), "not gmic image"), command="print")
+        gmic.run(images=[gmic.GmicImage(struct.pack('1f', 1.0)), "not gmic image"], command="print")
 
-    # 1 tuple/list of GmicImages, 1 correct command
-    gmic.run(images=(gmic.GmicImage(struct.pack('1f', 1.0)), gmic.GmicImage(struct.pack('1f', 1.0))), command="print")
+    # 1 list of GmicImages, 1 correct command
+    gmic.run(images=[gmic.GmicImage(struct.pack('1f', 1.0)), gmic.GmicImage(struct.pack('1f', 1.0))], command="print")
 
-    # 1 tuple/list of GmicImages, no command
+    # 1 list of GmicImages, no command
     with pytest.raises(TypeError, match=r".*Required argument 'command'.*not found.*"):
-        gmic.run(images=(gmic.GmicImage(struct.pack('1f', 1.0)), gmic.GmicImage(struct.pack('1f', 1.0))))
+        gmic.run(images=[gmic.GmicImage(struct.pack('1f', 1.0)), gmic.GmicImage(struct.pack('1f', 1.0))])
 
-    # 1 tuple/list of GmicImages, multiline whitespace-bloated correct command
+    # 1 list of GmicImages, multiline whitespace-bloated correct command
     # This most probably requires compilation with libgmic>=2.8.3 to work
-    gmic.run(images=(gmic.GmicImage(struct.pack('1f', 1.0)), gmic.GmicImage(struct.pack('1f', 1.0))), command=" \n\n\r\r  print   \n\r   \t print   \n\n\r\t\t    print    \n")
+    gmic.run(images=[gmic.GmicImage(struct.pack('1f', 1.0)), gmic.GmicImage(struct.pack('1f', 1.0))], command=" \n\n\r\r  print   \n\r   \t print   \n\n\r\t\t    print    \n")
 
-    two_images = (gmic.GmicImage(struct.pack('1f', 1.0)), gmic.GmicImage(struct.pack('1f', 1.0)))
-    original_two_images = (gmic.GmicImage(struct.pack('1f', 1.0)), gmic.GmicImage(struct.pack('1f', 1.0)))
-    two_image_names = ("a", "b")
-    original_two_image_names = ("a", "b")
 
-    # 1 tuple/list of correct length string image_names, correct images, 1 correct command
+def test_gmic_run_parameters_fuzzying_for_lists_cardinality():
+    import gmic
+    import struct
+
+    two_images = [gmic.GmicImage(struct.pack('2f', 2.0, 3.0), 1, 2), gmic.GmicImage(struct.pack('2f', 17.0, 5.0), 2)]
+    original_two_images = [gmic.GmicImage(struct.pack('2f', 2.0, 3.0), 1, 2), gmic.GmicImage(struct.pack('2f', 17.0, 5.0), 2)]
+    two_image_names = ["a", "b"]
+    original_two_image_names = ["a", "b"]
+
+    # 1 list of correct length string image_names, correct images, 1 correct command
     gmic.run(images=two_images, image_names=two_image_names, command="print")
 
-    # 1 tuple/list of correct length string image_names, no images at all, 1 correct command
+    # 1 list of correct length string image_names, no images at all, 1 correct command
     gmic.run(image_names=two_image_names, command="print")
 
-    # 1 tuple/list of correct length string image_names, empty images list, 1 correct command
-    gmic.run(images=[], image_names=two_image_names, command="print")
-    # here gmic must have sliced the image_names to make it the same size as the images length
+    # 1 list of correct length string image_names, empty images list, 1 correct command
+    input_empty_images = []
+    input_command = "print"
+    gmic.run(images=input_empty_images, image_names=two_image_names, command=input_command)
+    # here gmic will slice the image_names underlying gmic_list to make it the same size as the images gmic_list length
     # if this fails, this means we did not update the image_names output Python object..
-    assert len(two_image_names) == 0
+    assert len(two_image_names) == 0 and type(two_image_names) == list
+    assert len(input_empty_images) == 0 and type(input_empty_images) == list
+    assert input_command == "print" and type(input_command) == str
 
     # empty image_names, empty images list, 1 correct command
     gmic.run(images=[], image_names=[], command="print")
 
-    # decreasing size of the images list
-    gmic.run(images=two_images, image_names=[], command="rm[0]")
-    # Here G'MIC will remove the first image, so the output two_images should have been changed and be a single-item tuple
-    assert len(two_images) == 1 and two_images[0] == original_two_images[0]
+    two_images = [gmic.GmicImage(struct.pack('2f', 2.0, 3.0), 1, 2), gmic.GmicImage(struct.pack('2f', 17.0, 5.0), 2)]
+    original_two_images = [gmic.GmicImage(struct.pack('2f', 2.0, 3.0), 1, 2), gmic.GmicImage(struct.pack('2f', 17.0, 5.0), 2)]
+    two_image_names = ["a", "b"]
+    original_two_image_names = ["a", "b"]
 
-    # 1 tuple/list of incorrect length string image_names, correct images, 1 correct command
-    # 1 tuple/list of incorrect length string image_names, correct images, 1 correct command
-    # 1 non-tuple/list image_names, correct images, 1 correct command
-    # 1 iterable non-tuple/list image_names, correct images, 1 correct command
-    # 1 empty tuple/list image_names, correct images, 1 correct command
-    # 1 empty tuple/list image_names, correct images, 1 correct command
-    # 1 tuple/list of image_names with not only strings, correct images, 1 correct command
-    # 1 tuple/list of image_names with 'bytes' strings, correct images, 1 correct command
+    # Testing decreasing size of the images list
+    gmic.run(images=two_images, image_names=two_image_names, command="rm[0]")
+    # Here G'MIC will remove the first image, so the output two_images should have been changed and be a single-item list
+    assert len(two_images) == 1
+    #assert two_images[0] == original_two_images[1]
+    assert_gmic_images_are_identical(two_images[0], original_two_images[1])
+    assert two_image_names == ['b']
+
+    # Testing single-image parameter with decreasing size of images list (processed by the binding as a 1 item list)
+    two_images = [gmic.GmicImage(struct.pack('2f', 2.0, 3.0), 1, 2), gmic.GmicImage(struct.pack('2f', 17.0, 5.0), 2)]
+    original_two_images = [gmic.GmicImage(struct.pack('2f', 2.0, 3.0), 1, 2), gmic.GmicImage(struct.pack('2f', 17.0, 5.0), 2)]
+    two_image_names = ["a", "b"]
+    original_two_image_names = ["a", "b"]
+
+    with pytest.raises(RuntimeError, match=r".*was removed by your G'MIC command.*emptied.*image_names.*untouched.*"):
+        gmic.run(images=two_images[0], image_names=two_image_names, command="rm[0]")
+    assert two_images[0] != original_two_images[0] # Ensuring zombie image differs from original image
+    assert two_image_names == original_two_image_names # Ensuring image names are preserved
+
+    # 1 list of incorrect length string image_names, correct images, 1 correct command
+    # 1 list of incorrect length string image_names, correct images, 1 correct command
+    # 1 non-list image_names, correct images, 1 correct command
+    # 1 iterable non-list image_names, correct images, 1 correct command
+    # 1 empty list image_names, correct images, 1 correct command
+    # 1 empty list image_names, correct images, 1 correct command
+    # 1 list of image_names with not only strings, correct images, 1 correct command
+    # 1 list of image_names with 'bytes' strings, correct images, 1 correct command
 
 def test_gmic_image_rich_compare():
     import gmic
