@@ -458,13 +458,51 @@ def test_gmic_run_parameters_fuzzying_for_lists_cardinality():
     assert two_image_names == original_two_image_names # Ensuring image names are preserved
 
     # 1 list of incorrect length string image_names, correct images, 1 correct command
+    two_images = [gmic.GmicImage(struct.pack('2f', 2.0, 3.0), 1, 2), gmic.GmicImage(struct.pack('2f', 17.0, 5.0), 2)]
+    original_two_images = [gmic.GmicImage(struct.pack('2f', 2.0, 3.0), 1, 2), gmic.GmicImage(struct.pack('2f', 17.0, 5.0), 2)]
+    one_image_names = ["b"]
+
+    gmic.run(images=two_images, image_names=one_image_names, command="print")
+    assert_gmic_images_are_identical(two_images[0], original_two_images[0])
+    assert_gmic_images_are_identical(two_images[1], original_two_images[1])
+    assert one_image_names == ["b", "[unnamed]"]
+
     # 1 list of incorrect length string image_names, correct images, 1 correct command
-    # 1 non-list image_names, correct images, 1 correct command
-    # 1 iterable non-list image_names, correct images, 1 correct command
+    two_images = [gmic.GmicImage(struct.pack('2f', 2.0, 3.0), 1, 2), gmic.GmicImage(struct.pack('2f', 17.0, 5.0), 2)]
+    original_two_images = [gmic.GmicImage(struct.pack('2f', 2.0, 3.0), 1, 2), gmic.GmicImage(struct.pack('2f', 17.0, 5.0), 2)]
+    one_image_names = ["", ""]
+
+    gmic.run(images=two_images, image_names=one_image_names, command="print")
+    assert_gmic_images_are_identical(two_images[0], original_two_images[0])
+    assert_gmic_images_are_identical(two_images[1], original_two_images[1])
+    assert one_image_names == ["", ""]
+
+    # 1 image GmicImage, 1 image_names string, 1 correct command
+    gmic.run(images=two_images[0], image_names="single_image", command="print")
+    assert_gmic_images_are_identical(two_images[0], original_two_images[0])
+
+    # 1 image GmicImage in a list, 1 image_names string, 1 correct command
+    with pytest.raises(TypeError, match=r".*'images' parameter must be a '.*GmicImage.*' if the 'image_names' parameter is a bare 'str'.*"):
+        gmic.run(images=[two_images[0]], image_names="single_image", command="print")
+
+    # 1 non-list image_names sequence, correct images, 1 correct command
+    with pytest.raises(TypeError, match=r".*'tuple' 'image_names' parameter must be a .*list.*of.*str.*"):
+        gmic.run(images=two_images, image_names=("a","b"), command="print")
+
     # 1 empty list image_names, correct images, 1 correct command
-    # 1 empty list image_names, correct images, 1 correct command
+    empty_image_names = []
+    gmic.run(images=two_images, image_names=empty_image_names, command="print")
+    assert empty_image_names == ["[unnamed]", "[unnamed]"]
+
     # 1 list of image_names with not only strings, correct images, 1 correct command
+    bad_content_image_names = [3, "hey"]
+    with pytest.raises(TypeError, match=r"'int'.*input element found at position 0 in 'image_names' list.*"):
+        gmic.run(images=two_images, image_names=bad_content_image_names, command="print")
+
     # 1 list of image_names with 'bytes' strings, correct images, 1 correct command
+    bad_content_image_names = [b'bonsoir', "hey"]
+    with pytest.raises(TypeError, match=r"'bytes'.*input element found at position 0 in 'image_names' list.*"):
+        gmic.run(images=two_images, image_names=bad_content_image_names, command="print")
 
 def test_gmic_image_rich_compare():
     import gmic
@@ -492,6 +530,7 @@ def test_gmic_image_rich_compare():
     for operator, representation in zip(['__gt__', '__ge__', '__lt__', '__le__'], ['>', '>=', '<', '<=']):
         assert getattr(b, operator)(b) == NotImplemented
 
+@pytest.mark.skip(reason="some machines/OS are too brave and will try this allocation for minutes instead of erroring")
 def test_gmic_image_memory_exhaustion_initialization_resilience():
     import gmic
     import struct
@@ -500,4 +539,14 @@ def test_gmic_image_memory_exhaustion_initialization_resilience():
     with pytest.raises(MemoryError):
         gmic.GmicImage(struct.pack('8f', (0.0,)*494949*2000*393938*499449), 494949, 2000, 393938, 499449)
 
-# todo: test GmicImage to GmicImage copy (several times) and deletion of the first GmicImage and independent buffer and other attributes subsistance
+def test_gmic_images_post_element_removal_conservation():
+    import gmic
+    import struct
+    a = gmic.GmicImage(struct.pack('2f', 1.0, 2.0), 2, 1)
+    original_a = gmic.GmicImage(struct.pack('2f', 1.0, 2.0), 2, 1)
+
+    images = [a, a, a]
+    # If this core dumps, this means that there is a missing or badly put memcpy() on input list GmicImage(s) retrieval
+    gmic.run(command="rm[0]", images=images)
+    for i in images:
+        assert_gmic_images_are_identical(i, original_a)

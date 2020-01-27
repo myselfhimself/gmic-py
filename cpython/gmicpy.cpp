@@ -147,9 +147,9 @@ static PyObject* run_impl(PyObject*, PyObject* args, PyObject* kwargs)
     Py_XINCREF(input_gmic_image_names);
 
 
-    // Grab image names and check their typings
-    // TODO allow for single string non-list
+    // Grab image names or single image name and check typings
     if (input_gmic_image_names != NULL) {
+        // If list of image names provided
         if(PyList_Check(input_gmic_image_names)) {
             PyObject* iter = PyObject_GetIter(input_gmic_image_names);
             image_names_count = Py_SIZE(input_gmic_image_names);
@@ -173,10 +173,28 @@ static PyObject* run_impl(PyObject*, PyObject* args, PyObject* kwargs)
 		image_name_position++;
             }
 
+	// If single image name provided
+        } else if (PyUnicode_Check(input_gmic_image_names)) {
+	    // Enforce also non-null single-GmicImage 'images' parameter
+            if (input_gmic_images != NULL && Py_TYPE(input_gmic_images) != (PyTypeObject*)&PyGmicImageType) {
+                PyErr_Format(PyExc_TypeError,
+                             "'%.50s' 'images' parameter must be a '%.400s' if the 'image_names' parameter is a bare '%.400s'.",
+                             Py_TYPE(input_gmic_images)->tp_name, PyGmicImageType.tp_name, PyUnicode_Type.tp_name);
+                Py_XDECREF(input_gmic_images);
+                Py_XDECREF(input_gmic_image_names);
+
+                return NULL;
+	    }
+
+            image_names.assign(1);
+	    current_image_name_raw = (char*) PyUnicode_AsUTF8(input_gmic_image_names);
+	    image_names[0].assign(strlen(current_image_name_raw)+1);
+	    memcpy(image_names[0]._data, current_image_name_raw, image_names[0]._width);
+	// If neither a list of strings nor a single string were provided, raise exception
         } else {
             PyErr_Format(PyExc_TypeError,
                 "'%.50s' 'image_names' parameter must be a list of '%.400s'(s)",
-                Py_TYPE(input_gmic_images)->tp_name, PyUnicode_Type.tp_name);
+                Py_TYPE(input_gmic_image_names)->tp_name, PyUnicode_Type.tp_name);
             Py_XDECREF(input_gmic_images);
             Py_XDECREF(input_gmic_image_names);
 
@@ -204,11 +222,13 @@ static PyObject* run_impl(PyObject*, PyObject* args, PyObject* kwargs)
 
                     return NULL;
                 }
+                int dimensions_product = ((PyGmicImage*)current_image)->ptrObj._width * ((PyGmicImage*)current_image)->ptrObj._height * ((PyGmicImage*)current_image)->ptrObj._depth * ((PyGmicImage*)current_image)->ptrObj._spectrum;
+		images[image_position].assign(dimensions_product);
                 images[image_position]._width = ((PyGmicImage*)current_image)->ptrObj._width;
                 images[image_position]._height = ((PyGmicImage*)current_image)->ptrObj._height;
                 images[image_position]._depth = ((PyGmicImage*)current_image)->ptrObj._depth;
                 images[image_position]._spectrum = ((PyGmicImage*)current_image)->ptrObj._spectrum;
-                images[image_position]._data = ((PyGmicImage*)current_image)->ptrObj._data;
+	        memcpy(images[image_position]._data, ((PyGmicImage*)current_image)->ptrObj._data, dimensions_product*sizeof(T));
                 images[image_position]._is_shared = ((PyGmicImage*)current_image)->ptrObj._is_shared;
 
                 image_position++;
@@ -218,7 +238,6 @@ static PyObject* run_impl(PyObject*, PyObject* args, PyObject* kwargs)
             gmic(commands_line, images, image_names);
 
             // Prevent images auto-deallocation by G'MIC
-	    // TODO adapt to new images list size!!! (list.size())
             image_position = 0;
 
 	    // Bring new images set back into the Python world (in place list items change)
@@ -332,6 +351,7 @@ PyDoc_STRVAR(
 run_impl_doc,
 "run(command: str[, images: GmicImage|List[GmicImage], image_names: str|List[str]]) -> bool\n\n\
 Run G'MIC interpret following a G'MIC language command(s) string, on 0 or more GmicImage(s).\n\n\
+Note (single-image short-hand calling): if 'images' is a GmicImage, then 'image_names' must be either a 'str' or not provided.\n\n\
 Example:\n\
 import gmic\n\
 import struct\n\
@@ -343,7 +363,8 @@ a._width == a._height == 8 # The image is half smaller\n\
 gmic.run('display', a) # If you have X11 enabled (linux only), show the image in a window\n\
 image_names = ['img_' + str(i) for i in range(10)] # You can also name your images if you have several (optional)\n\
 images = [gmic.GmicImage(struct.pack(*((str(w*h)+'f',) + (i*2.0,)*w*h)), w, h) for i in range(10)] # Prepare a list of image\n\
-gmic.run('add 1 print', images, image_names) # And pipe those into the interpret");
+gmic.run('add 1 print', images, image_names) # And pipe those into the interpret\n\
+gmic.run('blur 10,0,1 print', images[0], 'my_pic_name') # Short-hand 1-image calling style");
 
 static PyMethodDef gmic_methods[] = {
   {"run", (PyCFunction)run_impl, METH_VARARGS|METH_KEYWORDS, run_impl_doc},
