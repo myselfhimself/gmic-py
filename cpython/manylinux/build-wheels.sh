@@ -26,7 +26,7 @@ for PYBIN in /opt/python/cp3*/bin; do
     export PIP3="${PYBIN}/pip"
     export PYTHON3="${PYBIN}/python"
 
-    bash /io/1_clean_and_regrab_gmic_src.sh
+    bash /io/build_tools.bash 1_clean_and_regrab_gmic_src
 
     "${PYBIN}/pip" install -r /io/dev-requirements.txt  || { echo "Fatal pip requirements download error" ; exit 1; }
     "${PYBIN}/pip" wheel /io/ -w wheelhouse/ -vvv || { echo "Fatal wheel build error" ; exit 1; }
