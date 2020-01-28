@@ -93,9 +93,8 @@ static void PyGmicImage_dealloc(PyGmicImage * self)
 
 static PyObject * PyGmicImage_from_numpy_array(PyGmicImage * self, PyObject* args)
 {
-int retval;
+    int retval;
 
-// todo array of floats instead from numpy array
     if (! PyArg_ParseTuple(args, "f", &self->_gmic_image._data))
         return Py_False;
 
@@ -273,8 +272,6 @@ static PyObject* run_impl(PyObject*, PyObject* args, PyObject* kwargs)
 
             // Pipe the commands, our single image, and no image names
             gmic(commands_line, images, image_names);
-            // TODO adapt to new images list size!!! (list.size())
-            // TODO adapt to new image names list size!!!
 
 	    // Alter the original image only if the gmic_image list has not been downsized to 0 elements
 	    // this may happen with eg. a rm[0] G'MIC command
