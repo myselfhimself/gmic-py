@@ -23,7 +23,7 @@ You need Python 3.x and `pip` installed.
 Things work best with the last development version for now :)
 
 ```bash
-pip install gmic==2.8.1.dev7 # Consider adding --only-binary if your machine makes you compile from source
+pip install gmic==2.8.1.dev8 # Consider adding --only-binary if your machine makes you compile from source
 python3
 ```
 ```python
