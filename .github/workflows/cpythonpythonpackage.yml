@@ -18,7 +18,7 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
     - name: Compile and run tests on .so, .whl and source distribution
-      working-directory: ./cpython/
+      working-directory: ./
       env:
         TWINE_PASSWORD_GITHUB_SECRET: ${{ secrets.TWINE_PASSWORD_GITHUB_SECRET }} # For build_tools.bash 11_send_to_pypi
         PYTHON3: python3

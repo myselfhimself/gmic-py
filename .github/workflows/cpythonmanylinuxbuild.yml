@@ -30,7 +30,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: build, run packages on ${{ matrix.plat }} architecture and publish them to PyPI
-        working-directory: ./cpython
+        working-directory: ./
         env:
           TWINE_PASSWORD_GITHUB_SECRET: ${{ secrets.TWINE_PASSWORD_GITHUB_SECRET }} # For build_tools.bash 11_send_to_pypi
           DOCKER_IMAGE: ${{ matrix.docker_image }}

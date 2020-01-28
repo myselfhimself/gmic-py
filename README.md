@@ -56,7 +56,7 @@ If your machine has `libopencv` installed and your gmic-py was compiled from sou
 ### Q4 2019
 1. Create a `pip install -e GITHUB_URL` installable Python package for GMIC, with an API very similar to the C++ library: `gmic_instance.run(...)`, `gmic(...)` and matching exception types. Binary dependencies [should be bundled as in this tutorial](https://python-packaging-tutorial.readthedocs.io/en/latest/binaries_dependencies.html).
     1. Through `Ctypes` dynamic binding on an Ubuntu docker image using Python 2-3. DONE in [ctypes\_archive branch](https://github.com/dtschump/gmic-py/tree/ctypes_archive).
-    1. Through custom Python/C++ binding in `cpython/` WIP
+    1. Through custom Python/C++ binding (see `gmicpy.cpp` and `setup.py`) WIP
 1. Create documented examples for various application domains. WIP
 
 ### Q1-Q2 2020
