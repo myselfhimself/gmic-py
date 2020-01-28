@@ -32,10 +32,10 @@ jobs:
       - name: build, run packages on ${{ matrix.plat }} architecture and publish them to PyPI
         working-directory: ./cpython
         env:
-          TWINE_PASSWORD_GITHUB_SECRET: ${{ secrets.TWINE_PASSWORD_GITHUB_SECRET }} # For 11_send_to_pypi.sh
+          TWINE_PASSWORD_GITHUB_SECRET: ${{ secrets.TWINE_PASSWORD_GITHUB_SECRET }} # For build_tools.bash 11_send_to_pypi
           DOCKER_IMAGE: ${{ matrix.docker_image }}
           PLAT: ${{ matrix.plat }}
           CMD: ${{ matrix.cmd }}
         run: |
           for apt_file in `grep -lr microsoft /etc/apt/sources.list.d/`; do sudo rm $apt_file; done
-          bash 33_build_manylinux.sh && bash 11_send_to_pypi.sh
+          bash build_tools.bash 33_build_manylinux && bash build_tools.bash 11_send_to_pypi

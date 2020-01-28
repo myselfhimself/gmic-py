@@ -1,1 +1,0 @@
-$PIP3 uninstall gmic -y; cd ./build/lib.*-*/ ; LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH ; $PIP3 install -r ../../tests/requirements.txt ; pwd; ls; $PYTHON3 -m pytest ../../tests/test_gmic_install_and_run.py -vvv -rxXs || (echo "Fatal while running pytests" && exit 1) ; cd ../..
