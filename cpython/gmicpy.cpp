@@ -219,13 +219,12 @@ static PyObject* run_impl(PyObject*, PyObject* args, PyObject* kwargs)
 
                     return NULL;
                 }
-                int dimensions_product = ((PyGmicImage*)current_image)->_gmic_image._width * ((PyGmicImage*)current_image)->_gmic_image._height * ((PyGmicImage*)current_image)->_gmic_image._depth * ((PyGmicImage*)current_image)->_gmic_image._spectrum;
-		images[image_position].assign(dimensions_product);
+		images[image_position].assign(((PyGmicImage*)current_image)->_gmic_image._width, ((PyGmicImage*)current_image)->_gmic_image._height, ((PyGmicImage*)current_image)->_gmic_image._depth, ((PyGmicImage*)current_image)->_gmic_image._spectrum);
                 images[image_position]._width = ((PyGmicImage*)current_image)->_gmic_image._width;
                 images[image_position]._height = ((PyGmicImage*)current_image)->_gmic_image._height;
                 images[image_position]._depth = ((PyGmicImage*)current_image)->_gmic_image._depth;
                 images[image_position]._spectrum = ((PyGmicImage*)current_image)->_gmic_image._spectrum;
-	        memcpy(images[image_position]._data, ((PyGmicImage*)current_image)->_gmic_image._data, dimensions_product*sizeof(T));
+	        memcpy(images[image_position]._data, ((PyGmicImage*)current_image)->_gmic_image._data, ((PyGmicImage*)current_image)->_gmic_image.size()*sizeof(T));
                 images[image_position]._is_shared = ((PyGmicImage*)current_image)->_gmic_image._is_shared;
 
                 image_position++;
@@ -261,14 +260,14 @@ static PyObject* run_impl(PyObject*, PyObject* args, PyObject* kwargs)
 	} else if(Py_TYPE(input_gmic_images) == (PyTypeObject*)&PyGmicImageType) {
             images_count = 1;
             images.assign(1);
-            image_position = 0;
 
-            images[image_position]._width = ((PyGmicImage*)input_gmic_images)->_gmic_image._width;
-            images[image_position]._height = ((PyGmicImage*)input_gmic_images)->_gmic_image._height;
-            images[image_position]._depth = ((PyGmicImage*)input_gmic_images)->_gmic_image._depth;
-            images[image_position]._spectrum = ((PyGmicImage*)input_gmic_images)->_gmic_image._spectrum;
-            images[image_position]._data = ((PyGmicImage*)input_gmic_images)->_gmic_image._data;
-            images[image_position]._is_shared = ((PyGmicImage*)input_gmic_images)->_gmic_image._is_shared;
+            images[0].assign(((PyGmicImage*)input_gmic_images)->_gmic_image._width, ((PyGmicImage*)input_gmic_images)->_gmic_image._height, ((PyGmicImage*)input_gmic_images)->_gmic_image._depth, ((PyGmicImage*)input_gmic_images)->_gmic_image._spectrum);
+            images[0]._width = ((PyGmicImage*)input_gmic_images)->_gmic_image._width;
+            images[0]._height = ((PyGmicImage*)input_gmic_images)->_gmic_image._height;
+            images[0]._depth = ((PyGmicImage*)input_gmic_images)->_gmic_image._depth;
+            images[0]._spectrum = ((PyGmicImage*)input_gmic_images)->_gmic_image._spectrum;
+	    memcpy(images[0]._data, ((PyGmicImage*)input_gmic_images)->_gmic_image._data, ((PyGmicImage*)input_gmic_images)->_gmic_image.size()*sizeof(T));
+            images[0]._is_shared = ((PyGmicImage*)input_gmic_images)->_gmic_image._is_shared;
 
             // Pipe the commands, our single image, and no image names
             gmic(commands_line, images, image_names);

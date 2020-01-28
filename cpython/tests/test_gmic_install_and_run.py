@@ -454,7 +454,7 @@ def test_gmic_run_parameters_fuzzying_for_lists_cardinality():
 
     with pytest.raises(RuntimeError, match=r".*was removed by your G'MIC command.*emptied.*image_names.*untouched.*"):
         gmic.run(images=two_images[0], image_names=two_image_names, command="rm[0]")
-    assert two_images[0] != original_two_images[0] # Ensuring zombie image differs from original image
+    assert two_images[0] == original_two_images[0] # Ensuring input image is preserved (ie. untouched)
     assert two_image_names == original_two_image_names # Ensuring image names are preserved
 
     # 1 list of incorrect length string image_names, correct images, 1 correct command
