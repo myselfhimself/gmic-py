@@ -10,10 +10,8 @@ using namespace std;
 #define T gmic_pixel_type
 #endif
 
-
 typedef struct {
     PyObject_HEAD
-    PyObject* dict;
     gmic_image<T> ptrObj; // G'MIC library's Gmic Image
 } PyGmicImage;
 
@@ -475,7 +473,6 @@ PyMODINIT_FUNC PyInit_gmic() {
     PyGmicImageType.tp_getattro=PyObject_GenericGetAttr;
     PyGmicImageType.tp_doc=PyGmicImage_doc;
     PyGmicImageType.tp_members=PyGmicImage_members;
-    PyGmicImageType.tp_dictoffset = offsetof(PyGmicImage,dict);
     PyGmicImageType.tp_getset = PyGmicImage_getsets;
     PyGmicImageType.tp_richcompare = PyGmicImage_richcompare;
 
