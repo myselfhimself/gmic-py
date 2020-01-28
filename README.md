@@ -18,6 +18,40 @@ When this matures, running `pip install gmic-py` should be all you need to get r
 
 This project is a work in progress and lives under the CeCILL license (similar to GNU Public License).
 
+## Quickstart
+You need Python 3.x and `pip` installed.
+Things work best with the last development version for now :)
+
+```bash
+pip install gmic==2.8.1.dev7 # Consider adding --only-binary if your machine makes you compile from source
+python3
+```
+```python
+import gmic
+import struct
+import random
+
+random_32x32_image = gmic.GmicImage(struct.pack('1024f', *[random.randint(0, 255) for i in range(1024)]), 32, 32) 
+random_32x32_image
+# Output: <gmic.GmicImage object at 0x7f1084c41c90 with _data address at 0x2772010, w=32 h=32 d=1 s=1 shared=0>
+
+gmic.run("print", images=random_32x32_image)
+# Output:
+# [gmic]-1./ Print image [0] = '[unnamed]'.
+# [0] = '[unnamed]':
+#   size = (32,32,1,1) [4096 b of floats].
+#   data = (152,88,134,92,50,179,33,248,18,81,84,187,(...),54,42,179,121,125,74,67,171,224,240,174,96).
+#   min = 0, max = 255, mean = 127.504, std = 75.1126, coords_min = (22,1,0,0), coords_max = (8,2,0,0).
+
+gmic.run("blur 2 print", images=random_32x32_image, image_names="my random blurred picture") # add "display" after "print" for a preview on Linux
+# Output:
+# [gmic]-1./ Print image [0] = 'my random blurred picture'.
+# [0] = 'my random blurred picture':
+#   size = (32,32,1,1) [4096 b of floats].
+#   data = (146.317,134.651,125.137,117.714,115.019,118.531,121.125,123.81,121.736,120.603,123.06,130.212,(...),116.879,114.402,117.773,119.173,117.546,117.341,122.487,133.949,143.605,145.584,137.652,125.728).
+#   min = 85.2638, max = 186.79, mean = 127.961, std = 11.9581, coords_min = (0,31,0,0), coords_max = (31,0,0,0).
+```
+
 ## Official platform support
 You can build your own Gmic python binding on possibly any platform with a C/C++ compiler.
 Here is what we have managed to build and ship to [Gmic PyPI page](https://pypi.org/project/gmic/), allowing you to `pip install gmic` and use pre-built binaries or build `gmic-py` on the fly.
