@@ -41,7 +41,7 @@ static PyObject* PyGmic_repr(PyGmic* self)
 {
     return PyUnicode_FromFormat("<%s interpreter object at %p with _gmic address at %p>",
         Py_TYPE(self)->tp_name,
-        self, self->_gmic
+        self, &(self->_gmic)
     );
 }
 
