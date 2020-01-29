@@ -49,11 +49,7 @@ static PyObject* PyGmic_repr(PyGmic* self)
 
 static int PyGmic_init(PyGmic *self, PyObject *args, PyObject *kwargs)
 {
-    // printf("%d\n", self->_gmic.builtin_commands_inds.size());
-    // if(self->_gmic.builtin_commands_inds.size() == 0) {
-    //         throw;
-    // }
-    self->_gmic = new gmic;
+    self->_gmic = new gmic();
     return 0;
 }
 
@@ -418,227 +414,20 @@ static PyMethodDef PyGmicImage_methods[] = {
 
 static PyObject* module_level_run_impl(PyObject*, PyObject* args, PyObject* kwargs)
 {
-
   char const* keywords[] = {"command", "images", "image_names", NULL};
+  PyObject* commands_line = NULL;
   PyObject* input_gmic_images = NULL;
   PyObject* input_gmic_image_names = NULL;
-  char* commands_line = NULL;
-  int image_position;
-  int image_name_position;
-  int images_count;
-  int image_names_count;
-  gmic_list<T> images;
-  gmic_list<char> image_names; // Empty image names
-  char* current_image_name_raw;
-  PyObject* current_image = NULL;
-  PyObject* current_image_name = NULL;
-  PyObject* iter = NULL;
+  PyObject* temp_py_gmic = NULL;
+  PyObject* delegated_args = NULL;
 
   if(!PyArg_ParseTupleAndKeywords(args, kwargs, "s|OO", (char**)keywords, &commands_line, &input_gmic_images, &input_gmic_image_names)) {
       return NULL;
   }
 
-  try {
-
-    Py_XINCREF(input_gmic_images);
-    Py_XINCREF(input_gmic_image_names);
-
-
-    // Grab image names or single image name and check typings
-    if (input_gmic_image_names != NULL) {
-        // If list of image names provided
-        if(PyList_Check(input_gmic_image_names)) {
-            PyObject* iter = PyObject_GetIter(input_gmic_image_names);
-            image_names_count = Py_SIZE(input_gmic_image_names);
-            image_names.assign(image_names_count);
-            image_name_position = 0;
-
-            while ((current_image_name = PyIter_Next(iter))) {
-                if (!PyUnicode_Check(current_image_name)) {
-                    PyErr_Format(PyExc_TypeError,
-                                 "'%.50s' input element found at position %d in 'image_names' list is not a '%.400s'",
-                                 Py_TYPE(current_image_name)->tp_name, image_name_position, PyUnicode_Type.tp_name);
-                    Py_XDECREF(input_gmic_images);
-                    Py_XDECREF(input_gmic_image_names);
-
-                    return NULL;
-                }
-
-		current_image_name_raw = (char*) PyUnicode_AsUTF8(current_image_name);
-                image_names[image_name_position].assign(strlen(current_image_name_raw)+1);
-		memcpy(image_names[image_name_position]._data, current_image_name_raw, image_names[image_name_position]._width);
-		image_name_position++;
-            }
-
-	// If single image name provided
-        } else if (PyUnicode_Check(input_gmic_image_names)) {
-	    // Enforce also non-null single-GmicImage 'images' parameter
-            if (input_gmic_images != NULL && Py_TYPE(input_gmic_images) != (PyTypeObject*)&PyGmicImageType) {
-                PyErr_Format(PyExc_TypeError,
-                             "'%.50s' 'images' parameter must be a '%.400s' if the 'image_names' parameter is a bare '%.400s'.",
-                             Py_TYPE(input_gmic_images)->tp_name, PyGmicImageType.tp_name, PyUnicode_Type.tp_name);
-                Py_XDECREF(input_gmic_images);
-                Py_XDECREF(input_gmic_image_names);
-
-                return NULL;
-	    }
-
-            image_names.assign(1);
-	    current_image_name_raw = (char*) PyUnicode_AsUTF8(input_gmic_image_names);
-	    image_names[0].assign(strlen(current_image_name_raw)+1);
-	    memcpy(image_names[0]._data, current_image_name_raw, image_names[0]._width);
-	// If neither a list of strings nor a single string were provided, raise exception
-        } else {
-            PyErr_Format(PyExc_TypeError,
-                "'%.50s' 'image_names' parameter must be a list of '%.400s'(s)",
-                Py_TYPE(input_gmic_image_names)->tp_name, PyUnicode_Type.tp_name);
-            Py_XDECREF(input_gmic_images);
-            Py_XDECREF(input_gmic_image_names);
-
-            return NULL;
-        }
-    }
-
-    if (input_gmic_images != NULL) {
-        // A/ If a list of images was provided
-	if(PyList_Check(input_gmic_images)) {
-            image_position = 0;
-            images_count = Py_SIZE(input_gmic_images);
-            images.assign(images_count);
-
-            // Grab images into a proper gmic_list after checking their typing
-            iter = PyObject_GetIter(input_gmic_images);
-            while ((current_image = PyIter_Next(iter))) {
-                if (Py_TYPE(current_image) != (PyTypeObject*)&PyGmicImageType) {
-                    PyErr_Format(PyExc_TypeError,
-                                 "'%.50s' input object found at position %d in 'images' list is not a '%.400s'",
-                                 Py_TYPE(current_image)->tp_name, image_position, PyGmicImageType.tp_name);
-
-                    Py_XDECREF(input_gmic_images);
-                    Py_XDECREF(input_gmic_image_names);
-
-                    return NULL;
-                }
-		images[image_position].assign(((PyGmicImage*)current_image)->_gmic_image._width, ((PyGmicImage*)current_image)->_gmic_image._height, ((PyGmicImage*)current_image)->_gmic_image._depth, ((PyGmicImage*)current_image)->_gmic_image._spectrum);
-                images[image_position]._width = ((PyGmicImage*)current_image)->_gmic_image._width;
-                images[image_position]._height = ((PyGmicImage*)current_image)->_gmic_image._height;
-                images[image_position]._depth = ((PyGmicImage*)current_image)->_gmic_image._depth;
-                images[image_position]._spectrum = ((PyGmicImage*)current_image)->_gmic_image._spectrum;
-	        memcpy(images[image_position]._data, ((PyGmicImage*)current_image)->_gmic_image._data, ((PyGmicImage*)current_image)->_gmic_image.size()*sizeof(T));
-                images[image_position]._is_shared = ((PyGmicImage*)current_image)->_gmic_image._is_shared;
-
-                image_position++;
-            }
-
-            // Process images and names
-            gmic(commands_line, images, image_names);
-
-            // Prevent images auto-deallocation by G'MIC
-            image_position = 0;
-
-	    // Bring new images set back into the Python world (in place list items change)
-	    // First empty the input Python images list
-            PySequence_DelSlice(input_gmic_images, 0, PySequence_Length(input_gmic_images));
-            // // Add image names from the Gmic List of names
-            cimglist_for(images, l) {
-		// On the fly python GmicImage build
-		// per https://stackoverflow.com/questions/4163018/create-an-object-using-pythons-c-api/4163055#comment85217110_4163055
-                PyList_Append(input_gmic_images, PyObject_CallFunction(	(PyObject*) &PyGmicImageType,
-                                       // The last argument is a p(redicate), ie. boolean..
-				       // but Py_BuildValue() used by PyObject_CallFunction has a slightly different parameters format specification
-					(const char*) "SIIIIi",
-                                        PyBytes_FromStringAndSize((const char*)images[l]._data, sizeof(T)*images[l].size()),
-					(unsigned int) images[l]._width,
-				       (unsigned int) images[l]._height,
-			               (unsigned int) images[l]._depth,
-			               (unsigned int) images[l]._spectrum,
-			               (int) images[l]._is_shared
-					));
-            }
-
-        // B/ Else if a single GmicImage was provided
-	} else if(Py_TYPE(input_gmic_images) == (PyTypeObject*)&PyGmicImageType) {
-            images_count = 1;
-            images.assign(1);
-
-            images[0].assign(((PyGmicImage*)input_gmic_images)->_gmic_image._width, ((PyGmicImage*)input_gmic_images)->_gmic_image._height, ((PyGmicImage*)input_gmic_images)->_gmic_image._depth, ((PyGmicImage*)input_gmic_images)->_gmic_image._spectrum);
-            images[0]._width = ((PyGmicImage*)input_gmic_images)->_gmic_image._width;
-            images[0]._height = ((PyGmicImage*)input_gmic_images)->_gmic_image._height;
-            images[0]._depth = ((PyGmicImage*)input_gmic_images)->_gmic_image._depth;
-            images[0]._spectrum = ((PyGmicImage*)input_gmic_images)->_gmic_image._spectrum;
-	    memcpy(images[0]._data, ((PyGmicImage*)input_gmic_images)->_gmic_image._data, ((PyGmicImage*)input_gmic_images)->_gmic_image.size()*sizeof(T));
-            images[0]._is_shared = ((PyGmicImage*)input_gmic_images)->_gmic_image._is_shared;
-
-            // Pipe the commands, our single image, and no image names
-            gmic(commands_line, images, image_names);
-
-	    // Alter the original image only if the gmic_image list has not been downsized to 0 elements
-	    // this may happen with eg. a rm[0] G'MIC command
-	    // We must prevent this, because a 'core dumped' happens otherwise
-	    if(images.size() > 0) {
-                // Put back the possibly modified reallocated image buffer into the original external GmicImage
-                // Back up the image data into the original external image before it gets freed
-                swap(((PyGmicImage*)input_gmic_images)->_gmic_image._data, images[0]._data);
-                ((PyGmicImage*)input_gmic_images)->_gmic_image._width = images[0]._width;
-                ((PyGmicImage*)input_gmic_images)->_gmic_image._height = images[0]._height;
-                ((PyGmicImage*)input_gmic_images)->_gmic_image._depth = images[0]._depth;
-                ((PyGmicImage*)input_gmic_images)->_gmic_image._spectrum = images[0]._spectrum;
-                ((PyGmicImage*)input_gmic_images)->_gmic_image._is_shared = images[0]._is_shared;
-                // Prevent freeing the data buffer's pointer now copied into the external image
-                images[0]._data = 0;
-            }
-	    else
-	    {
-                PyErr_Format(PyExc_RuntimeError,
-                    "'%.50s' 'images' single-element parameter was removed by your G\'MIC command. It was probably emptied, your optional 'image_names' list is untouched.",
-                    Py_TYPE(input_gmic_images)->tp_name, PyGmicImageType.tp_name, PyGmicImageType.tp_name);
-                Py_XDECREF(input_gmic_images);
-                Py_XDECREF(input_gmic_image_names);
-
-                return NULL;
-	    }
-        } else {
-            PyErr_Format(PyExc_TypeError,
-                "'%.50s' 'images' parameter must be a '%.400s' or list of '%.400s'(s)",
-                Py_TYPE(input_gmic_images)->tp_name, PyGmicImageType.tp_name, PyGmicImageType.tp_name);
-            Py_XDECREF(input_gmic_images);
-            Py_XDECREF(input_gmic_image_names);
-
-            return NULL;
-	}
-
-        // If a correctly-typed image names parameter was provided, even if wrongly typed, let us update its Python object
-        // in place, to mirror any kind of changes that may have taken place in the gmic_list of image names
-        if (input_gmic_image_names != NULL) {
-            // i) If a list parameter was provided
-            if(PyList_Check(input_gmic_image_names)) {
-                // First empty the input Python image names list
-                PySequence_DelSlice(input_gmic_image_names, 0, PySequence_Length(input_gmic_image_names));
-                // Add image names from the Gmic List of names
-                cimglist_for(image_names, l) {
-                    PyList_Append(input_gmic_image_names, PyUnicode_FromString(image_names[l]));
-                }
-            }
-            // ii) If a str parameter was provided
-            // Because of Python's string immutability, we will not change the input string's content here :) :/
-	}
-
-    } else {
-        gmic(commands_line, 0, true);
-    }
-
-    Py_XDECREF(input_gmic_images);
-    Py_XDECREF(input_gmic_image_names);
-
-  } catch (gmic_exception& e) {
-    // TODO bind a new GmicException type?
-    PyErr_SetString(PyExc_Exception, e.what());
-    return NULL;
-  } catch (std::exception& e) {
-    PyErr_SetString(PyExc_Exception, e.what());
-    return NULL;
-  }
-  Py_RETURN_NONE;
+  temp_py_gmic = PyObject_CallObject((PyObject*)(&PyGmicType), NULL);
+  delegated_args = PyTuple_Pack(1, commands_line);//, input_gmic_images, input_gmic_image_names); 
+  return PyObject_CallMethodObjArgs(temp_py_gmic, PyUnicode_FromString("run"), commands_line, NULL);
 }
 
 PyDoc_STRVAR(
