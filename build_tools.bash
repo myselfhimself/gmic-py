@@ -102,7 +102,7 @@ function 33_build_manylinux () {
 }
 
 function 3_test_compiled_so () {
-    $PIP3 uninstall gmic -y; cd ./build/lib.*-*/ ; LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH ; $PIP3 install -r ../../tests/requirements.txt ; pwd; ls; $PYTHON3 -m pytest ../../tests/test_gmic_install_and_run.py -vvv -rxXs || (echo "Fatal while running pytests" && exit 1) ; cd ../..
+    $PIP3 uninstall gmic -y; cd ./build/lib.*-*/ ; LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH ; $PIP3 install -r ../../dev-requirements.txt ; pwd; ls; $PYTHON3 -m pytest ../../tests/test_gmic_install_and_run.py -vvv -rxXs || (echo "Fatal while running pytests" && exit 1) ; cd ../..
 }    
 
 function 4_build_wheel () {
