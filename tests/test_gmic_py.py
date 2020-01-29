@@ -550,3 +550,10 @@ def test_gmic_images_post_element_removal_conservation():
     gmic.run(command="rm[0]", images=images)
     for i in images:
         assert_gmic_images_are_identical(i, original_a)
+
+def test_gmic_class_void_parameters_instantation_and_simple_hello_world_run(capfd):
+    import gmic
+    gmic_instance = gmic.Gmic()
+    gmic_instance.run('echo_stdout "hello world"')
+    outerr = capfd.readouterr()
+    assert "hello world\n" == outerr.out
