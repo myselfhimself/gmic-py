@@ -557,3 +557,8 @@ def test_gmic_class_void_parameters_instantation_and_simple_hello_world_run(capf
     gmic_instance.run('echo_stdout "hello world"')
     outerr = capfd.readouterr()
     assert "hello world\n" == outerr.out
+
+    # No variable assignment
+    gmic.Gmic().run("echo_stdout \"hello world2\"")
+    outerr = capfd.readouterr()
+    assert "hello world2\n" == outerr.out
