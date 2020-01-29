@@ -30,7 +30,9 @@ typedef struct {
 
 typedef struct {
     PyObject_HEAD
-    gmic _gmic; // G'MIC library's interpreter instance
+    // Using a pointer here and PyGmic_init()-time instantiation fixes a crash with
+    // empty G'MIC command-set.
+    gmic* _gmic; // G'MIC library's interpreter instance
 } PyGmic;
 
 
@@ -41,7 +43,7 @@ static PyObject* PyGmic_repr(PyGmic* self)
 {
     return PyUnicode_FromFormat("<%s interpreter object at %p with _gmic address at %p>",
         Py_TYPE(self)->tp_name,
-        self, &(self->_gmic)
+        self, self->_gmic
     );
 }
 
@@ -51,6 +53,7 @@ static int PyGmic_init(PyGmic *self, PyObject *args, PyObject *kwargs)
     // if(self->_gmic.builtin_commands_inds.size() == 0) {
     //         throw;
     // }
+    self->_gmic = new gmic;
     return 0;
 }
 
@@ -170,7 +173,7 @@ static PyObject* run_impl(PyObject* self, PyObject* args, PyObject* kwargs)
             }
 
             // Process images and names
-            ((PyGmic*)self)->_gmic.run(commands_line, images, image_names, 0, 0);
+            ((PyGmic*)self)->_gmic->run(commands_line, images, image_names, 0, 0);
 
             // Prevent images auto-deallocation by G'MIC
             image_position = 0;
@@ -209,7 +212,7 @@ static PyObject* run_impl(PyObject* self, PyObject* args, PyObject* kwargs)
             images[0]._is_shared = ((PyGmicImage*)input_gmic_images)->_gmic_image._is_shared;
 
             // Pipe the commands, our single image, and no image names
-            ((PyGmic*)self)->_gmic.run(commands_line, images, image_names, 0, 0);
+            ((PyGmic*)self)->_gmic->run(commands_line, images, image_names, 0, 0);
 
 	    // Alter the original image only if the gmic_image list has not been downsized to 0 elements
 	    // this may happen with eg. a rm[0] G'MIC command
@@ -264,7 +267,7 @@ static PyObject* run_impl(PyObject* self, PyObject* args, PyObject* kwargs)
 
     } else {
 	T pixel_type;
-        ((PyGmic*)self)->_gmic.run((const char* const) commands_line, (float* const) NULL, (bool* const)NULL, (const T&)pixel_type);
+        ((PyGmic*)self)->_gmic->run((const char* const) commands_line, (float* const) NULL, (bool* const)NULL, (const T&)pixel_type);
     }
 
     Py_XDECREF(input_gmic_images);
