@@ -43,10 +43,10 @@ function 11_send_to_pypi () {
 
 function 1_clean_and_regrab_gmic_src () {
     set -x
-    GMIC_VERSION=prerelease
+    GMIC_VERSION=2.8.3
     GMIC_ARCHIVE_NAME=gmic_${GMIC_VERSION}*.tar.gz
-    #GMIC_URL=https://gmic.eu/files/source/gmic_${GMIC_VERSION}.tar.gz
-    GMIC_URL=https://gmic.eu/files/prerelease/gmic_prerelease.tar.gz
+    GMIC_URL=https://gmic.eu/files/source/gmic_${GMIC_VERSION}.tar.gz
+    #GMIC_URL=https://gmic.eu/files/prerelease/gmic_prerelease.tar.gz
     rm -rf dist/
     rm -rf src/
     mkdir src -p

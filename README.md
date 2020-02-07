@@ -23,7 +23,7 @@ You need Python 3.x and `pip` installed.
 Things work best with the last development version for now :)
 
 ```bash
-pip install gmic==2.8.1.dev8 # Consider adding --only-binary if your machine makes you compile from source
+pip install gmic # Consider adding --only-binary if your machine makes you compile from source
 python3
 ```
 ```python
@@ -43,8 +43,11 @@ gmic.run("print", images=random_32x32_image)
 #   data = (152,88,134,92,50,179,33,248,18,81,84,187,(...),54,42,179,121,125,74,67,171,224,240,174,96).
 #   min = 0, max = 255, mean = 127.504, std = 75.1126, coords_min = (22,1,0,0), coords_max = (8,2,0,0).
 
-gmic.run("blur 2 print", images=random_32x32_image, image_names="my random blurred picture") # add "display" after "print" for a preview on Linux
-# Output:
+# Reuse the same interpreter for better performance
+reusable_gmic_instance = gmic.Gmic()
+for a in range(10):
+    reusable_gmic_instance.run("blur 2 print", images=random_32x32_image, image_names="my random blurred picture") # add "display" after "print" for a preview on Linux
+# Output (first iteration only):
 # [gmic]-1./ Print image [0] = 'my random blurred picture'.
 # [0] = 'my random blurred picture':
 #   size = (32,32,1,1) [4096 b of floats].
@@ -63,7 +66,7 @@ Note that `gmic-py`'s package installer links to your machine's existing `libpng
 | DIY Linux 32&64bit <sup>1</sup>                              | ✓                          | ✓ <sup>2</sup>| ✓      | ✓ <sup>2</sup> | ✓ <sup>2</sup> |
 | Pre-compiled Linux i686 & x86\_64 py3.4-3.8 (gcc)<sup>m</sup>| ✓                          | ✓             | ✓      | ✗ <sup>3</sup> | ✗              |
 | Pre-compiled MacOS 64 py3.5-3.8 (clang)                      | ✓                          | ✓             | ✓      | ✓              | ✗              |
-| Windows (unplanned)<sup>w</sup>                              | ✗                          | ✗             | ✗      | ✗              | ✗              |
+| Windows (planned)<sup>w</sup>                                | ✗                          | ✗             | ✗      | ✗              | ✗              |
 
 <sup>0</sup> ie. `gmic.GmicImage(bytes, w, h, d, s)`,  `gmic.run(..., "commands")`
 
@@ -75,7 +78,7 @@ Note that `gmic-py`'s package installer links to your machine's existing `libpng
 
 <sup>m</sup> those are actually manylinux2010 and manylinux2014 targets. Manylinux1 has been dropped
 
-<sup>w</sup> you can try building you own gmic-py builds on Windows using [MSYS2](https://www.msys2.org/)
+<sup>w</sup> Until it is ready, you can try building you own gmic-py builds on Windows using [MSYS2](https://www.msys2.org/)
 
 ## Examples
 
@@ -91,11 +94,13 @@ If your machine has `libopencv` installed and your gmic-py was compiled from sou
 ### Q4 2019
 1. Create a `pip install -e GITHUB_URL` installable Python package for GMIC, with an API very similar to the C++ library: `gmic_instance.run(...)`, `gmic(...)` and matching exception types. Binary dependencies [should be bundled as in this tutorial](https://python-packaging-tutorial.readthedocs.io/en/latest/binaries_dependencies.html).
     1. Through `Ctypes` dynamic binding on an Ubuntu docker image using Python 2-3. DONE in [ctypes\_archive branch](https://github.com/dtschump/gmic-py/tree/ctypes_archive).
-    1. Through custom Python/C++ binding (see `gmicpy.cpp` and `setup.py`) WIP
+    1. Through custom Python/C++ binding (see `gmicpy.cpp` and `setup.py`) DONE
 1. Create documented examples for various application domains. WIP
 
 ### Q1-Q2 2020
-1. Move the package to official Python package repositories.
+1. Move the package to official Python package repositories. DONE
+1. Add numpy nparray I/O support with automatic values (de-)interlacing
+1. Add Windows support
 1. In a separate repository, create a Blender Plugin, leveraging the Python library and exposing:
   1. a single Blender GMIC 2D node with a text field or linkable script to add a GMIC expression
   1. as many 2D nodes as there are types of GMIC 'operators'
