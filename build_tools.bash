@@ -2,6 +2,7 @@
 
 PYTHON3=${PYTHON3:-python3}
 PIP3=${PIP3:-pip3}
+PYTHON_VERSION=$($PYTHON3 --version | cut -d' ' -f2 | cut -d'.' -f1,2)
 
 function 00_all_steps () {
     1_clean_and_regrab_gmic_src && 2_compile && 3_test_compiled_so && 4_build_wheel && 5_test_wheel && 6_build_sdist && 7_test_sdist
@@ -76,7 +77,12 @@ function 22_docker_run_all_steps () {
 }
 
 function 2_compile () {
+    set -x
+    $PIP3 install -r dev-requirements.txt || { echo "Fatal pip install of dev-requirements.txt error" ; exit 1; }
     $PYTHON3 setup.py build 2>&1 || { echo "Fatal setup.py build error" ; exit 1; }
+
+    cp build/lib*$PYTHON_VERSION*/*.so ~/Apps/blender-2.80-linux-glibc217-x86_64/2.80/python/lib/python3.7/lib-dynload
+    set +x
 }
 
 function 33_build_manylinux () {
@@ -102,7 +108,7 @@ function 33_build_manylinux () {
 }
 
 function 3_test_compiled_so () {
-    $PIP3 uninstall gmic -y; cd ./build/lib.*-*/ ; LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH ; $PIP3 install -r ../../dev-requirements.txt ; pwd; ls; $PYTHON3 -m pytest ../../tests/test_gmic_py.py -vvv -rxXs || (echo "Fatal while running pytests" && exit 1) ; cd ../..
+    $PIP3 uninstall gmic -y; cd ./build/lib*$PYTHON_VERSION*/ ; LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH ; $PIP3 install -r ../../dev-requirements.txt ; pwd; ls; $PYTHON3 -m pytest ../../tests/test_gmic_py.py -vvv -rxXs || (echo "Fatal while running pytests" && exit 1) ; cd ../..
 }    
 
 function 4_build_wheel () {
