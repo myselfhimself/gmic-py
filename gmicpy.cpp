@@ -47,13 +47,6 @@ static PyObject* PyGmic_repr(PyGmic* self)
     );
 }
 
-static int PyGmic_init(PyGmic *self, PyObject *args, PyObject *kwargs)
-{
-    self->_gmic = new gmic();
-    return 0;
-}
-
-
 static PyObject* run_impl(PyObject* self, PyObject* args, PyObject* kwargs)
 {
 
@@ -280,6 +273,17 @@ static PyObject* run_impl(PyObject* self, PyObject* args, PyObject* kwargs)
   Py_RETURN_NONE;
 }
 
+static int PyGmic_init(PyGmic *self, PyObject *args, PyObject *kwargs)
+{
+    int result = 0;
+    self->_gmic = new gmic();
+    if(args != Py_None && PyTuple_Size(args) > 0) {
+        result = (run_impl((PyObject*) self, args, kwargs) != NULL) ? 0 : -1;
+    }
+    return result;
+}
+
+
 PyDoc_STRVAR(
 run_impl_doc,
 "run(command: str[, images: GmicImage|List[GmicImage], image_names: str|List[str]]) -> bool\n\n\
@@ -400,12 +404,6 @@ static PyObject * PyGmicImage_from_numpy_array(PyGmicImage * self, PyObject* arg
 }
 
 
-
-
-
-
-
-
 static PyMethodDef PyGmicImage_methods[] = {
     { "from_numpy_array", (PyCFunction)PyGmicImage_from_numpy_array, METH_VARARGS|METH_KEYWORDS, "get numpy array's data" },
     {NULL}  /* Sentinel */
@@ -414,20 +412,13 @@ static PyMethodDef PyGmicImage_methods[] = {
 
 static PyObject* module_level_run_impl(PyObject*, PyObject* args, PyObject* kwargs)
 {
-  char const* keywords[] = {"command", "images", "image_names", NULL};
-  PyObject* commands_line = NULL;
-  PyObject* input_gmic_images = NULL;
-  PyObject* input_gmic_image_names = NULL;
-  PyObject* temp_py_gmic = NULL;
-  PyObject* delegated_args = NULL;
-
-  if(!PyArg_ParseTupleAndKeywords(args, kwargs, "s|OO", (char**)keywords, &commands_line, &input_gmic_images, &input_gmic_image_names)) {
-      return NULL;
-  }
-
-  temp_py_gmic = PyObject_CallObject((PyObject*)(&PyGmicType), NULL);
-  delegated_args = PyTuple_Pack(1, commands_line);//, input_gmic_images, input_gmic_image_names); 
-  return PyObject_CallMethodObjArgs(temp_py_gmic, PyUnicode_FromString("run"), commands_line, NULL);
+    // Create a temporary Gmic() instance, call its run() method on our params, but always just return the run() result
+    PyObject* temp_gmic_instance = PyObject_CallObject((PyObject*)(&PyGmicType), NULL);
+    if(temp_gmic_instance != NULL) {
+        return run_impl(temp_gmic_instance, args, kwargs);
+    } else {
+        return temp_gmic_instance;
+    }
 }
 
 PyDoc_STRVAR(
