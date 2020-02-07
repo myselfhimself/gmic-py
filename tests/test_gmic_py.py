@@ -1,8 +1,8 @@
 import pytest
 import gmic
 
-# Tests parametrization: calls to gmic_instance.run() and gmic.Gmic().run() should be idempotent!
-gmic_instance_types = {"argnames": "gmic_instance", "argvalues": [gmic, gmic.Gmic()], "ids":["gmic_module", "gmic_instance"]}
+# Tests parametrization: calls to gmic_instance.run() and gmic.Gmic().run() should have the same outdoor behaviour!
+gmic_instance_types = {"argnames": "gmic_instance", "argvalues": [gmic, gmic.Gmic()], "ids": ["gmic_module_run", "gmic_instance_run"]}
 
 FLOAT_SIZE_IN_BYTES = 4
 
@@ -553,6 +553,11 @@ def test_gmic_class_void_parameters_instantation_and_simple_hello_world_run(capf
     gmic.Gmic().run("echo_stdout \"hello world2\"")
     outerr = capfd.readouterr()
     assert "hello world2\n" == outerr.out
+
+def test_gmic_class_direct_run_remains_usable_instance():
+    gmic_instance = gmic.Gmic("echo_stdout \"single instance\"")
+    assert type(gmic_instance) == gmic.Gmic
+    gmic_instance.run("echo_stdout \"other run\"")
 
 def test_gmic_module_run_vs_single_instance_run_benchmark():
     from time import time
