@@ -1,20 +1,21 @@
 import pytest
+import gmic
+
+# Tests parametrization: calls to gmic_instance.run() and gmic.Gmic().run() should be idempotent!
+gmic_instance_types = {"argnames": "gmic_instance", "argvalues": [gmic, gmic.Gmic()], "ids":["gmic_module", "gmic_instance"]}
 
 FLOAT_SIZE_IN_BYTES = 4
 
-def test_import_gmic():
-    import gmic
-
-def test_catch_exceptions():
-    import gmic
+@pytest.mark.parametrize(**gmic_instance_types)
+def test_catch_exceptions(gmic_instance):
     with pytest.raises(Exception, match=r".*Unknown command or filename.*"):
-        gmic.run('badly formatted command')
+        gmic_instance.run('badly formatted command')
 
-def test_run_gmic_ensure_openmp_linked_and_working(capfd):
-    import gmic
+@pytest.mark.parametrize(**gmic_instance_types)
+def test_run_gmic_ensure_openmp_linked_and_working(capfd, gmic_instance):
     import traceback
     import sys
-    gmic.run('v - sp lena eval. "end(call(\'echo_stdout[] \',merge(t,max)))"')
+    gmic_instance.run('v - sp lena eval. "end(call(\'echo_stdout[] \',merge(t,max)))"')
     outerr = capfd.readouterr()
     try:
         assert int(outerr.out.strip()) > 0 # should be "0\n" or "nan\n" if openmp not working
@@ -26,18 +27,18 @@ def test_run_gmic_ensure_openmp_linked_and_working(capfd):
         filename, line, func, text = tb_info[-1]
         pytest.fail('parallel test case fails, OpenMP probably could not link or compile well on this platform, gmic parallelization will not work: stdout: {}; assert check: {}'.format(outerr.out, text))
 
-def test_run_gmic_run_helloworld(capfd):
-    import gmic
+@pytest.mark.parametrize(**gmic_instance_types)
+def test_run_gmic_instance_run_helloworld(capfd, gmic_instance):
     # Using pytest stderr capture per https://docs.pytest.org/en/latest/capture.html#accessing-captured-output-from-a-test-function
-    gmic.run('echo_stdout "hello world"')
+    gmic_instance.run('echo_stdout "hello world"')
     outerr = capfd.readouterr()
     assert "hello world\n" == outerr.out
 
-def test_run_gmic_run_simple_3pixels_png_output():
-    import gmic
+@pytest.mark.parametrize(**gmic_instance_types)
+def test_run_gmic_instance_run_simple_3pixels_png_output(gmic_instance):
     import pathlib
     png_filename = "a.png"
-    gmic.run('input "(0,128,255)" output ' + png_filename)
+    gmic_instance.run('input "(0,128,255)" output ' + png_filename)
     a_png = pathlib.Path(png_filename)
     # Ensure generated png file exists and is non empty
     assert a_png.exists()
@@ -45,29 +46,29 @@ def test_run_gmic_run_simple_3pixels_png_output():
     a_png.unlink()
 
 
-def test_run_gmic_run_simple_demo_png_output_and_input():
+@pytest.mark.parametrize(**gmic_instance_types)
+def test_run_gmic_instance_run_simple_demo_png_output_and_input(gmic_instance):
     """ Ensure that zlib is properly linked and ensures that either
     the png library used or the 'convert' tool of the imagemagick suite, for saving png"""
-    import gmic
     import pathlib
     png_filename = "demo.png"
-    gmic.run('testimage2d 512 output ' + png_filename)
+    gmic_instance.run('testimage2d 512 output ' + png_filename)
     a_png = pathlib.Path(png_filename)
     # Ensure generated png file exists and is non empty
     assert a_png.exists()
     assert a_png.stat().st_size > 0
 
     # Open generated file
-    gmic.run('input ' + png_filename)
+    gmic_instance.run('input ' + png_filename)
     a_png.unlink()
 
 
-def test_run_gmic_run_simple_3pixels_bmp_output():
+@pytest.mark.parametrize(**gmic_instance_types)
+def test_run_gmic_instance_run_simple_3pixels_bmp_output(gmic_instance):
     """ Ensure that the native bmp file output works"""
-    import gmic
     import pathlib
     bmp_filename = "a.bmp"
-    gmic.run('input "(0,128,255)" output ' + bmp_filename)
+    gmic_instance.run('input "(0,128,255)" output ' + bmp_filename)
     a_bmp = pathlib.Path(bmp_filename)
     # Ensure generated bmp file exists and is non empty
     assert a_bmp.exists()
@@ -75,7 +76,6 @@ def test_run_gmic_run_simple_3pixels_bmp_output():
     a_bmp.unlink()
 
 def test_gmic_image_parameters_fuzzying():
-    import gmic
     import struct
     import re
     # Fail test if anything else as a TypeError is raised
@@ -99,7 +99,6 @@ def test_gmic_image_parameters_fuzzying():
     assert "-24*" in str(excinfo.value)
 
 def test_gmic_image_handmade_attributes_copying():
-    import gmic
     import struct
     b = gmic.GmicImage(struct.pack('8f', 1, 3, 5, 7, 2, 6, 10, 14), 2,4,1, shared=False)
     c = gmic.GmicImage(b._data, b._width, b._height, b._depth, b._spectrum, b._is_shared)
@@ -107,7 +106,6 @@ def test_gmic_image_handmade_attributes_copying():
 
 def test_gmic_image_construct_buffer_check_and_destroy():
     import re
-    import gmic
     import struct
     # Function parameter-time bytes generation: with bad reference management, reading the buffer's bytes later should fail
     i = gmic.GmicImage(struct.pack('8f', 1, 3, 5, 7, 2, 6, 10, 14), 4, 2, 1, 1)
@@ -120,7 +118,6 @@ def test_gmic_image_construct_buffer_check_and_destroy():
     del i # Tentative reference decrementing for crash
 
 def test_gmic_image_float_third_dimension_and_precision_conservation():
-    import gmic
     import struct
     import re
     import decimal
@@ -143,16 +140,16 @@ def test_gmic_image_float_third_dimension_and_precision_conservation():
     # We want at list the 5 decimal digits of eg. 0.12345 to remain between GmicImage input and output, even though much higher precision happens in background
     assert common_first_decimals > 5
 
-def test_gmic_image_generation_and_shared_multiple_gmic_print_runs():
-    import gmic
+@pytest.mark.parametrize(**gmic_instance_types)
+def test_gmic_image_generation_and_shared_multiple_gmic_print_runs(gmic_instance):
     import struct
     import re
     shared = True # having shared False is enough for now to have a crash below, let us test something else as crashing: buffer integrity through multiple run's
     i = gmic.GmicImage(struct.pack('8f', 1, 3, 5, 7, 2, 6, 10, 14), 4, 2, 1, 1, shared)
     pixel_before_gmic_run = i(0,0)
-    gmic.run("print print print", i)
-    pixel_after_gmic_run = i(0,0)
-    assert pixel_before_gmic_run == pixel_after_gmic_run
+    gmic_instance.run("print print print", i)
+    pixel_after_gmic_instance_run = i(0,0)
+    assert pixel_before_gmic_run == pixel_after_gmic_instance_run
 
 # Per https://stackoverflow.com/a/33024979/420684
 # This starts to be builtin from Python > 3.5
@@ -188,8 +185,8 @@ def assert_gmic_image_is_filled_with(gmic_image, w, h, d, s, pixel_value):
                         pixel = gmic_image(x, y, z, c)
                         assert isclose(pixel, pixel_value)
 
-def test_gmic_image_generation_and_gmic_multiple_resize_run(capfd):
-    import gmic
+@pytest.mark.parametrize(**gmic_instance_types)
+def test_gmic_image_generation_and_gmic_multiple_resize_run(capfd, gmic_instance):
     import struct
     import re
     w = 60
@@ -201,29 +198,29 @@ def test_gmic_image_generation_and_gmic_multiple_resize_run(capfd):
     struct_pack_params = (str(w*h)+'f',) + (0,)*w*h
     i = gmic.GmicImage(struct.pack(*struct_pack_params), w, h, d, s, shared=False)
     # Divide original size by 2 and check pixels stability
-    gmic.run("{} print".format(command_to_apply), i)
+    gmic_instance.run("{} print".format(command_to_apply), i)
     outerr = capfd.readouterr()
     w = w/2
     h = h/2
     assert_get_proper_print_regex(w, h, search_str=outerr.err)
     assert_gmic_image_is_filled_with(i, w, h, d, s, 0)
     # Divide original size by 4 and check pixels stability
-    gmic.run("{} print".format(command_to_apply), i)
+    gmic_instance.run("{} print".format(command_to_apply), i)
     outerr = capfd.readouterr()
     w = w/2
     h = h/2
     assert_get_proper_print_regex(w, h, search_str=outerr.err)
     assert_gmic_image_is_filled_with(i, w, h, d, s, 0)
     # Divide original size by 16 (now twice by 2) and check pixels stability
-    gmic.run("{} {} print".format(command_to_apply, command_to_apply), i)
+    gmic_instance.run("{} {} print".format(command_to_apply, command_to_apply), i)
     outerr = capfd.readouterr()
     w = w/4
     h = h/4
     assert_get_proper_print_regex(w, h, search_str=outerr.err)
     assert_gmic_image_is_filled_with(i, w, h, d, s, 0)
 
-def test_gmic_image_readonly_attributes_and_bytes_stability():
-    import gmic
+@pytest.mark.parametrize(**gmic_instance_types)
+def test_gmic_image_readonly_attributes_and_bytes_stability(gmic_instance):
     import struct
     w = 60
     h = 80
@@ -240,7 +237,7 @@ def test_gmic_image_readonly_attributes_and_bytes_stability():
     assert len(i._data) == len(float_array) # Additional bytes array check just in case
 
     # Ensure GmicImage's parameters stability after a resize operation
-    gmic.run("resize 50%,50%", i)
+    gmic_instance.run("resize 50%,50%", i)
     required_floats = int(w*h/4)
     expected_result_float_array = struct.pack(*((str(required_floats)+'f',) + (0,)*required_floats))
     assert i._width == w/2
@@ -258,7 +255,7 @@ def test_gmic_image_readonly_attributes_and_bytes_stability():
     s = 3
     float_array = struct.pack(*((str(w*h*d*s)+'f',) + (0,)*w*h*d*s))
     i = gmic.GmicImage(float_array, w, h, d, s, shared=True)
-    gmic.run("add 1", i)
+    gmic_instance.run("add 1", i)
     required_floats= int(w*h*d*s)
     expected_uniform_pixel_value = 1.0
     expected_result_float_array = struct.pack(*((str(required_floats)+'f',) + (expected_uniform_pixel_value,)*required_floats))
@@ -272,7 +269,6 @@ def test_gmic_image_readonly_attributes_and_bytes_stability():
     assert len(i._data) == len(expected_result_float_array) # Additional bytes array check just in case
 
 def test_gmic_image_readonly_forbidden_write_attributes():
-    import gmic
     import struct
     w = 60
     h = 80
@@ -294,8 +290,8 @@ def test_gmic_image_readonly_forbidden_write_attributes():
         with pytest.raises(AttributeError, match=r".*(readonly|not writable).*"):
             setattr(i, a, "anything")
 
-def test_gmic_images_list_with_image_names_multiple_add_filter_run():
-    import gmic
+@pytest.mark.parametrize(**gmic_instance_types)
+def test_gmic_images_list_with_image_names_multiple_add_filter_run(gmic_instance):
     import struct
     w = 60
     h = 80
@@ -307,26 +303,24 @@ def test_gmic_images_list_with_image_names_multiple_add_filter_run():
     untouched_image_names = ["some_image_" + str(i) for i in range(nb_images)]
     images = [gmic.GmicImage(struct.pack(*((str(w*h)+'f',) + (i*base_pixel_multiplicator,)*w*h)), w, h) for i in range(nb_images)]
     # First run adding 1 of value to all pixels in all images
-    gmic.run("add 1", images, image_names)
+    gmic_instance.run("add 1", images, image_names)
     for c, image in enumerate(images):
         assert_gmic_image_is_filled_with(images[c], w, h, d, s, c*base_pixel_multiplicator+1)
     assert untouched_image_names == image_names
 
     # Second run adding 2 of value to all pixels in all images
-    gmic.run("add 2", images, image_names)
+    gmic_instance.run("add 2", images, image_names)
     for c, image in enumerate(images):
         assert_gmic_image_is_filled_with(images[c], w, h, d, s, c*base_pixel_multiplicator+2+1)
     assert untouched_image_names == image_names
 
 def test_gmic_image_attributes_visibility():
-    import gmic
     import struct
     a = gmic.GmicImage(struct.pack('1f', 1))
     for required_attribute in ("_width", "_height", "_depth", "_spectrum", "_is_shared", "_data"):
         assert required_attribute in dir(a)
 
 def test_gmic_image_object_and_attribute_types():
-    import gmic
     import struct
     a = gmic.GmicImage(struct.pack('1f', 1))
     assert type(a) == gmic.GmicImage
@@ -338,75 +332,75 @@ def test_gmic_image_object_and_attribute_types():
     assert type(a._is_shared) == bool
     assert type(a._data) == bytes
 
-def test_gmic_run_parameters_fuzzying_basic():
-    import gmic
+@pytest.mark.parametrize(**gmic_instance_types)
+def test_gmic_instance_run_parameters_fuzzying_basic(gmic_instance):
     import struct
     w = 60
     h = 80
     d = s = 1
     # 0 parameters
     with pytest.raises(TypeError):
-        gmic.run()
+        gmic_instance.run()
 
     # 1 correct command
-    gmic.run("echo_stdout 'bonsoir'")
+    gmic_instance.run("echo_stdout 'bonsoir'")
 
     # 1 parameters-depending command without an image or with empty list
-    gmic.run("print")
-    gmic.run("print", [])
+    gmic_instance.run("print")
+    gmic_instance.run("print", [])
 
     # 1 correct GmicImage, 1 correct command, in wrong order
     with pytest.raises(TypeError, match=r".*argument 1 must be str, not gmic.GmicImage.*"):
-        a = gmic.run(gmic.GmicImage(struct.pack('1f', 1.0)), "print")
+        a = gmic_instance.run(gmic.GmicImage(struct.pack('1f', 1.0)), "print")
 
     # 1 correct GmicImage, 1 correct command, some strange keyword
     with pytest.raises(TypeError, match=r".*hey.*is an invalid keyword argument.*"):
-        a = gmic.run("print", gmic.GmicImage(struct.pack('1f', 1.0), hey=3))
+        a = gmic_instance.run("print", gmic.GmicImage(struct.pack('1f', 1.0), hey=3))
 
     # 1 correct GmicImage, 1 correct command with flipped keywords
-    gmic.run(images=gmic.GmicImage(struct.pack('1f', 1.0)), command="print")
+    gmic_instance.run(images=gmic.GmicImage(struct.pack('1f', 1.0)), command="print")
 
     # 1 correct list of GmicImages, 1 correct command with flipped keywords
-    gmic.run(images=[gmic.GmicImage(struct.pack('1f', 1.0)), gmic.GmicImage(struct.pack('2f', 1.0, 2.0), 2)], command="add 3")
+    gmic_instance.run(images=[gmic.GmicImage(struct.pack('1f', 1.0)), gmic.GmicImage(struct.pack('2f', 1.0, 2.0), 2)], command="add 3")
 
     # 1 GmicImage, no command
     with pytest.raises(TypeError, match=r".*argument 1 must be str, not gmic.GmicImage.*"):
-        gmic.run(gmic.GmicImage(struct.pack('1f', 1.0)))
+        gmic_instance.run(gmic.GmicImage(struct.pack('1f', 1.0)))
 
     # 1 GmicImage, no correct command
     with pytest.raises(Exception, match=r".*Unknown command or filename 'hey'.*"):
-        gmic.run(images=gmic.GmicImage(struct.pack('1f', 1.0)), command="hey")
+        gmic_instance.run(images=gmic.GmicImage(struct.pack('1f', 1.0)), command="hey")
 
     # 1 non-GmicImage, 1 correct command
     with pytest.raises(TypeError, match=r".*'int' 'images' parameter must be a .*GmicImage.* or .*list.*"):
-         gmic.run(images=42, command="print")
+         gmic_instance.run(images=42, command="print")
 
     # 1 GmicImage, 1 correct command, one non-list of image names
     with pytest.raises(TypeError, match=r".* 'image_names' parameter must be a list.*str.*"):
-        gmic.run(images=gmic.GmicImage(struct.pack('1f', 1.0)), image_names=3, command="add 4")
+        gmic_instance.run(images=gmic.GmicImage(struct.pack('1f', 1.0)), image_names=3, command="add 4")
 
     # 1 iterable "list" for images but not list (here, a str), 1 correct command
     with pytest.raises(TypeError, match=r".*'str' 'images' parameter must be a .*GmicImage.* or .*list.*"):
-        gmic.run(images="some iterable object", command="print")
+        gmic_instance.run(images="some iterable object", command="print")
 
     # 1 list of not-only GmicImages, 1 correct command
     with pytest.raises(TypeError, match=r"'str'.*object found at position 1 in 'images' list.*"):
-        gmic.run(images=[gmic.GmicImage(struct.pack('1f', 1.0)), "not gmic image"], command="print")
+        gmic_instance.run(images=[gmic.GmicImage(struct.pack('1f', 1.0)), "not gmic image"], command="print")
 
     # 1 list of GmicImages, 1 correct command
-    gmic.run(images=[gmic.GmicImage(struct.pack('1f', 1.0)), gmic.GmicImage(struct.pack('1f', 1.0))], command="print")
+    gmic_instance.run(images=[gmic.GmicImage(struct.pack('1f', 1.0)), gmic.GmicImage(struct.pack('1f', 1.0))], command="print")
 
     # 1 list of GmicImages, no command
     with pytest.raises(TypeError, match=r".*argument 'command'.*"):
-        gmic.run(images=[gmic.GmicImage(struct.pack('1f', 1.0)), gmic.GmicImage(struct.pack('1f', 1.0))])
+        gmic_instance.run(images=[gmic.GmicImage(struct.pack('1f', 1.0)), gmic.GmicImage(struct.pack('1f', 1.0))])
 
     # 1 list of GmicImages, multiline whitespace-bloated correct command
     # This most probably requires compilation with libgmic>=2.8.3 to work
-    gmic.run(images=[gmic.GmicImage(struct.pack('1f', 1.0)), gmic.GmicImage(struct.pack('1f', 1.0))], command=" \n\n\r\r  print   \n\r   \t print   \n\n\r\t\t    print    \n")
+    gmic_instance.run(images=[gmic.GmicImage(struct.pack('1f', 1.0)), gmic.GmicImage(struct.pack('1f', 1.0))], command=" \n\n\r\r  print   \n\r   \t print   \n\n\r\t\t    print    \n")
 
 
-def test_gmic_run_parameters_fuzzying_for_lists_cardinality():
-    import gmic
+@pytest.mark.parametrize(**gmic_instance_types)
+def test_gmic_instance_run_parameters_fuzzying_for_lists_cardinality(gmic_instance):
     import struct
 
     two_images = [gmic.GmicImage(struct.pack('2f', 2.0, 3.0), 1, 2), gmic.GmicImage(struct.pack('2f', 17.0, 5.0), 2)]
@@ -415,15 +409,15 @@ def test_gmic_run_parameters_fuzzying_for_lists_cardinality():
     original_two_image_names = ["a", "b"]
 
     # 1 list of correct length string image_names, correct images, 1 correct command
-    gmic.run(images=two_images, image_names=two_image_names, command="print")
+    gmic_instance.run(images=two_images, image_names=two_image_names, command="print")
 
     # 1 list of correct length string image_names, no images at all, 1 correct command
-    gmic.run(image_names=two_image_names, command="print")
+    gmic_instance.run(image_names=two_image_names, command="print")
 
     # 1 list of correct length string image_names, empty images list, 1 correct command
     input_empty_images = []
     input_command = "print"
-    gmic.run(images=input_empty_images, image_names=two_image_names, command=input_command)
+    gmic_instance.run(images=input_empty_images, image_names=two_image_names, command=input_command)
     # here gmic will slice the image_names underlying gmic_list to make it the same size as the images gmic_list length
     # if this fails, this means we did not update the image_names output Python object..
     assert len(two_image_names) == 0 and type(two_image_names) == list
@@ -431,7 +425,7 @@ def test_gmic_run_parameters_fuzzying_for_lists_cardinality():
     assert input_command == "print" and type(input_command) == str
 
     # empty image_names, empty images list, 1 correct command
-    gmic.run(images=[], image_names=[], command="print")
+    gmic_instance.run(images=[], image_names=[], command="print")
 
     two_images = [gmic.GmicImage(struct.pack('2f', 2.0, 3.0), 1, 2), gmic.GmicImage(struct.pack('2f', 17.0, 5.0), 2)]
     original_two_images = [gmic.GmicImage(struct.pack('2f', 2.0, 3.0), 1, 2), gmic.GmicImage(struct.pack('2f', 17.0, 5.0), 2)]
@@ -439,7 +433,7 @@ def test_gmic_run_parameters_fuzzying_for_lists_cardinality():
     original_two_image_names = ["a", "b"]
 
     # Testing decreasing size of the images list
-    gmic.run(images=two_images, image_names=two_image_names, command="rm[0]")
+    gmic_instance.run(images=two_images, image_names=two_image_names, command="rm[0]")
     # Here G'MIC will remove the first image, so the output two_images should have been changed and be a single-item list
     assert len(two_images) == 1
     #assert two_images[0] == original_two_images[1]
@@ -453,7 +447,7 @@ def test_gmic_run_parameters_fuzzying_for_lists_cardinality():
     original_two_image_names = ["a", "b"]
 
     with pytest.raises(RuntimeError, match=r".*was removed by your G'MIC command.*emptied.*image_names.*untouched.*"):
-        gmic.run(images=two_images[0], image_names=two_image_names, command="rm[0]")
+        gmic_instance.run(images=two_images[0], image_names=two_image_names, command="rm[0]")
     assert two_images[0] == original_two_images[0] # Ensuring input image is preserved (ie. untouched)
     assert two_image_names == original_two_image_names # Ensuring image names are preserved
 
@@ -462,7 +456,7 @@ def test_gmic_run_parameters_fuzzying_for_lists_cardinality():
     original_two_images = [gmic.GmicImage(struct.pack('2f', 2.0, 3.0), 1, 2), gmic.GmicImage(struct.pack('2f', 17.0, 5.0), 2)]
     one_image_names = ["b"]
 
-    gmic.run(images=two_images, image_names=one_image_names, command="print")
+    gmic_instance.run(images=two_images, image_names=one_image_names, command="print")
     assert_gmic_images_are_identical(two_images[0], original_two_images[0])
     assert_gmic_images_are_identical(two_images[1], original_two_images[1])
     assert one_image_names == ["b", "[unnamed]"]
@@ -472,40 +466,39 @@ def test_gmic_run_parameters_fuzzying_for_lists_cardinality():
     original_two_images = [gmic.GmicImage(struct.pack('2f', 2.0, 3.0), 1, 2), gmic.GmicImage(struct.pack('2f', 17.0, 5.0), 2)]
     one_image_names = ["", ""]
 
-    gmic.run(images=two_images, image_names=one_image_names, command="print")
+    gmic_instance.run(images=two_images, image_names=one_image_names, command="print")
     assert_gmic_images_are_identical(two_images[0], original_two_images[0])
     assert_gmic_images_are_identical(two_images[1], original_two_images[1])
     assert one_image_names == ["", ""]
 
     # 1 image GmicImage, 1 image_names string, 1 correct command
-    gmic.run(images=two_images[0], image_names="single_image", command="print")
+    gmic_instance.run(images=two_images[0], image_names="single_image", command="print")
     assert_gmic_images_are_identical(two_images[0], original_two_images[0])
 
     # 1 image GmicImage in a list, 1 image_names string, 1 correct command
     with pytest.raises(TypeError, match=r".*'images' parameter must be a '.*GmicImage.*' if the 'image_names' parameter is a bare 'str'.*"):
-        gmic.run(images=[two_images[0]], image_names="single_image", command="print")
+        gmic_instance.run(images=[two_images[0]], image_names="single_image", command="print")
 
     # 1 non-list image_names sequence, correct images, 1 correct command
     with pytest.raises(TypeError, match=r".*'tuple' 'image_names' parameter must be a .*list.*of.*str.*"):
-        gmic.run(images=two_images, image_names=("a","b"), command="print")
+        gmic_instance.run(images=two_images, image_names=("a","b"), command="print")
 
     # 1 empty list image_names, correct images, 1 correct command
     empty_image_names = []
-    gmic.run(images=two_images, image_names=empty_image_names, command="print")
+    gmic_instance.run(images=two_images, image_names=empty_image_names, command="print")
     assert empty_image_names == ["[unnamed]", "[unnamed]"]
 
     # 1 list of image_names with not only strings, correct images, 1 correct command
     bad_content_image_names = [3, "hey"]
     with pytest.raises(TypeError, match=r"'int'.*input element found at position 0 in 'image_names' list.*"):
-        gmic.run(images=two_images, image_names=bad_content_image_names, command="print")
+        gmic_instance.run(images=two_images, image_names=bad_content_image_names, command="print")
 
     # 1 list of image_names with 'bytes' strings, correct images, 1 correct command
     bad_content_image_names = [b'bonsoir', "hey"]
     with pytest.raises(TypeError, match=r"'bytes'.*input element found at position 0 in 'image_names' list.*"):
-        gmic.run(images=two_images, image_names=bad_content_image_names, command="print")
+        gmic_instance.run(images=two_images, image_names=bad_content_image_names, command="print")
 
 def test_gmic_image_rich_compare():
-    import gmic
     import struct
 
     a = gmic.GmicImage(struct.pack('2f', 1.0, 2.0), 2, 1)
@@ -532,27 +525,25 @@ def test_gmic_image_rich_compare():
 
 @pytest.mark.skip(reason="some machines/OS are too brave and will try this allocation for minutes instead of erroring")
 def test_gmic_image_memory_exhaustion_initialization_resilience():
-    import gmic
     import struct
     # out of memory
     pytest.skip()
     with pytest.raises(MemoryError):
         gmic.GmicImage(struct.pack('8f', (0.0,)*494949*2000*393938*499449), 494949, 2000, 393938, 499449)
 
-def test_gmic_images_post_element_removal_conservation():
-    import gmic
+@pytest.mark.parametrize(**gmic_instance_types)
+def test_gmic_images_post_element_removal_conservation(gmic_instance):
     import struct
     a = gmic.GmicImage(struct.pack('2f', 1.0, 2.0), 2, 1)
     original_a = gmic.GmicImage(struct.pack('2f', 1.0, 2.0), 2, 1)
 
     images = [a, a, a]
     # If this core dumps, this means that there is a missing or badly put memcpy() on input list GmicImage(s) retrieval
-    gmic.run(command="rm[0]", images=images)
+    gmic_instance.run(command="rm[0]", images=images)
     for i in images:
         assert_gmic_images_are_identical(i, original_a)
 
 def test_gmic_class_void_parameters_instantation_and_simple_hello_world_run(capfd):
-    import gmic
     gmic_instance = gmic.Gmic()
     gmic_instance.run('echo_stdout "hello world"')
     outerr = capfd.readouterr()
@@ -562,3 +553,23 @@ def test_gmic_class_void_parameters_instantation_and_simple_hello_world_run(capf
     gmic.Gmic().run("echo_stdout \"hello world2\"")
     outerr = capfd.readouterr()
     assert "hello world2\n" == outerr.out
+
+def test_gmic_module_run_vs_single_instance_run_benchmark():
+    from time import time
+    testing_command = "sp lena blur 10 blur 30 blur 4"
+    testing_iterations_max = 100 
+    expected_speed_improvement_by_single_instance_runs = 1.4 # at least 40%
+
+
+    time_before_module_runs = time()
+    for a in range(testing_iterations_max):
+        gmic.run(testing_command)
+    time_after_module_runs = time()
+
+    time_before_instance_runs = time()
+    gmic_instance = gmic.Gmic()
+    for a in range(testing_iterations_max):
+        gmic_instance.run(testing_command)
+    time_after_instance_runs = time()
+
+    assert (time_after_instance_runs - time_before_instance_runs) * expected_speed_improvement_by_single_instance_runs < (time_after_module_runs - time_before_module_runs)
