@@ -574,7 +574,7 @@ def test_gmic_module_run_vs_single_instance_run_benchmark():
     time_before_instance_runs = time()
     gmic_instance = gmic.Gmic()
     for a in range(testing_iterations_max):
-        gmic_instance_run(testing_command)
+        gmic_instance.run(testing_command)
     time_after_instance_runs = time()
 
     assert (time_after_instance_runs - time_before_instance_runs) * expected_speed_improvement_by_single_instance_runs < (time_after_module_runs - time_before_module_runs)
