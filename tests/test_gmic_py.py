@@ -12,7 +12,7 @@ def test_catch_exceptions(gmic_instance_run):
         gmic_instance_run('badly formatted command')
 
 @pytest.mark.parametrize(**gmic_instance_types)
-def test_run_gmic_ensure_openmp_linked_and_working(capfd, gmic_instance):
+def test_run_gmic_ensure_openmp_linked_and_working(capfd, gmic_instance_run):
     import traceback
     import sys
     gmic_instance_run('v - sp lena eval. "end(call(\'echo_stdout[] \',merge(t,max)))"')
@@ -28,7 +28,7 @@ def test_run_gmic_ensure_openmp_linked_and_working(capfd, gmic_instance):
         pytest.fail('parallel test case fails, OpenMP probably could not link or compile well on this platform, gmic parallelization will not work: stdout: {}; assert check: {}'.format(outerr.out, text))
 
 @pytest.mark.parametrize(**gmic_instance_types)
-def test_run_gmic_instance_run_helloworld(capfd, gmic_instance):
+def test_run_gmic_instance_run_helloworld(capfd, gmic_instance_run):
     # Using pytest stderr capture per https://docs.pytest.org/en/latest/capture.html#accessing-captured-output-from-a-test-function
     gmic_instance_run('echo_stdout "hello world"')
     outerr = capfd.readouterr()
@@ -186,7 +186,7 @@ def assert_gmic_image_is_filled_with(gmic_image, w, h, d, s, pixel_value):
                         assert isclose(pixel, pixel_value)
 
 @pytest.mark.parametrize(**gmic_instance_types)
-def test_gmic_image_generation_and_gmic_multiple_resize_run(capfd, gmic_instance):
+def test_gmic_image_generation_and_gmic_multiple_resize_run(capfd, gmic_instance_run):
     import struct
     import re
     w = 60
