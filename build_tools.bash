@@ -108,12 +108,12 @@ function 33_build_manylinux () {
 }
 
 function 3_test_compiled_so () {
-    $PIP3 uninstall gmic -y; cd ./build/lib*$PYTHON_VERSION*/ ; LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH ; $PIP3 install -r ../../dev-requirements.txt ; pwd; ls; $PYTHON3 -m pytest ../../tests/test_gmic_py.py -vvv -rxXs || { echo "Fatal error while running pytests" ; exit 1 } ; cd ../..
+    $PIP3 uninstall gmic -y; cd ./build/lib*$PYTHON_VERSION*/ ; LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH ; $PIP3 install -r ../../dev-requirements.txt ; pwd; ls; $PYTHON3 -m pytest ../../tests/test_gmic_py.py -vvv -rxXs || { echo "Fatal error while running pytests" ; exit 1 ; } ; cd ../..
 }    
 
 function 4_build_wheel () {
-    $PIP3 install wheel || { echo "Fatal wheel package install error" ; exit 1 }
-    $PYTHON3 setup.py bdist_wheel || { echo "Fatal wheel build error" ; exit 1 }
+    $PIP3 install wheel || { echo "Fatal wheel package install error" ; exit 1 ; }
+    $PYTHON3 setup.py bdist_wheel || { echo "Fatal wheel build error" ; exit 1 ; }
     echo "Not doing any auditwheel repair step here, development environment :)"
 }
 
