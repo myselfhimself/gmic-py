@@ -3,7 +3,7 @@
 set -e -x
 
 # Install a system package required by our library
-yum check-update || { echo "yum check-update failed but manylinux build-wheels script will continue" }
+yum check-update || { echo "yum check-update failed but manylinux build-wheels script will continue" ; }
 yum install fftw-devel curl-devel libpng-devel zlib-devel libgomp wget -y || { echo "Fatal yum dependencies install error" ; exit 1; }
 
 # Install slightly newer libpng12 includes if too old, to avoid c++11 problem listed here: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=676157
