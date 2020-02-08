@@ -558,7 +558,7 @@ def test_gmic_class_void_parameters_instantation_and_simple_hello_world_run(capf
 
 def test_gmic_class_direct_run_remains_usable_instance():
     gmic_instance = gmic.Gmic("echo_stdout \"single instance\"")
-    assert type(gmic_instance.run) == gmic.Gmic
+    assert type(gmic_instance) == gmic.Gmic
     gmic_instance.run("echo_stdout \"other run\"")
 
 def test_gmic_module_run_vs_single_instance_run_benchmark():
