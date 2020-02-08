@@ -338,9 +338,11 @@ def test_gmic_instance_run_parameters_fuzzying_basic(gmic_instance_run):
     w = 60
     h = 80
     d = s = 1
-    # 0 parameters
-    with pytest.raises(TypeError):
-        gmic_instance_run()
+    # 0 parameters should not be allowed for the .run() method
+    # except for the Gmic class's own constructor which will not trigger .run() if not fed with any parameters
+    if gmic_instance_run != gmic.Gmic:
+        with pytest.raises(TypeError):
+            gmic_instance_run()
 
     # 1 correct command
     gmic_instance_run("echo_stdout 'bonsoir'")
@@ -545,7 +547,7 @@ def test_gmic_images_post_element_removal_conservation(gmic_instance_run):
 
 def test_gmic_class_void_parameters_instantation_and_simple_hello_world_run(capfd):
     gmic_instance = gmic.Gmic()
-    gmic_instance_run('echo_stdout "hello world"')
+    gmic_instance.run('echo_stdout "hello world"')
     outerr = capfd.readouterr()
     assert "hello world\n" == outerr.out
 
@@ -556,8 +558,8 @@ def test_gmic_class_void_parameters_instantation_and_simple_hello_world_run(capf
 
 def test_gmic_class_direct_run_remains_usable_instance():
     gmic_instance = gmic.Gmic("echo_stdout \"single instance\"")
-    assert type(gmic_instance_run) == gmic.Gmic
-    gmic_instance_run("echo_stdout \"other run\"")
+    assert type(gmic_instance.run) == gmic.Gmic
+    gmic_instance.run("echo_stdout \"other run\"")
 
 def test_gmic_module_run_vs_single_instance_run_benchmark():
     from time import time
