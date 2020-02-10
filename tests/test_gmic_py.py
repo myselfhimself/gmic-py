@@ -564,8 +564,8 @@ def test_gmic_class_direct_run_remains_usable_instance():
 def test_gmic_module_run_vs_single_instance_run_benchmark():
     from time import time
     testing_command = "sp lena blur 10 blur 30 blur 4"
-    testing_iterations_max = 100 
-    expected_speed_improvement_by_single_instance_runs = 1.4 # at least 40%
+    testing_iterations_max = 100
+    expected_speed_improvement_by_single_instance_runs = 1.1 # at least 10%
 
 
     time_before_module_runs = time()

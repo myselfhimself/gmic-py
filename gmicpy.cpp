@@ -3,6 +3,12 @@
 #include <iostream>
 #include <stdio.h>
 #include "gmic.h"
+
+
+#include <exception>
+#include <typeinfo>
+#include <stdexcept>
+
 using namespace std;
 
 // Set T be a float if not platform-overridden
@@ -269,6 +275,11 @@ static PyObject* run_impl(PyObject* self, PyObject* args, PyObject* kwargs)
   } catch (std::exception& e) {
     PyErr_SetString(PyExc_Exception, e.what());
     return NULL;
+  } catch (...) {
+	          std::exception_ptr p = std::current_exception();
+        std::clog <<(p ? p.__cxa_exception_type()->name() : "null") << std::endl;
+    PyErr_SetString(PyExc_Exception, "unknown exception");
+    return NULL;
   }
   Py_RETURN_NONE;
 }
@@ -277,7 +288,8 @@ static int PyGmic_init(PyGmic *self, PyObject *args, PyObject *kwargs)
 {
     int result = 0;
     self->_gmic = new gmic();
-    if(args != Py_None && PyTuple_Size(args) > 0) {
+    // If parameters are provided, pipe them to our run() method, and do only exceptions raising without returning anything if things go well
+    if(args != Py_None && ((args && (int)PyTuple_Size(args) > 0) || (kwargs && (int)PyDict_Size(kwargs) > 0))) {
         result = (run_impl((PyObject*) self, args, kwargs) != NULL) ? 0 : -1;
     }
     return result;
@@ -286,7 +298,7 @@ static int PyGmic_init(PyGmic *self, PyObject *args, PyObject *kwargs)
 
 PyDoc_STRVAR(
 run_impl_doc,
-"Gmic.run(command: str[, images: GmicImage|List[GmicImage], image_names: str|List[str]]) -> bool\n\n\
+"Gmic.run(command: str[, images: GmicImage|List[GmicImage], image_names: str|List[str]]) -> None\n\n\
 Run G'MIC interpreter following a G'MIC language command(s) string, on 0 or more namable GmicImage(s).\n\n\
 Note (single-image short-hand calling): if 'images' is a GmicImage, then 'image_names' must be either a 'str' or not provided.\n\n\
 Example:\n\
@@ -414,18 +426,14 @@ static PyMethodDef PyGmicImage_methods[] = {
 
 static PyObject* module_level_run_impl(PyObject*, PyObject* args, PyObject* kwargs)
 {
-    // Create a temporary Gmic() instance, call its run() method on our params, but always just return the run() result
     PyObject* temp_gmic_instance = PyObject_CallObject((PyObject*)(&PyGmicType), NULL);
-    if(temp_gmic_instance != NULL) {
-        return run_impl(temp_gmic_instance, args, kwargs);
-    } else {
-        return temp_gmic_instance;
-    }
+    // Return None or a Python exception flag
+    return run_impl(temp_gmic_instance, args, kwargs);
 }
 
 PyDoc_STRVAR(
 module_level_run_impl_doc,
-"run(command: str[, images: GmicImage|List[GmicImage], image_names: str|List[str]]) -> bool\n\n\
+"run(command: str[, images: GmicImage|List[GmicImage], image_names: str|List[str]]) -> None\n\n\
 Run G'MIC interpreter following a G'MIC language command(s) string, on 0 or more nameable GmicImage(s).\n\n\
 This creates a single-use interpret for you and destroys it. For faster run()s, reuse instead ia G'MIC interpret instance, see gmic.Gmic() and its run() method.\n\n\
 Note (single-image short-hand calling): if 'images' is a GmicImage, then 'image_names' must be either a 'str' or not provided.\n\n\
