@@ -275,11 +275,6 @@ static PyObject* run_impl(PyObject* self, PyObject* args, PyObject* kwargs)
   } catch (std::exception& e) {
     PyErr_SetString(PyExc_Exception, e.what());
     return NULL;
-  } catch (...) {
-	          std::exception_ptr p = std::current_exception();
-        std::clog <<(p ? p.__cxa_exception_type()->name() : "null") << std::endl;
-    PyErr_SetString(PyExc_Exception, "unknown exception");
-    return NULL;
   }
   Py_RETURN_NONE;
 }
