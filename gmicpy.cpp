@@ -4,11 +4,6 @@
 #include <stdio.h>
 #include "gmic.h"
 
-
-#include <exception>
-#include <typeinfo>
-#include <stdexcept>
-
 using namespace std;
 
 // Set T be a float if not platform-overridden
