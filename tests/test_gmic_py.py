@@ -9,7 +9,7 @@ FLOAT_SIZE_IN_BYTES = 4
 
 def test_gmic_module_has_version_and_build_attributes():
     assert re.match(r'\d\.\d\.\d.*', gmic.__version__)
-    assert re.match(r'([^\:\s]:\d\s?)', gmic.__build__)
+    assert re.match(r"(\S+:\S+\s?)+", gmic.__build__)
 
 @pytest.mark.parametrize(**gmic_instance_types)
 def test_catch_exceptions(gmic_instance_run):
