@@ -6,11 +6,6 @@
 
 using namespace std;
 
-// Set T be a float if not platform-overridden
-#ifndef T
-#define T gmic_pixel_type
-#endif
-
 
 //------- G'MIC MAIN TYPES ----------//
 
