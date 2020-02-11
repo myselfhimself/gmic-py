@@ -2,14 +2,9 @@
 #include "structmember.h"
 #include <iostream>
 #include <stdio.h>
-#include "gmic.h"
+#include "gmicpy.h"
 
 using namespace std;
-
-// Set T be a float if not platform-overridden
-#ifndef T
-#define T gmic_pixel_type
-#endif
 
 
 //------- G'MIC MAIN TYPES ----------//
@@ -575,5 +570,9 @@ PyMODINIT_FUNC PyInit_gmic() {
     Py_INCREF(&PyGmicType);
     PyModule_AddObject(m, "GmicImage", (PyObject *)&PyGmicImageType); // Add GmicImage object to the module
     PyModule_AddObject(m, "Gmic", (PyObject *)&PyGmicType); // Add Gmic object to the module
+    PyModule_AddObject(m, "__version__", PyUnicode_Join(PyUnicode_FromString("."), PyUnicode_FromString(xstr(gmic_version))));
+    PyModule_AddObject(m, "__build__", gmicpy_build_info);
+    // For more debugging, the user can look at __spec__ automatically set by setup.py
+
     return m;
 }

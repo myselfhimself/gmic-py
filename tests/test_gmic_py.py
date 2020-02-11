@@ -1,10 +1,15 @@
 import pytest
 import gmic
+import re
 
 # Tests parametrization: run calls to gmic.run(), gmic.Gmic() and gmic.Gmic().run() should have the same behaviour!
 gmic_instance_types = {"argnames": "gmic_instance_run", "argvalues": [gmic.run, gmic.Gmic, gmic.Gmic().run], "ids": ["gmic_module_run", "gmic_instance_constructor_run", "gmic_instance_run"]}
 
 FLOAT_SIZE_IN_BYTES = 4
+
+def test_gmic_module_has_version_and_build_attributes():
+    assert re.match(r'\d\.\d\.\d.*', gmic.__version__)
+    assert re.match(r"(\S+:\S+\s?)+", gmic.__build__)
 
 @pytest.mark.parametrize(**gmic_instance_types)
 def test_catch_exceptions(gmic_instance_run):
