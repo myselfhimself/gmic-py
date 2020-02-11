@@ -16,6 +16,9 @@ using namespace std;
 #define T gmic_pixel_type
 #endif
 
+#define xstr(s) str(s)
+#define str(s) #s
+
 
 //------- G'MIC MAIN TYPES ----------//
 
@@ -580,5 +583,7 @@ PyMODINIT_FUNC PyInit_gmic() {
     Py_INCREF(&PyGmicType);
     PyModule_AddObject(m, "GmicImage", (PyObject *)&PyGmicImageType); // Add GmicImage object to the module
     PyModule_AddObject(m, "Gmic", (PyObject *)&PyGmicType); // Add Gmic object to the module
+    PyModule_AddObject(m, "__version__", PyUnicode_Join(PyUnicode_FromString("."), PyUnicode_FromString(xstr(gmic_version)))); // Add Gmic object to the module
+
     return m;
 }
