@@ -60,13 +60,13 @@ You can build your own Gmic python binding on possibly any platform with a C/C++
 Here is what we have managed to build and ship to [Gmic PyPI page](https://pypi.org/project/gmic/), allowing you to `pip install gmic` and use pre-built binaries or build `gmic-py` on the fly.
 Note that `gmic-py`'s package installer links to your machine's existing `libpng`, `OpenMP` and `libcURL` if found.
 
-| Build target                                                 | Basic gmic-py<sup>0</sup>  |  libpng I/O   | OpenMP | libcURL        | OpenCV         |
-| -----------                                                  | -------------------------  | ----------    |------- | -------        |--------        |
-| Build from source<sup>1</sup>                                | ✓                          | ✓ <sup>2</sup>| ✓      | ✓ <sup>2</sup> | ✓ <sup>2</sup> |
-| DIY Linux 32&64bit <sup>1</sup>                              | ✓                          | ✓ <sup>2</sup>| ✓      | ✓ <sup>2</sup> | ✓ <sup>2</sup> |
-| Pre-compiled Linux i686 & x86\_64 py3.4-3.8 (gcc)<sup>m</sup>| ✓                          | ✓             | ✓      | ✗ <sup>3</sup> | ✗              |
-| Pre-compiled MacOS 64 py3.5-3.8 (clang)                      | ✓                          | ✓             | ✓      | ✓              | ✗              |
-| Windows (planned)<sup>w</sup>                                | ✗                          | ✗             | ✗      | ✗              | ✗              |
+| Build target                                                 | Basic gmic-py<sup>0</sup> |  ppm/bmp I/O    |  libpng I/O    | OpenMP | libcURL        | OpenCV         |
+| -----------                                                  | ------------------------- | -----------     | ----------     |------- | -------        |--------        |
+| Build from source<sup>1</sup>                                | ✓                         | ✓               | ✓ <sup>2</sup> | ✓      | ✓ <sup>2</sup> | ✓ <sup>2</sup> |
+| DIY Linux 32&64bit <sup>1</sup>                              | ✓                         | ✓               | ✓ <sup>2</sup> | ✓      | ✓ <sup>2</sup> | ✓ <sup>2</sup> |
+| Pre-compiled Linux i686 & x86\_64 py3.4-3.8 (gcc)<sup>m</sup>| ✓                         | ✓               | ✓              | ✓      | ✗ <sup>3</sup> | ✗              |
+| Pre-compiled MacOS 64 py3.5-3.8 (clang)                      | ✓                         | ✓               | ✓              | ✓      | ✓              | ✗              |
+| Windows (planned)<sup>w</sup>                                | ✗                         | ✗               | ✗              | ✗      | ✗              | ✗              |
 
 <sup>0</sup> ie. `gmic.GmicImage(bytes, w, h, d, s)`,  `gmic.run(..., "commands")`
 
@@ -97,67 +97,12 @@ If your machine has `libopencv` installed and your gmic-py was compiled from sou
     1. Through custom Python/C++ binding (see `gmicpy.cpp` and `setup.py`) DONE
 1. Create documented examples for various application domains. WIP
 
-### Q1-Q2 2020
+### Q1-Q3 2020
 1. Move the package to official Python package repositories. DONE
 1. Add numpy nparray I/O support with automatic values (de-)interlacing
 1. Add Windows support
+
+### Q2-Q3 2020
 1. In a separate repository, create a Blender Plugin, leveraging the Python library and exposing:
   1. a single Blender GMIC 2D node with a text field or linkable script to add a GMIC expression
-  1. as many 2D nodes as there are types of GMIC 'operators'
-
-### Q3-Q4 2020
-1. In a separate repository, create a GMIC Inkscape plugin, leveraging the Python library (possibly applying only to image objects, as the Trace bitmap tool does).
-
-## Binding blueprint
-This is an overview of how we want the gmic binding inner working:
-```python3
-from gmic import Gmic, run, Image, GmicException
-#we give up the Gmic native List
-
-class GmicException:
-   def __init__(self, command, message):
-       self.command = command
-       self.message = message
-   def what(self):
-       pass
-   def command_help(self):
-       pass
-
-class Gmic:
-    def __init__(self, images=[]|tuple|iterable[Image], image_names=[]|tuple|iterable, include_stdlib=True, progress=None, is_abort=None):
-        self._status = None
-        self.include_stdlib = include_stdlib
-        # TODO V2 = progress, is_abort
-        if all params were given:
-           self.run(images, image_names, include_stdlib, progress, is_abort)
-
-    @throws GmicException
-    def run(self, images=[], images_names=[], progress=None, abort=None):
-        ....
-        self._status = ""
-        return self
-
-    def _build_lists(self):
-        self._build_gmic_images_list(self.images)
-        self._build_gmic_images_names_list(self.image_names)
-
-    def _build_gmic_images_list(self):
-        """Convert and store to Gmic builtin C++ type"""
-        pass
-
-    def _build_gmic_images_names_list(self):
-        """Convert and store to Gmic builtin C++ type"""
-        pass
-
-    @property
-    def status(self):
-       """ string result of last operation, or exception text if was raised, or user-entered text through a gmic command. 
-       This is a read-only attribute, starting with underscore. See https://stackoverflow.com/a/15812738/420684
-       :return str
-       """
-       return self._status
-
-
-def run(images=[]|tuple|iterable[Image], image_names=[]|tuple|iterable[Image], include_stdlib=True, progress=None, is_abort=None):
-    return Gmic(images, images_names, include_stdlib, progress, is_abort).run()
-```
+  1. as many 2D nodes as there are types of GMIC filters and commands (500+)
