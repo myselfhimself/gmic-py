@@ -566,6 +566,22 @@ def test_gmic_class_direct_run_remains_usable_instance():
     assert type(gmic_instance) == gmic.Gmic
     gmic_instance.run("echo_stdout \"other run\"")
 
+def test_numpy_ndarray_simple_file_IO_through_PIL():
+    from PIL import Image
+    import numpy
+
+    gmic.run("sp lena -output image.png")
+    
+    im = numpy.array(Image.open('image.png'))
+    #Image.fromarray(im)
+
+    assert type(im) == numpy.ndarray
+    gmic.run(images=im, command="output[0] image2.png")
+    im2 = numpy.array(Image.open('image.png'))
+
+    assert im2 == im
+
+@pytest.mark.skip(reason="TODO unskip me")
 def test_gmic_module_run_vs_single_instance_run_benchmark():
     from time import time
     testing_command = "sp lena blur 10 blur 30 blur 4"
