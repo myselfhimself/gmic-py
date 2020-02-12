@@ -570,7 +570,7 @@ PyMODINIT_FUNC PyInit_gmic() {
     Py_INCREF(&PyGmicType);
     PyModule_AddObject(m, "GmicImage", (PyObject *)&PyGmicImageType); // Add GmicImage object to the module
     PyModule_AddObject(m, "Gmic", (PyObject *)&PyGmicType); // Add Gmic object to the module
-    PyModule_AddObject(m, "__version__", PyUnicode_Join(PyUnicode_FromString("."), PyUnicode_FromString(xstr(gmic_version))));
+    PyModule_AddObject(m, "__version__", gmicpy_version_info);
     PyModule_AddObject(m, "__build__", gmicpy_build_info);
     // For more debugging, the user can look at __spec__ automatically set by setup.py
 
