@@ -76,6 +76,14 @@ function 22_docker_run_all_steps () {
     docker run testpython3
 }
 
+function 2_compile_with_debug_and_sanitizer () {
+    GMICPY_SANITIZER=1 GMICPY_DEBUG=1 2_compile
+}
+
+function 2_compile_with_debug () {
+    GMICPY_DEBUG=1 2_compile
+}
+
 function 2_compile () {
     set -x
     $PIP3 install -r dev-requirements.txt || { echo "Fatal pip install of dev-requirements.txt error" ; exit 1; }
@@ -108,7 +116,11 @@ function 33_build_manylinux () {
 }
 
 function 3_test_compiled_so () {
-    $PIP3 uninstall gmic -y; cd ./build/lib*$PYTHON_VERSION*/ ; LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH ; $PIP3 install -r ../../dev-requirements.txt ; pwd; ls; $PYTHON3 -m pytest ../../tests/test_gmic_py.py -vvv -rxXs || { echo "Fatal error while running pytests" ; exit 1 ; } ; cd ../..
+    # Allow .so compiled with sanitizer enabled to load properly
+    if ! [ -x "$(command -v gcc)" ]; then
+        LD_PRELOAD=$(gcc -print-file-name=libasan.so)
+    fi
+    $PIP3 uninstall gmic -y; cd ./build/lib*$PYTHON_VERSION*/ ; LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH ; $PIP3 install -r ../../dev-requirements.txt ; pwd; ls;  $PYTHON3 -m pytest ../../tests/test_gmic_py.py -vvv -rxXs || { echo "Fatal error while running pytests" ; exit 1 ; } ; cd ../..
 }    
 
 function 4_build_wheel () {

@@ -54,6 +54,12 @@
 #define gmicpy_optimize_enabled 1
 #endif
 
-#define gmicpy_build_info PyUnicode_FromFormat("zlib_enabled:%d libpng_enabled:%d display_enabled:%d fftw3_enabled:%d libcurl_enabled:%d openmp_enabled:%d cimg_OS:%d OS_type:%s debug_symbols:%d optimized:%d", zlib_enabled, libpng_enabled, display_enabled, fftw3_enabled, libcurl_enabled, cimg_use_openmp, cimg_OS, OS_type, gmicpy_debug_enabled, gmicpy_optimize_enabled)
+#ifdef gmicpy_sanitizer
+#define gmicpy_sanitizer_enabled 1
+#else
+#define gmicpy_sanitizer_enabled 0
+#endif
+
+#define gmicpy_build_info PyUnicode_FromFormat("zlib_enabled:%d libpng_enabled:%d display_enabled:%d fftw3_enabled:%d libcurl_enabled:%d openmp_enabled:%d cimg_OS:%d OS_type:%s debug_symbols:%d optimized:%d sanitizer_enabled:%d", zlib_enabled, libpng_enabled, display_enabled, fftw3_enabled, libcurl_enabled, cimg_use_openmp, cimg_OS, OS_type, gmicpy_debug_enabled, gmicpy_optimize_enabled, gmicpy_sanitizer_enabled)
 
 #define gmicpy_version_info PyUnicode_Join(PyUnicode_FromString("."), PyUnicode_FromString(xstr(gmic_version)))

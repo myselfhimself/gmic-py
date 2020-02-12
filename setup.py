@@ -14,6 +14,8 @@ gmic_src_path = path.abspath('src/gmic/src')
 # List of non-standard '-l*' compiler parameters
 extra_link_args = []
 
+extra_compile_args = ['-std=c++11'] 
+
 # List of libs to get include directories and linkable libraries paths from for compiling
 pkgconfig_list = ['zlib']
 
@@ -61,6 +63,14 @@ include_dirs = packages['include_dirs'] + [here, gmic_src_path]
 if sys.platform == 'darwin':
     include_dirs += ['/usr/local/opt/llvm@6/include']
 
+# Open-MP support for MacOSX and Linux
+if sys.platform == 'darwin':
+    extra_compile_args += ['-fopenmp', '-stdlib=libc++']
+    extra_link_args += ['-lomp', '-nodefaultlibs', '-lc++'] #options inspired by https://github.com/explosion/spaCy/blob/master/setup.py
+elif sys.platform == 'linux': # Enable openmp for 32bit & 64bit linuxes
+    extra_compile_args += ['-fopenmp']
+    extra_link_args += ['-lgomp']
+
 # Adding C-preprocessor-detectable define of debugging mode and custom debug-mode compile options
 debugging_args = []
 optimization_args = []
@@ -68,21 +78,23 @@ optimization_args = []
 if environ.get('GMICPY_DEBUG', False):
     print("compiling a debug gmic-py version")
     if sys.platform == 'windows':
-        debugging_args = ['/DEBUG:FULL']
+        debugging_args += ['/DEBUG:FULL']
     else:
-        debugging_args = ['-O0', '-g3', '-fsanitize=address']
+        debugging_args += ['-O0', '-g3']
     define_macros += [('gmicpy_debug', None)]
 else:
    print("compiling an optimized gmic-py version")
-   optimization_args = ['-O2', '-g0']
+   optimization_args += ['-O2', '-g0']
 
-extra_compile_args = ['-std=c++11'] + debugging_args + optimization_args
-if sys.platform == 'darwin':
-    extra_compile_args += ['-fopenmp', '-stdlib=libc++']
-    extra_link_args += ['-lomp', '-nodefaultlibs', '-lc++'] #options inspired by https://github.com/explosion/spaCy/blob/master/setup.py
-elif sys.platform == 'linux': # Enable openmp for 32bit & 64bit linuxes
-    extra_compile_args += ['-fopenmp']
-    extra_link_args += ['-lgomp']
+# set GMICPY_SANITIZER to any non-empty string to toggle memory sanitizing options (GCC, maybe CLang)
+if environ.get('GMICPY_SANITIZER', False):
+    print("adding sanitizer support for memory leaks checking, make sure you set LD_PRELOAD=....libasan.so for running, see build_tools.bash for reference")
+    debugging_args += ['-fsanitize=address']
+    extra_link_args += ['-lasan', '-fsanitize=address']
+    libraries.insert(0, 'asan')
+    define_macros += [('gmicpy_sanitizer', None)]
+
+extra_compile_args += debugging_args + optimization_args
 
 print("Define macros:")
 print(define_macros)
