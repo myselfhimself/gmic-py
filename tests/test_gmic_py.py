@@ -1,11 +1,24 @@
 import pytest
 import gmic
 import re
+import pathlib
 
 # Tests parametrization: run calls to gmic.run(), gmic.Gmic() and gmic.Gmic().run() should have the same behaviour!
 gmic_instance_types = {"argnames": "gmic_instance_run", "argvalues": [gmic.run, gmic.Gmic, gmic.Gmic().run], "ids": ["gmic_module_run", "gmic_instance_constructor_run", "gmic_instance_run"]}
 
 FLOAT_SIZE_IN_BYTES = 4
+
+def assert_non_empty_file_exists(filename):
+    """ Assert filename corresponds to non-empty file and return is pathlib.Path object
+    """
+    if type(filename) != pathlib.Path:
+        a_file = pathlib.Path(filename)
+    else:
+        a_file = filename
+    assert a_file.exists()
+    assert a_file.stat().st_size > 0
+
+    return a_file
 
 def test_gmic_module_has_version_and_build_attributes():
     assert re.match(r'\d\.\d\.\d.*', gmic.__version__)
@@ -41,14 +54,9 @@ def test_run_gmic_instance_run_helloworld(capfd, gmic_instance_run):
 
 @pytest.mark.parametrize(**gmic_instance_types)
 def test_run_gmic_instance_run_simple_3pixels_png_output(gmic_instance_run):
-    import pathlib
     png_filename = "a.png"
     gmic_instance_run('input "(0,128,255)" output ' + png_filename)
-    a_png = pathlib.Path(png_filename)
-    # Ensure generated png file exists and is non empty
-    assert a_png.exists()
-    assert a_png.stat().st_size > 0
-    a_png.unlink()
+    assert_non_empty_file_exists(png_filename).unlink()
 
 
 @pytest.mark.parametrize(**gmic_instance_types)
@@ -58,10 +66,7 @@ def test_run_gmic_instance_run_simple_demo_png_output_and_input(gmic_instance_ru
     import pathlib
     png_filename = "demo.png"
     gmic_instance_run('testimage2d 512 output ' + png_filename)
-    a_png = pathlib.Path(png_filename)
-    # Ensure generated png file exists and is non empty
-    assert a_png.exists()
-    assert a_png.stat().st_size > 0
+    a_png = assert_non_empty_file_exists(png_filename)
 
     # Open generated file
     gmic_instance_run('input ' + png_filename)
@@ -74,11 +79,7 @@ def test_run_gmic_instance_run_simple_3pixels_bmp_output(gmic_instance_run):
     import pathlib
     bmp_filename = "a.bmp"
     gmic_instance_run('input "(0,128,255)" output ' + bmp_filename)
-    a_bmp = pathlib.Path(bmp_filename)
-    # Ensure generated bmp file exists and is non empty
-    assert a_bmp.exists()
-    assert a_bmp.stat().st_size > 0
-    a_bmp.unlink()
+    assert_non_empty_file_exists(bmp_filename).unlink()
 
 def test_gmic_image_parameters_fuzzying():
     import struct
@@ -567,19 +568,24 @@ def test_gmic_class_direct_run_remains_usable_instance():
     gmic_instance.run("echo_stdout \"other run\"")
 
 def test_numpy_ndarray_simple_file_IO_through_PIL():
-    from PIL import Image
+    import PIL.Image
     import numpy
+    im1_name = "image.png"
+    im2_name = "image2.png"
 
-    gmic.run("sp lena -output image.png")
+    gmic.run("sp lena -output " + im1_name)
     
-    im = numpy.array(Image.open('image.png'))
+    im = numpy.array(PIL.Image.open(im1_name))
+    im_gmicimage = gmic.GmicImage(im.tobytes(), im.shape[0], im.shape[1], im.shape[2])
     #Image.fromarray(im)
 
     assert type(im) == numpy.ndarray
-    gmic.run(images=im, command="output[0] image2.png")
-    im2 = numpy.array(Image.open('image.png'))
+    gmic.run(images=im, command=("output[0] " + im2_name))
+    im2 = numpy.array(Image.open(im1_name))
 
-    assert im2 == im
+    assert_gmic_images_are_identical(im_gmicimage, im2_gmicimage)
+    assert_non_empty_file_exists(im1_name).unlink()
+    assert_non_empty_file_exists(im2_name).unlink()
 
 @pytest.mark.skip(reason="TODO unskip me")
 def test_gmic_module_run_vs_single_instance_run_benchmark():

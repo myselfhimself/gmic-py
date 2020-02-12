@@ -330,6 +330,8 @@ static int PyGmicImage_init(PyGmicImage *self, PyObject *args, PyObject *kwargs)
     if (! PyArg_ParseTupleAndKeywords(args, kwargs, "S|IIIIp", (char**) keywords, &bytesObj, &_width, &_height, &_depth, &_spectrum, &_is_shared))
         return -1;
 
+    printf("type is: %s", ((PyTypeObject *)PyObject_Type(bytesObj))->tp_name);
+
     dimensions_product = _width*_height*_depth*_spectrum;
     _data_bytes_size = PyBytes_Size(bytesObj);
     if((Py_ssize_t)(dimensions_product*sizeof(T)) != _data_bytes_size)
