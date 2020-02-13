@@ -324,22 +324,79 @@ static int PyGmicImage_init(PyGmicImage *self, PyObject *args, PyObject *kwargs)
     Py_ssize_t _data_bytes_size;
     int _is_shared = (int) false; // Whether image should be shared across gmic operations (if true, operations like resize will fail)
     PyObject* bytesObj;        // Incoming bytes buffer object pointer
-    char const* keywords[] = {"data", "width", "height", "depth", "spectrum", "shared", NULL};
+    bool bytesObj_is_ndarray = false;
+    bool bytesObj_is_bytes = false;
+    PyObject* bytesObj_ndarray_dtype;
+    PyTupleObject* bytesObj_ndarray_shape;
+    Py_ssize_t bytesObj_ndarray_shape_size;
+    char * bytesObj_ndarray_dtype_kind_str;
+    char * bytesObj_ndarray_dtype_name_str;
+    char * keywords[] = {"data", "width", "height", "depth", "spectrum", "shared", NULL};
     _width=_height=_depth=_spectrum=1;
 
-    if (! PyArg_ParseTupleAndKeywords(args, kwargs, "S|IIIIp", (char**) keywords, &bytesObj, &_width, &_height, &_depth, &_spectrum, &_is_shared))
+    // Parameters parsing and checking
+    if (! PyArg_ParseTupleAndKeywords(args, kwargs, "O|IIIIp", (char**) keywords, &bytesObj, &_width, &_height, &_depth, &_spectrum, &_is_shared))
         return -1;
 
-    printf("type is: %s", ((PyTypeObject *)PyObject_Type(bytesObj))->tp_name);
-
-    dimensions_product = _width*_height*_depth*_spectrum;
-    _data_bytes_size = PyBytes_Size(bytesObj);
-    if((Py_ssize_t)(dimensions_product*sizeof(T)) != _data_bytes_size)
-    {
-        PyErr_Format(PyExc_ValueError, "GmicImage dimensions-induced buffer bytes size (%d*%dB=%d) cannot be strictly negative or different than the _data buffer size in bytes (%d)", dimensions_product, sizeof(T), dimensions_product*sizeof(T), _data_bytes_size);
-	return -1;
+    bytesObj_is_bytes = (bool) PyBytes_Check(bytesObj);
+    bytesObj_is_ndarray = strcmp(((PyTypeObject *)PyObject_Type(bytesObj))->tp_name, "numpy.ndarray") == 0;
+    if (! bytesObj_is_ndarray && ! bytesObj_is_ndarray) {
+        PyErr_Format(PyExc_TypeError, "Parameter 'data' must be a 'numpy.ndarray' or a pure-python 'bytes' buffer object.");
+	// TODO pytest this
+        return -1;
     }
 
+    // Importing numpy.ndarray shape and import buffer after deinterlacing it
+    // We are skipping any need for a C API include of numpy, to use either python-language level API or common-python structure access
+    if (bytesObj_is_ndarray) {
+       // Get ndarray.dtype
+       bytesObj_ndarray_dtype = PyObject_GetAttrString(bytesObj, "dtype");
+       // Ensure dtype kind is a number we can convert (from dtype values here: https://numpy.org/doc/1.18/reference/generated/numpy.dtype.kind.html#numpy.dtype.kind)
+       bytesObj_ndarray_dtype_kind_str = PyUnicode_AsUTF8(PyObject_GetAttrString(bytesObj_ndarray_dtype, "kind"));
+       if (!strchr("iuf", bytesObj_ndarray_dtype_kind_str)) {
+           PyErr_Format(PyExc_TypeError, "Parameter 'data' of type 'numpy.ndarray' does not contain numbers ie. its 'dtype.kind' is not one of 'i', 'u', 'f'.");
+	   // TODO pytest this
+           return -1;
+       }
+
+       bytesObj_ndarray_shape = (PyTupleObject*) PyObject_GetAttrString(bytesObj, "shape");
+       bytesObj_ndarray_shape_size = PyTuple_GET_SIZE(bytesObj_ndarray_shape);
+       switch(bytesObj_ndarray_shape_size) {
+	       // TODO maybe skip other images than 2D or 3D
+           case 1:
+	      _width = (unsigned int) PyLong_AsSize_t(PyTuple_GetItem(bytesObj_ndarray_shape_size, 0));
+	      break;
+	   case 2:
+	      //TODO set _width, height
+	      break;
+	   case 3:
+	      //TODO set _widht, height, depth
+	      break;
+	   default:
+	      // raise exception
+	}
+
+       bytesObj_ndarray_dtype_name_str = PyUnicode_AsUTF8(PyObject_GetAttrString(bytesObj_ndarray_dtype, "name"));
+       // TODO float64,float64 uint16, uint32, float32, float16, float8
+       // We are doing string comparison here instead of introspecting the dtype.kind.num which is expected to be a unique identifier of type
+       // Slightly simpler to read.. slightly slower to run
+       if (strcmp(bytesObj_ndarray_dtype_name_str, "uint8") == 0) {
+          foreach()
+       }
+    }
+
+    // Bytes object spatial dimensions vs. bytes-length checking
+    if (bytesObj_is_bytes) {
+        dimensions_product = _width*_height*_depth*_spectrum;
+        _data_bytes_size = PyBytes_Size(bytesObj);
+        if((Py_ssize_t)(dimensions_product*sizeof(T)) != _data_bytes_size)
+        {
+            PyErr_Format(PyExc_ValueError, "GmicImage dimensions-induced buffer bytes size (%d*%dB=%d) cannot be strictly negative or different than the _data buffer size in bytes (%d)", dimensions_product, sizeof(T), dimensions_product*sizeof(T), _data_bytes_size);
+            return -1;
+        }
+    }
+
+    // Importing input data to an internal buffer
     try {
         self->_gmic_image.assign(_width,_height,_depth,_spectrum);
     }
@@ -375,11 +432,11 @@ static PyObject *PyGmicImage_call(PyObject *self, PyObject *args, PyObject *kwar
     const char* keywords[] = {"x", "y", "z", "c", NULL};
     int x,y,z,c;
     x=y=z=c=0;
-    
+
     if(!PyArg_ParseTupleAndKeywords(args, kwargs, "i|iii", (char**)keywords, &x, &y, &z, &c)) {
         return NULL;
     }
-    
+
     return PyFloat_FromDouble(((PyGmicImage*)self)->_gmic_image(x,y,z,c));
 }
 
