@@ -116,11 +116,12 @@ function 33_build_manylinux () {
 }
 
 function 3_test_compiled_so () {
-    # Allow .so compiled with sanitizer enabled to load properly
-    if ! [ -x "$(command -v gcc)" ]; then
-        LD_PRELOAD=$(gcc -print-file-name=libasan.so)
+    # Example usage: <this_script.bash> 3_test_compiled_so my_pytest_expr ====> pytest <the pytest file> -k my_pytest_expr
+    PYTEST_EXPRESSION_PARAM=
+    if ! [ -z "$1" ]; then
+        PYTEST_EXPRESSION_PARAM="-k $1"
     fi
-    $PIP3 uninstall gmic -y; cd ./build/lib*$PYTHON_VERSION*/ ; LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH ; $PIP3 install -r ../../dev-requirements.txt ; pwd; ls;  $PYTHON3 -m pytest ../../tests/test_gmic_py.py -vvv -rxXs || { echo "Fatal error while running pytests" ; exit 1 ; } ; cd ../..
+    $PIP3 uninstall gmic -y; cd ./build/lib*$PYTHON_VERSION*/ ; LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH ; $PIP3 install -r ../../dev-requirements.txt ; pwd; ls; $PYTHON3 -m pytest ../../tests/test_gmic_py.py $PYTEST_EXPRESSION_PARAM -vvv -rxXs || { echo "Fatal error while running pytests" ; exit 1 ; } ; cd ../..
 }    
 
 function 4_build_wheel () {
@@ -142,7 +143,8 @@ function --help () {
 }
 
 if [ $# -gt 0 ]; then
-    $"$1"
+    # Call the first arg<->function name, inject to it the 2 and more parameters
+    $"$1" "${@:2}"
 else
     --help
 fi
