@@ -168,7 +168,7 @@ def assert_get_proper_print_regex(w, h, search_str):
     assert re.compile(r"size = \({},{},1,1\) \[{} b of floats\](.*)\n(.*)\n(.*)min = 0".format(round(w), round(h), int(round(w)*round(h)*FLOAT_SIZE_IN_BYTES)), flags=re.MULTILINE).search(search_str) is not None
 
 def assert_gmic_images_are_identical(gmic_image1, gmic_image2):
-    assert gmic_image1 == gmic_image2 # Use of the build __eq__ and __ne__ operators
+    assert gmic_image1 == gmic_image2 # Use of the builtin __eq__ and __ne__ operators relying on C++ CImg data buffers compare, without w,h,d,s check
     assert not (gmic_image1 != gmic_image2)
     assert gmic_image1._width == gmic_image2._width
     assert gmic_image1._height == gmic_image2._height
@@ -568,24 +568,36 @@ def test_gmic_class_direct_run_remains_usable_instance():
     gmic_instance.run("echo_stdout \"other run\"")
 
 def test_numpy_ndarray_simple_file_IO_through_PIL():
+    # test without numpy/PIL first
+    gmic.run("sp lena [0]")
+
+
+
     import PIL.Image
     import numpy
-    im1_name = "image.png"
-    im2_name = "image2.png"
+    im1_name = "image.bmp"
+    im2_name = "image2.bmp"
 
-    gmic.run("sp lena -output " + im1_name)
+    gmic.run("sp lena -output " + im1_name + " print")
     
     im = numpy.array(PIL.Image.open(im1_name))
-    im_gmicimage = gmic.GmicImage(im.tobytes(), im.shape[0], im.shape[1], im.shape[2])
+    print(im)
+    print(im.shape)
+    print(im.dtype)
+    print(im.dtype.kind)
+    print(dir(im.dtype))
+    print(im.dtype.type)
+    im_gmicimage = gmic.GmicImage(im)
     #Image.fromarray(im)
 
     assert type(im) == numpy.ndarray
-    gmic.run(images=im, command=("output[0] " + im2_name))
-    im2 = numpy.array(Image.open(im1_name))
+    gmic.run(images=im_gmicimage, command=("output[0] " + im2_name + " print"))
+    im2 = numpy.array(PIL.Image.open(im1_name))
+    im2_gmicimage = gmic.GmicImage(im)
 
     assert_gmic_images_are_identical(im_gmicimage, im2_gmicimage)
-    assert_non_empty_file_exists(im1_name).unlink()
-    assert_non_empty_file_exists(im2_name).unlink()
+    # assert_non_empty_file_exists(im1_name).unlink()
+    # assert_non_empty_file_exists(im2_name).unlink()
 
 @pytest.mark.skip(reason="TODO unskip me")
 def test_gmic_module_run_vs_single_instance_run_benchmark():
