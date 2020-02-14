@@ -327,11 +327,11 @@ static int PyGmicImage_init(PyGmicImage *self, PyObject *args, PyObject *kwargs)
     bool bytesObj_is_ndarray = false;
     bool bytesObj_is_bytes = false;
     PyObject* bytesObj_ndarray_dtype;
-    PyTupleObject* bytesObj_ndarray_shape;
+    PyObject* bytesObj_ndarray_shape;
     Py_ssize_t bytesObj_ndarray_shape_size;
-    char * bytesObj_ndarray_dtype_kind_str;
+    PyObject * bytesObj_ndarray_dtype_kind;
     char * bytesObj_ndarray_dtype_name_str;
-    char * keywords[] = {"data", "width", "height", "depth", "spectrum", "shared", NULL};
+    char const* keywords[] = {"data", "width", "height", "depth", "spectrum", "shared", NULL};
     _width=_height=_depth=_spectrum=1;
 
     // Parameters parsing and checking
@@ -352,28 +352,45 @@ static int PyGmicImage_init(PyGmicImage *self, PyObject *args, PyObject *kwargs)
        // Get ndarray.dtype
        bytesObj_ndarray_dtype = PyObject_GetAttrString(bytesObj, "dtype");
        // Ensure dtype kind is a number we can convert (from dtype values here: https://numpy.org/doc/1.18/reference/generated/numpy.dtype.kind.html#numpy.dtype.kind)
-       bytesObj_ndarray_dtype_kind_str = PyUnicode_AsUTF8(PyObject_GetAttrString(bytesObj_ndarray_dtype, "kind"));
-       if (!strchr("iuf", bytesObj_ndarray_dtype_kind_str)) {
-           PyErr_Format(PyExc_TypeError, "Parameter 'data' of type 'numpy.ndarray' does not contain numbers ie. its 'dtype.kind' is not one of 'i', 'u', 'f'.");
+       bytesObj_ndarray_dtype_kind = PyObject_GetAttrString(bytesObj_ndarray_dtype, "kind");
+       if (strchr("iuf", (PyUnicode_ReadChar(bytesObj_ndarray_dtype_kind, (Py_ssize_t) 0))) == NULL) {
+           PyErr_Format(PyExc_TypeError, "Parameter 'data' of type 'numpy.ndarray' does not contain numbers ie. its 'dtype.kind'(=%U) is not one of 'i', 'u', 'f'.", bytesObj_ndarray_dtype_kind);
 	   // TODO pytest this
            return -1;
        }
 
-       bytesObj_ndarray_shape = (PyTupleObject*) PyObject_GetAttrString(bytesObj, "shape");
+       bytesObj_ndarray_shape = PyObject_GetAttrString(bytesObj, "shape");
        bytesObj_ndarray_shape_size = PyTuple_GET_SIZE(bytesObj_ndarray_shape);
        switch(bytesObj_ndarray_shape_size) {
 	       // TODO maybe skip other images than 2D or 3D
            case 1:
-	      _width = (unsigned int) PyLong_AsSize_t(PyTuple_GetItem(bytesObj_ndarray_shape_size, 0));
-	      break;
+              PyErr_Format(PyExc_TypeError, "Parameter 'data' of type 'numpy.ndarray' is 1D with single-channel, this is not supported yet.");
+	      return -1;
+	      //_width = (unsigned int) PyLong_AsSize_t(PyTuple_GetItem(bytesObj_ndarray_shape_size, 0));
 	   case 2:
+              PyErr_Format(PyExc_TypeError, "Parameter 'data' of type 'numpy.ndarray' is 1D with multiple channels, this is not supported yet.");
+	      return -1;
 	      //TODO set _width, height
-	      break;
 	   case 3:
-	      //TODO set _widht, height, depth
+              _width = (unsigned int) PyLong_AsSize_t(PyTuple_GetItem(bytesObj_ndarray_shape, 0));
+              _height = (unsigned int) PyLong_AsSize_t(PyTuple_GetItem(bytesObj_ndarray_shape, 1));
+              _depth = 1;
+              _spectrum = (unsigned int) PyLong_AsSize_t(PyTuple_GetItem(bytesObj_ndarray_shape, 2));
+	      printf("here we are: %d, %d, %d, %d\n", _width, _height, _depth, _spectrum);
+	      break;
+	   case 4:
+              _width = (unsigned int) PyLong_AsSize_t(PyTuple_GetItem(bytesObj_ndarray_shape, 0));
+              _height = (unsigned int) PyLong_AsSize_t(PyTuple_GetItem(bytesObj_ndarray_shape, 1));
+              _depth = (unsigned int) PyLong_AsSize_t(PyTuple_GetItem(bytesObj_ndarray_shape, 2));
+              _spectrum = (unsigned int) PyLong_AsSize_t(PyTuple_GetItem(bytesObj_ndarray_shape, 3));
 	      break;
 	   default:
-	      // raise exception
+	      if(bytesObj_ndarray_shape_size < 1) {
+                  PyErr_Format(PyExc_TypeError, "Parameter 'data' of type 'numpy.ndarray' has an empty shape. This is not supported by this binding.");
+	      } else { // case >4
+                  PyErr_Format(PyExc_TypeError, "Parameter 'data' of type 'numpy.ndarray' has a shape larger than 3D x 1-256 channels. This is not supported by G'MIC.");
+	      }
+	      return -1;
 	}
 
        bytesObj_ndarray_dtype_name_str = PyUnicode_AsUTF8(PyObject_GetAttrString(bytesObj_ndarray_dtype, "name"));
@@ -381,7 +398,9 @@ static int PyGmicImage_init(PyGmicImage *self, PyObject *args, PyObject *kwargs)
        // We are doing string comparison here instead of introspecting the dtype.kind.num which is expected to be a unique identifier of type
        // Slightly simpler to read.. slightly slower to run
        if (strcmp(bytesObj_ndarray_dtype_name_str, "uint8") == 0) {
-          foreach()
+       } else {
+          PyErr_Format(PyExc_TypeError, "Parameter 'data' of type 'numpy.ndarray' has an understandable shape for us, but its data type '%s' is not supported yet(?).", bytesObj_ndarray_dtype_name_str);
+	  return -1;
        }
     }
 
@@ -409,7 +428,13 @@ static int PyGmicImage_init(PyGmicImage *self, PyObject *args, PyObject *kwargs)
 
     self->_gmic_image._is_shared = _is_shared;
 
-    memcpy(self->_gmic_image._data, PyBytes_AsString(bytesObj), PyBytes_Size(bytesObj));
+    if (bytesObj_is_bytes) {
+        memcpy(self->_gmic_image._data, PyBytes_AsString(bytesObj), PyBytes_Size(bytesObj));
+    } else { // if bytesObj is numpy
+	PyObject* bytesObjNumpyBytes = PyObject_CallMethod(bytesObj, "tobytes", NULL);
+	// TODO make proper casted per-cell copy with deinterlacing
+        memcpy(self->_gmic_image._data, PyBytes_AsString(bytesObjNumpyBytes), PyBytes_Size(bytesObjNumpyBytes));
+    }
 
     return 0;
 }
