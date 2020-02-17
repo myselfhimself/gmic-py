@@ -397,7 +397,7 @@ static int PyGmicImage_init(PyGmicImage *self, PyObject *args, PyObject *kwargs)
 	      return -1;
 	}
 
-       bytesObj_ndarray_dtype_name_str = PyUnicode_AsUTF8(PyObject_GetAttrString(bytesObj_ndarray_dtype, "name"));
+       bytesObj_ndarray_dtype_name_str = PyUnicode_AsUTF8(PyObject_GetAttrString(bytesObj_ndarray_dtype, (const char*) "name"));
        // TODO float64,float64 uint16, uint32, float32, float16, float8
        // We are doing string comparison here instead of introspecting the dtype.kind.num which is expected to be a unique identifier of type
        // Slightly simpler to read.. slightly slower to run
