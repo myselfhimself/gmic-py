@@ -163,24 +163,29 @@ static PyObject* run_impl(PyObject* self, PyObject* args, PyObject* kwargs)
             // Prevent images auto-deallocation by G'MIC
             image_position = 0;
 
-	    // Bring new images set back into the Python world (in place list items change)
-	    // First empty the input Python images list
+	    // Bring new images set back into the Python world (change List items in-place)
+	    // First empty the input Python images list without deleting its List object
             PySequence_DelSlice(input_gmic_images, 0, PySequence_Length(input_gmic_images));
-            // // Add image names from the Gmic List of names
             cimglist_for(images, l) {
 		// On the fly python GmicImage build
 		// per https://stackoverflow.com/questions/4163018/create-an-object-using-pythons-c-api/4163055#comment85217110_4163055
-                PyList_Append(input_gmic_images, PyObject_CallFunction(	(PyObject*) &PyGmicImageType,
+		PyObject* _data = PyBytes_FromStringAndSize((const char*)images[l]._data, sizeof(T)*images[l].size());
+                PyObject* new_gmic_image = PyObject_CallFunction(	(PyObject*) &PyGmicImageType,
                                        // The last argument is a p(redicate), ie. boolean..
 				       // but Py_BuildValue() used by PyObject_CallFunction has a slightly different parameters format specification
 					(const char*) "SIIIIi",
-                                        PyBytes_FromStringAndSize((const char*)images[l]._data, sizeof(T)*images[l].size()),
+                                        _data,
 					(unsigned int) images[l]._width,
 				       (unsigned int) images[l]._height,
 			               (unsigned int) images[l]._depth,
 			               (unsigned int) images[l]._spectrum,
 			               (int) images[l]._is_shared
-					));
+					);
+		if (new_gmic_image == NULL) {
+                    PyErr_Format(PyExc_RuntimeError, "Could not initialize GmicImage for appending it to provided 'images' parameter list.");
+		    return NULL;
+		}
+                PyList_Append(input_gmic_images, new_gmic_image);
             }
 
         // B/ Else if a single GmicImage was provided
@@ -340,7 +345,7 @@ static int PyGmicImage_init(PyGmicImage *self, PyObject *args, PyObject *kwargs)
 
     bytesObj_is_bytes = (bool) PyBytes_Check(bytesObj);
     bytesObj_is_ndarray = strcmp(((PyTypeObject *)PyObject_Type(bytesObj))->tp_name, "numpy.ndarray") == 0;
-    if (! bytesObj_is_ndarray && ! bytesObj_is_ndarray) {
+    if (! bytesObj_is_ndarray && ! bytesObj_is_bytes) {
         PyErr_Format(PyExc_TypeError, "Parameter 'data' must be a 'numpy.ndarray' or a pure-python 'bytes' buffer object.");
 	// TODO pytest this
         return -1;
@@ -376,7 +381,6 @@ static int PyGmicImage_init(PyGmicImage *self, PyObject *args, PyObject *kwargs)
               _height = (unsigned int) PyLong_AsSize_t(PyTuple_GetItem(bytesObj_ndarray_shape, 1));
               _depth = 1;
               _spectrum = (unsigned int) PyLong_AsSize_t(PyTuple_GetItem(bytesObj_ndarray_shape, 2));
-	      printf("here we are: %d, %d, %d, %d\n", _width, _height, _depth, _spectrum);
 	      break;
 	   case 4:
               _width = (unsigned int) PyLong_AsSize_t(PyTuple_GetItem(bytesObj_ndarray_shape, 0));
@@ -432,8 +436,17 @@ static int PyGmicImage_init(PyGmicImage *self, PyObject *args, PyObject *kwargs)
         memcpy(self->_gmic_image._data, PyBytes_AsString(bytesObj), PyBytes_Size(bytesObj));
     } else { // if bytesObj is numpy
 	PyObject* bytesObjNumpyBytes = PyObject_CallMethod(bytesObj, "tobytes", NULL);
-	// TODO make proper casted per-cell copy with deinterlacing
-        memcpy(self->_gmic_image._data, PyBytes_AsString(bytesObjNumpyBytes), PyBytes_Size(bytesObjNumpyBytes));
+	unsigned char* ptr = (unsigned char*) PyBytes_AsString(bytesObjNumpyBytes);
+	for(unsigned int y=0; y<_height; y++) {
+	    for(unsigned int x=0; x<_width; x++) {
+	        unsigned char R = *(ptr++);
+	        unsigned char G = *(ptr++);
+	        unsigned char B = *(ptr++);
+		self->_gmic_image(x, y, 0, 0) = (float) R;
+		self->_gmic_image(x, y, 0, 1) = (float) G;
+		self->_gmic_image(x, y, 0, 2) = (float) B;
+            }
+	}
     }
 
     return 0;

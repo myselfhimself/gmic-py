@@ -567,39 +567,41 @@ def test_gmic_class_direct_run_remains_usable_instance():
     assert type(gmic_instance) == gmic.Gmic
     gmic_instance.run("echo_stdout \"other run\"")
 
-def test_numpy_ndarray_simple_file_IO_through_PIL():
-    # test without numpy/PIL first
-    gmic.run("sp lena [0]")
+def test_filling_empty_gmicimage_list_with_input_image_nonregtest_issue_30():
+    images = []
+    gmic.run(images=images, command="sp lena")
+    assert len(images) == 1
+    assert type(images[0]) == gmic.GmicImage
 
-
-
+def test_numpy_ndarray_RGB_2D_image_integrity_through_numpyPIL_or_gmic():
     import PIL.Image
     import numpy
     im1_name = "image.bmp"
     im2_name = "image2.bmp"
 
+    # 1. Generate lena bitmap, save it to disk
     gmic.run("sp lena -output " + im1_name + " print")
     
-    im = numpy.array(PIL.Image.open(im1_name))
-    print(im)
-    print(im.shape)
-    print(im.dtype)
-    print(im.dtype.kind)
-    print(dir(im.dtype))
-    print(im.dtype.type)
-    im_gmicimage = gmic.GmicImage(im)
-    #Image.fromarray(im)
+    # 2. Load disk lena through PIL/numpy, make it a GmicImage
+    image_from_numpy = numpy.array(PIL.Image.open(im1_name))
+    assert type(image_from_numpy) == numpy.ndarray
+    assert image_from_numpy.shape == (512, 512, 3)
+    assert image_from_numpy.dtype == 'uint8'
+    assert image_from_numpy.dtype.kind == 'u'
+    gmicimage_from_numpy = gmic.GmicImage(image_from_numpy)
 
-    assert type(im) == numpy.ndarray
-    gmic.run(images=im_gmicimage, command=("output[0] " + im2_name + " print"))
-    im2 = numpy.array(PIL.Image.open(im1_name))
-    im2_gmicimage = gmic.GmicImage(im)
+    gmic.run(images=gmicimage_from_numpy, command=("output[0] " + im2_name + " print"))
 
-    assert_gmic_images_are_identical(im_gmicimage, im2_gmicimage)
-    # assert_non_empty_file_exists(im1_name).unlink()
-    # assert_non_empty_file_exists(im2_name).unlink()
+    # 3. Load lena from disk again into a GmicImage through G'MIC without PIL/numpy
+    imgs = []
+    gmic.run(images=imgs, command="sp lena")
+    gmicimage_from_gmic = imgs[0]
 
-@pytest.mark.skip(reason="TODO unskip me")
+    # 4. Use G'MIC to compare both lena GmicImages from numpy and gmic sources
+    assert_gmic_images_are_identical(gmicimage_from_numpy, gmicimage_from_gmic)
+    assert_non_empty_file_exists(im1_name).unlink()
+    assert_non_empty_file_exists(im2_name).unlink()
+
 def test_gmic_module_run_vs_single_instance_run_benchmark():
     from time import time
     testing_command = "sp lena blur 10 blur 30 blur 4"
