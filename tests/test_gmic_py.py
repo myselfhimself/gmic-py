@@ -573,14 +573,35 @@ def test_filling_empty_gmicimage_list_with_input_image_nonregtest_issue_30():
     assert len(images) == 1
     assert type(images[0]) == gmic.GmicImage
 
-def test_numpy_ndarray_RGB_2D_image_integrity_through_numpyPIL_or_gmic():
+@pytest.mark.parametrize(**gmic_instance_types)
+def test_numpy_ndarray_RGB_2D_image_gmic_run_without_gmicimage_wrapping(gmic_instance_run):
+    # TODO completely uncoherent test now..
+    import PIL.Image
+    import numpy
+
+    im1_name = "image.png"
+    im2_name = "image.png"
+    gmic_instance_run("sp lena output " + im1_name)
+    np_PIL_image = numpy.array(PIL.Image.open(im1_name))
+    # TODO line below must fail because single numpy arrays rewrite is impossible for us
+    with pytest.raises(TypeError, match=r".*'images' parameter must be a 'gmic.GmicImage'.*"):
+        gmic_instance_run(images=np_PIL_image, command="output[0] " + im2_name)
+    imgs = []
+    gmic_instance_run(images=imgs, command="{} {}".format(im1_name, im2_name))
+    assert_gmic_images_are_identical(imgs[0], imgs[1])
+
+    # TODO input with list of numpy.ndarray's []
+    # TODO input with list of mixed numpy and GmicImage objects[]
+
+@pytest.mark.parametrize(**gmic_instance_types)
+def test_numpy_ndarray_RGB_2D_image_integrity_through_numpyPIL_or_gmic_with_gmicimage_wrapping(gmic_instance_run):
     import PIL.Image
     import numpy
     im1_name = "image.bmp"
     im2_name = "image2.bmp"
 
     # 1. Generate lena bitmap, save it to disk
-    gmic.run("sp lena -output " + im1_name + " print")
+    gmic_instance_run("sp lena -output " + im1_name)
     
     # 2. Load disk lena through PIL/numpy, make it a GmicImage
     image_from_numpy = numpy.array(PIL.Image.open(im1_name))
@@ -590,17 +611,52 @@ def test_numpy_ndarray_RGB_2D_image_integrity_through_numpyPIL_or_gmic():
     assert image_from_numpy.dtype.kind == 'u'
     gmicimage_from_numpy = gmic.GmicImage(image_from_numpy)
 
-    gmic.run(images=gmicimage_from_numpy, command=("output[0] " + im2_name + " print"))
+    gmic_instance_run(images=gmicimage_from_numpy, command=("output[0] " + im2_name))
 
-    # 3. Load lena from disk again into a GmicImage through G'MIC without PIL/numpy
+    # 3. Load lena into a regular GmicImage through G'MIC without PIL/numpy
     imgs = []
-    gmic.run(images=imgs, command="sp lena")
+    gmic_instance_run(images=imgs, command="sp lena")
     gmicimage_from_gmic = imgs[0]
 
     # 4. Use G'MIC to compare both lena GmicImages from numpy and gmic sources
     assert_gmic_images_are_identical(gmicimage_from_numpy, gmicimage_from_gmic)
     assert_non_empty_file_exists(im1_name).unlink()
     assert_non_empty_file_exists(im2_name).unlink()
+
+@pytest.mark.parametrize(**gmic_instance_types)
+def test_numpy_PIL_modes_to_gmic(gmic_instance_run):
+    import PIL.Image
+    import numpy
+
+    origin_image_name = "a.bmp"
+    gmicimages = []
+    gmic_instance_run("sp lena output " + origin_image_name)
+    PILimage = PIL.Image.open("a.bmp")
+
+    modes = ["1", "L", "P", "RGB", "RGBA", "CMYK", "YCbCr", "HSV", "I", "F"] # "LAB" skipped, cannot be converted from RGB
+
+    for mode in modes:
+        PILConvertedImage = PILimage.convert(mode=mode)
+        NPArrayImage = numpy.array(PILConvertedImage)
+        print(PILConvertedImage, NPArrayImage.shape, NPArrayImage.dtype)
+        gmic_instance_run(images=NPArrayImage, command="print") # TODO more checking here
+
+    # Outputs
+    """
+    <PIL.Image.Image image mode=1 size=512x512 at 0x7FAD99B18908> (512, 512) bool
+    <PIL.Image.Image image mode=L size=512x512 at 0x7FAD324FD4E0> (512, 512) uint8
+    <PIL.Image.Image image mode=P size=512x512 at 0x7FAD324FD8D0> (512, 512) uint8
+    <PIL.Image.Image image mode=RGB size=512x512 at 0x7FAD324FD908> (512, 512, 3) uint8
+    <PIL.Image.Image image mode=RGBA size=512x512 at 0x7FAD324FD8D0> (512, 512, 4) uint8
+    <PIL.Image.Image image mode=CMYK size=512x512 at 0x7FAD324FD908> (512, 512, 4) uint8
+    <PIL.Image.Image image mode=YCbCr size=512x512 at 0x7FAD324FD8D0> (512, 512, 3) uint8
+    <PIL.Image.Image image mode=HSV size=512x512 at 0x7FAD324FD908> (512, 512, 3) uint8
+    <PIL.Image.Image image mode=I size=512x512 at 0x7FAD324FD8D0> (512, 512) int32
+    <PIL.Image.Image image mode=F size=512x512 at 0x7FAD324FD908> (512, 512) float32
+    """
+
+    assert_non_empty_file_exists(origin_image_name).unlink()
+
 
 def test_gmic_module_run_vs_single_instance_run_benchmark():
     from time import time
