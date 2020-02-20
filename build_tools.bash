@@ -80,8 +80,6 @@ function 2_compile () {
     set -x
     $PIP3 install -r dev-requirements.txt || { echo "Fatal pip install of dev-requirements.txt error" ; exit 1; }
     $PYTHON3 setup.py build 2>&1 || { echo "Fatal setup.py build error" ; exit 1; }
-
-    cp build/lib*$PYTHON_VERSION*/*.so ~/Apps/blender-2.80-linux-glibc217-x86_64/2.80/python/lib/python3.7/lib-dynload
     set +x
 }
 
