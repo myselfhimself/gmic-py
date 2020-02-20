@@ -2,9 +2,11 @@ import pytest
 import gmic
 import re
 import pathlib
+import numpy
 
 # Tests parametrization: run calls to gmic.run(), gmic.Gmic() and gmic.Gmic().run() should have the same behaviour!
 gmic_instance_types = {"argnames": "gmic_instance_run", "argvalues": [gmic.run, gmic.Gmic, gmic.Gmic().run], "ids": ["gmic_module_run", "gmic_instance_constructor_run", "gmic_instance_run"]}
+numpy_dtypes = {"argnames": "dtype", "argvalues": [numpy.float32, numpy.float16, numpy.uint8, numpy.uint16]}
 
 FLOAT_SIZE_IN_BYTES = 4
 
@@ -572,6 +574,67 @@ def test_filling_empty_gmicimage_list_with_input_image_nonregtest_issue_30():
     gmic.run(images=images, command="sp lena")
     assert len(images) == 1
     assert type(images[0]) == gmic.GmicImage
+
+@pytest.mark.parametrize(**gmic_instance_types)
+def test_gmic_image_to_numpy_ndarray_exception_on_unimportable_numpy_module(gmic_instance_run):
+    # numpy module hiding hack found at: https://stackoverflow.com/a/1350574/420684
+    # Artificially prevent numpy from being imported
+    import sys
+    if 'numpy' in sys.modules:
+        old_numpy_sys_value = sys.modules['numpy']
+    try:
+        import numpy
+        old_numpy_sys_value = sys.modules['numpy']
+    except:
+        pass # tolerate that numpy is already not importable
+    else:
+        # otherwise, make numpy not importable
+        del numpy
+        sys.modules['numpy'] = None
+
+    import gmic
+    images = []
+    gmic.run(images=images, command="sp lena")
+    with pytest.raises(ModuleNotFoundError):
+        images[0].to_numpy_array()
+
+    # Repair our breaking of the numpy import
+    sys.modules['numpy'] = old_numpy_sys_value
+@pytest.mark.parametrize(**gmic_instance_types)
+@pytest.mark.parametrize(**numpy_dtypes)
+def test_gmic_image_to_numpy_ndarray_dtype_interlace_fuzzying(gmic_instance_run, dtype):
+    import numpy
+    single_image_list = []
+    gmic_instance_run(images=single_image_list, command="sp lena")
+    gmic_image = single_image_list[0]
+    # Test default dtype parameter is numpy.float32
+    numpy_image = gmic_image.to_numpy_array(astype=dtype)
+    numpy_image2 = gmic_image.to_numpy_array()
+    assert numpy_image2 == numpy_image
+    assert numpy_image.dtype == numpy_image2.dtype == dtype
+    print(numpy_image)
+    # TODO WIP real fuzzying
+
+@pytest.mark.parametrize(**gmic_instance_types)
+def test_gmic_image_to_numpy_ndarray_basic_attributes(gmic_instance_run):
+    import numpy
+    import struct
+    single_image_list = []
+    gmic_instance_run(images=single_image_list, command="sp lena")
+    gmic_image = single_image_list[0]
+    #gmic_image = gmic.GmicImage(struct.pack('8f', 1, 3, 5, 7, 2, 6, 10, 14), 8, 1)
+    numpy_image = gmic_image.to_numpy_array()
+    assert numpy_image.dtype == numpy.float32
+    assert numpy_image.shape == (gmic_image._width, gmic_image._height, gmic_image._spectrum)
+    bb = numpy_image.tobytes()
+    assert len(bb) == len(gmic_image._data)
+    assert numpy_image.tobytes() == gmic_image._data
+
+@pytest.mark.parametrize(**gmic_instance_types)
+def test_in_memory_gmic_image_to_numpy_nd_array_to_gmic_image(gmic_instance_run):
+    single_image_list = []
+    gmic_instance_run(images=single_image_list, command="sp lena")
+    # TODO convert back and compare with original sp lena GmicImage
 
 @pytest.mark.parametrize(**gmic_instance_types)
 def test_numpy_ndarray_RGB_2D_image_gmic_run_without_gmicimage_wrapping(gmic_instance_run):

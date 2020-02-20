@@ -525,27 +525,6 @@ static void PyGmicImage_dealloc(PyGmicImage * self)
     Py_TYPE(self)->tp_free(self);
 }
 
-
-
-static PyObject * PyGmicImage_from_numpy_array(PyGmicImage * self, PyObject* args)
-{
-    int retval;
-
-    if (! PyArg_ParseTuple(args, "f", &self->_gmic_image._data))
-        return Py_False;
-
-    retval = (self->_gmic_image)._data != NULL;
-
-    return Py_BuildValue("i",retval);
-}
-
-
-static PyMethodDef PyGmicImage_methods[] = {
-    { "from_numpy_array", (PyCFunction)PyGmicImage_from_numpy_array, METH_VARARGS|METH_KEYWORDS, "get numpy array's data" },
-    {NULL}  /* Sentinel */
-};
-
-
 static PyObject* module_level_run_impl(PyObject*, PyObject* args, PyObject* kwargs)
 {
     PyObject* temp_gmic_instance = PyObject_CallObject((PyObject*)(&PyGmicType), NULL);
@@ -637,6 +616,106 @@ PyGetSetDef PyGmicImage_getsets[] = {
      NULL /* closure */},
     {NULL}
 };
+
+
+static PyObject * PyGmicImage_from_numpy_array(PyGmicImage * self, PyObject* args)
+{
+    // TODO
+    int retval;
+
+    if (! PyArg_ParseTuple(args, "f", &self->_gmic_image._data))
+        return Py_False;
+
+    retval = (self->_gmic_image)._data != NULL;
+
+    return Py_BuildValue("i",retval);
+}
+
+
+/*
+ * Object method to_numpy_array().
+ *
+ * GmicImage().to_numpy_array(astype=numpy.float32: numpy.dtype, interlace=True: bool) -> numpy.ndarray
+ */
+static PyObject * PyGmicImage_to_numpy_array(PyGmicImage * self, PyObject* args, PyObject* kwargs)
+{
+
+    char const* keywords[] = {"astype", "interlace", NULL};
+    PyObject* numpy_module = NULL;
+    PyObject* ndarray_type = NULL;
+    PyObject* return_ndarray = NULL;
+    PyObject* return_ndarray_astype = NULL;
+    PyObject* shape = NULL;
+    PyObject* dtype = NULL;
+    PyObject* numpy_bytes_buffer = NULL;
+    float* numpy_buffer = NULL;
+    float* ptr;
+    int buffer_size = 0;
+    PyObject* arg_astype = NULL;
+    bool arg_interlace = true;
+
+    if(!PyArg_ParseTupleAndKeywords(args, kwargs, "|Op", (char**)keywords, &arg_astype, &arg_interlace)) {
+        return NULL;
+    }
+
+    numpy_module = PyImport_ImportModule("numpy");
+
+    // exit raising numpy_module import exception
+    if(!numpy_module) {
+        return NULL;
+    }
+
+    ndarray_type = PyObject_GetAttrString(numpy_module, "ndarray");
+    shape = Py_BuildValue("(iii)", self->_gmic_image._width, self->_gmic_image._height, self->_gmic_image._spectrum); // todo also support _depth
+    dtype = PyObject_GetAttrString(numpy_module, "float32");
+    buffer_size = sizeof(T) * self->_gmic_image._width * self->_gmic_image._height * self->_gmic_image._depth * self->_gmic_image._spectrum; // todo use _gmic_image.size()
+    numpy_buffer = (float *)malloc(buffer_size);
+    ptr = numpy_buffer;
+    // If interlacing is needed, copy the gmic_image buffer towards numpy by interlacing RRR,GGG,BBB into RGB,RGB,RGB
+    if (arg_interlace) {
+	printf("deinterlacing");
+        for(unsigned int y=0; y<self->_gmic_image._height; y++) {
+           for (unsigned int x=0; x<self->_gmic_image._width; x++) {
+               for (unsigned int c=0; c<3; c++) {
+               // TODO iterate over z?
+                   (*ptr++) = self->_gmic_image(x,y,0,c);
+               }
+           }
+        }
+    } else {
+	printf("no interlacing");
+	// If deinterlacing is needed, since this is G'MIC's internal image shape, keep pixel data order as and copy it simply
+        memcpy(numpy_buffer, self->_gmic_image._data, self->_gmic_image.size()*sizeof(T)); 
+    }
+    numpy_bytes_buffer = PyBytes_FromStringAndSize((const char*)numpy_buffer, buffer_size);
+    free(numpy_buffer);
+    return_ndarray = PyObject_CallFunction(ndarray_type, (const char*) "OOS", shape, dtype, numpy_bytes_buffer);
+
+    Py_DECREF(ndarray_type);
+    Py_DECREF(shape);
+    Py_DECREF(dtype);
+    Py_DECREF(numpy_bytes_buffer);
+    Py_DECREF(numpy_module);
+
+    if(arg_astype != NULL && PyType_Check(arg_astype)) {
+        return_ndarray_astype = PyObject_CallMethod(return_ndarray, "astype", "O", arg_astype);  
+	Py_DECREF(return_ndarray);
+        printf("astype: %s(default)\n", (char*)PyUnicode_1BYTE_DATA(PyObject_Repr(arg_astype)));
+	return return_ndarray_astype;
+    } else {
+      printf("astype: float32(default)\n");
+      return return_ndarray;
+    }
+}
+
+
+static PyMethodDef PyGmicImage_methods[] = {
+    { "from_numpy_array", (PyCFunction)PyGmicImage_from_numpy_array, METH_VARARGS|METH_KEYWORDS, "Make a GmicImage from a numpy.ndarray" },
+    { "to_numpy_array", (PyCFunction)PyGmicImage_to_numpy_array, METH_VARARGS|METH_KEYWORDS, "Make a numpy.ndarray from a GmicImage" },
+    {NULL}  /* Sentinel */
+};
+
+
 
 static PyObject *
 PyGmicImage_richcompare(PyObject *self, PyObject *other, int op)
