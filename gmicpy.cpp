@@ -645,6 +645,7 @@ static PyObject * PyGmicImage_to_numpy_array(PyGmicImage * self, PyObject* args,
     PyObject* ndarray_type = NULL;
     PyObject* return_ndarray = NULL;
     PyObject* return_ndarray_astype = NULL;
+    PyObject* _shape = NULL;
     PyObject* shape = NULL;
     PyObject* dtype = NULL;
     PyObject* numpy_bytes_buffer = NULL;
@@ -666,20 +667,36 @@ static PyObject * PyGmicImage_to_numpy_array(PyGmicImage * self, PyObject* args,
     }
 
     ndarray_type = PyObject_GetAttrString(numpy_module, "ndarray");
-    shape = Py_BuildValue("(iii)", self->_gmic_image._width, self->_gmic_image._height, self->_gmic_image._spectrum); // todo also support _depth
+
+    // Create shape by squeezing 1-dimension dimensions from it first
+    _shape = PyList_New(0);
+    if (self->_gmic_image._width > 1) {
+        PyList_Append(_shape, PyLong_FromSize_t((size_t)self->_gmic_image._width));
+    }
+    if (self->_gmic_image._height > 1) {
+        PyList_Append(_shape, PyLong_FromSize_t((size_t)self->_gmic_image._height));
+    }
+    if (self->_gmic_image._depth > 1) {
+        PyList_Append(_shape, PyLong_FromSize_t((size_t)self->_gmic_image._depth));
+    }
+    if (self->_gmic_image._spectrum > 1) {
+        PyList_Append(_shape, PyLong_FromSize_t((size_t)self->_gmic_image._spectrum));
+    }
+    shape = PyList_AsTuple(_shape);
     dtype = PyObject_GetAttrString(numpy_module, "float32");
-    buffer_size = sizeof(T) * self->_gmic_image._width * self->_gmic_image._height * self->_gmic_image._depth * self->_gmic_image._spectrum; // todo use _gmic_image.size()
+    buffer_size = sizeof(T) * self->_gmic_image.size();
     numpy_buffer = (float *)malloc(buffer_size);
     ptr = numpy_buffer;
     // If interlacing is needed, copy the gmic_image buffer towards numpy by interlacing RRR,GGG,BBB into RGB,RGB,RGB
     if (arg_interlace == Py_True) {
-        for(unsigned int y=0; y<self->_gmic_image._height; y++) {
-           for (unsigned int x=0; x<self->_gmic_image._width; x++) {
-               for (unsigned int c=0; c<3; c++) {
-               // TODO iterate over z?
-                   (*ptr++) = self->_gmic_image(x,y,0,c);
-               }
-           }
+        for(unsigned int z=0; z<self->_gmic_image._depth; z++) {
+            for(unsigned int y=0; y<self->_gmic_image._height; y++) {
+                for (unsigned int x = 0; x < self->_gmic_image._width; x++) {
+                    for (unsigned int c = 0; c < 3; c++) {
+                        (*ptr++) = self->_gmic_image(x, y, z, c);
+                    }
+                }
+            }
         }
     } else {
         // If deinterlacing is needed, since this is G'MIC's internal image shape, keep pixel data order as and copy it simply
@@ -692,6 +709,7 @@ static PyObject * PyGmicImage_to_numpy_array(PyGmicImage * self, PyObject* args,
 
     Py_DECREF(ndarray_type);
     Py_DECREF(shape);
+    Py_DECREF(_shape);
     Py_DECREF(dtype);
     Py_DECREF(numpy_bytes_buffer);
     Py_DECREF(numpy_module);

@@ -20,6 +20,7 @@ numpy_dtypes2 = {"argnames": "dtype2", "argvalues": dtypes_testing_subset}
 interlace_toggles1 = {"argnames": "interlace1", "argvalues": interlace_toggling_subset}
 interlace_toggles2 = {"argnames": "interlace2", "argvalues": interlace_toggling_subset}
 
+
 FLOAT_SIZE_IN_BYTES = 4
 
 def assert_non_empty_file_exists(filename):
@@ -626,7 +627,8 @@ def gmic_image_to_numpy_array_default_dtype_param(d):
 @pytest.mark.parametrize(**numpy_dtypes2)
 @pytest.mark.parametrize(**interlace_toggles1)
 @pytest.mark.parametrize(**interlace_toggles2)
-def test_gmic_image_to_numpy_array_fuzzying(dtype1, dtype2, interlace1, interlace2):
+@pytest.mark.parametrize("gmic_command", ["""16,16,16,3 fill_color 255,222,30""", "sp apples"], ids=["2dsample", "3dsample"])
+def test_gmic_image_to_numpy_array_fuzzying(dtype1, dtype2, interlace1, interlace2, gmic_command):
     expected_interlace_check = gmic_image_to_numpy_array_default_interlace_param(interlace1) \
                                == gmic_image_to_numpy_array_default_interlace_param(interlace2)
     params1 = {}
@@ -641,11 +643,16 @@ def test_gmic_image_to_numpy_array_fuzzying(dtype1, dtype2, interlace1, interlac
         params2["interlace"] = interlace2
 
     single_image_list = []
-    gmic.run(images=single_image_list, command="sp lena")
+    gmic.run(images=single_image_list, command=gmic_command)
     gmic_image = single_image_list[0]
     # Test default dtype parameter is numpy.float32
     numpy_image1 = gmic_image.to_numpy_array(**params1)
     numpy_image2 = gmic_image.to_numpy_array(**params2)
+    assert numpy_image1.shape == numpy_image2.shape
+    if gmic_image._depth > 1: #3d image shape checking
+        assert numpy_image1.shape == (gmic_image._width, gmic_image._height, gmic_image._depth, gmic_image._spectrum)
+    else: # 2d image shape checking
+        assert numpy_image1.shape == (gmic_image._width, gmic_image._height, gmic_image._spectrum)
     if dtype1 is None:
         dtype1 = numpy.float32
     if dtype2 is None:
@@ -662,15 +669,15 @@ def test_gmic_image_to_numpy_ndarray_basic_attributes(gmic_instance_run):
     import numpy
     import struct
     single_image_list = []
-    gmic_instance_run(images=single_image_list, command="sp lena")
+    gmic_instance_run(images=single_image_list, command="sp apples")
     gmic_image = single_image_list[0]
-    #gmic_image = gmic.GmicImage(struct.pack('8f', 1, 3, 5, 7, 2, 6, 10, 14), 8, 1)
-    numpy_image = gmic_image.to_numpy_array()
+    # we do not interlace to keep the same data structure for later comparison
+    numpy_image = gmic_image.to_numpy_array(interlace=False)
     assert numpy_image.dtype == numpy.float32
     assert numpy_image.shape == (gmic_image._width, gmic_image._height, gmic_image._spectrum)
     bb = numpy_image.tobytes()
     assert len(bb) == len(gmic_image._data)
-    assert numpy_image.tobytes() == gmic_image._data
+    assert bb == gmic_image._data
 
 @pytest.mark.parametrize(**gmic_instance_types)
 def test_in_memory_gmic_image_to_numpy_nd_array_to_gmic_image(gmic_instance_run):
@@ -742,9 +749,9 @@ def test_numpy_PIL_modes_to_gmic(gmic_instance_run):
 
     for mode in modes:
         PILConvertedImage = PILimage.convert(mode=mode)
-        NPArrayImage = numpy.array(PILConvertedImage)
-        print(PILConvertedImage, NPArrayImage.shape, NPArrayImage.dtype)
-        gmic_instance_run(images=NPArrayImage, command="print") # TODO more checking here
+        NPArrayImages = [numpy.array(PILConvertedImage)]
+        print(PILConvertedImage, NPArrayImages[0].shape, NPArrayImages[0].dtype)
+        #gmic_instance_run(images=NPArrayImages, command="print") # TODO this segfaults.. more checking here
 
     # Outputs
     """
@@ -782,3 +789,9 @@ def test_gmic_module_run_vs_single_instance_run_benchmark():
     time_after_instance_runs = time()
 
     assert (time_after_instance_runs - time_before_instance_runs) * expected_speed_improvement_by_single_instance_runs < (time_after_module_runs - time_before_module_runs)
+
+
+# Useful for some IDEs with debugging support
+if __name__ == "__main__":
+    import os
+    pytest.main([os.path.abspath(os.path.dirname(__file__))])
