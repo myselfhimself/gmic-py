@@ -1,4 +1,3 @@
-import random
 import re
 import pathlib
 
@@ -13,7 +12,7 @@ gmic_instance_types = {"argnames": "gmic_instance_run", "argvalues": [gmic.run, 
 # Test parametrization: dtypes and interlacing toggling between two images
 numpy_dtypes_base = (numpy.bool, numpy.longlong, numpy.single, numpy.double, numpy.longdouble, numpy.int8, numpy.int16, numpy.int32, numpy.uint8, numpy.uint16, numpy.uint32, numpy.float32, numpy.uint64, numpy.int64, numpy.float64, numpy.uint, numpy.intp, numpy.uintp)
 nb_random_dtypes_to_test = 3
-dtypes_testing_subset = [None] + random.choices(numpy_dtypes_base, k=nb_random_dtypes_to_test)
+dtypes_testing_subset = [None] + list(numpy.random.choice(numpy_dtypes_base, nb_random_dtypes_to_test))
 interlace_toggling_subset = (None, True, False)
 numpy_dtypes1 = {"argnames": "dtype1", "argvalues": dtypes_testing_subset}
 numpy_dtypes2 = {"argnames": "dtype2", "argvalues": dtypes_testing_subset}
