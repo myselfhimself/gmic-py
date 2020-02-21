@@ -1,12 +1,24 @@
-import pytest
-import gmic
+import random
 import re
 import pathlib
+
+import pytest
+import gmic
 import numpy
+
 
 # Tests parametrization: run calls to gmic.run(), gmic.Gmic() and gmic.Gmic().run() should have the same behaviour!
 gmic_instance_types = {"argnames": "gmic_instance_run", "argvalues": [gmic.run, gmic.Gmic, gmic.Gmic().run], "ids": ["gmic_module_run", "gmic_instance_constructor_run", "gmic_instance_run"]}
-numpy_dtypes = {"argnames": "dtype", "argvalues": [numpy.float32, numpy.float16, numpy.uint8, numpy.uint16]}
+
+# Test parametrization: dtypes and interlacing toggling between two images
+numpy_dtypes_base = (numpy.bool, numpy.longlong, numpy.single, numpy.double, numpy.longdouble, numpy.int8, numpy.int16, numpy.int32, numpy.uint8, numpy.uint16, numpy.uint32, numpy.float32, numpy.uint64, numpy.int64, numpy.float64, numpy.uint, numpy.intp, numpy.uintp)
+nb_random_dtypes_to_test = 3
+dtypes_testing_subset = [None] + random.choices(numpy_dtypes_base, k=nb_random_dtypes_to_test)
+interlace_toggling_subset = (None, True, False)
+numpy_dtypes1 = {"argnames": "dtype1", "argvalues": dtypes_testing_subset}
+numpy_dtypes2 = {"argnames": "dtype2", "argvalues": dtypes_testing_subset}
+interlace_toggles1 = {"argnames": "interlace1", "argvalues": interlace_toggling_subset}
+interlace_toggles2 = {"argnames": "interlace2", "argvalues": interlace_toggling_subset}
 
 FLOAT_SIZE_IN_BYTES = 4
 
@@ -600,20 +612,50 @@ def test_gmic_image_to_numpy_ndarray_exception_on_unimportable_numpy_module(gmic
 
     # Repair our breaking of the numpy import
     sys.modules['numpy'] = old_numpy_sys_value
-@pytest.mark.parametrize(**gmic_instance_types)
-@pytest.mark.parametrize(**numpy_dtypes)
-def test_gmic_image_to_numpy_ndarray_dtype_interlace_fuzzying(gmic_instance_run, dtype):
-    import numpy
+
+
+def gmic_image_to_numpy_array_default_interlace_param(i):
+    return i if i is not None else True
+
+
+def gmic_image_to_numpy_array_default_dtype_param(d):
+    return d if d is not None else numpy.float32
+
+
+@pytest.mark.parametrize(**numpy_dtypes1)
+@pytest.mark.parametrize(**numpy_dtypes2)
+@pytest.mark.parametrize(**interlace_toggles1)
+@pytest.mark.parametrize(**interlace_toggles2)
+def test_gmic_image_to_numpy_array_fuzzying(dtype1, dtype2, interlace1, interlace2):
+    expected_interlace_check = gmic_image_to_numpy_array_default_interlace_param(interlace1) \
+                               == gmic_image_to_numpy_array_default_interlace_param(interlace2)
+    params1 = {}
+    params2 = {}
+    if dtype1 is not None:
+        params1["astype"] = dtype1
+    if dtype2 is not None:
+        params2["astype"] = dtype2
+    if interlace1 is not None:
+        params1["interlace"] = interlace1
+    if interlace2 is not None:
+        params2["interlace"] = interlace2
+
     single_image_list = []
-    gmic_instance_run(images=single_image_list, command="sp lena")
+    gmic.run(images=single_image_list, command="sp lena")
     gmic_image = single_image_list[0]
     # Test default dtype parameter is numpy.float32
-    numpy_image = gmic_image.to_numpy_array(astype=dtype)
-    numpy_image2 = gmic_image.to_numpy_array()
-    assert numpy_image2 == numpy_image
-    assert numpy_image.dtype == numpy_image2.dtype == dtype
-    print(numpy_image)
-    # TODO WIP real fuzzying
+    numpy_image1 = gmic_image.to_numpy_array(**params1)
+    numpy_image2 = gmic_image.to_numpy_array(**params2)
+    if dtype1 is None:
+        dtype1 = numpy.float32
+    if dtype2 is None:
+        dtype2 = numpy.float32
+    assert numpy_image1.dtype == dtype1
+    assert numpy_image2.dtype == dtype2
+    # Ensure arrays are equal only if we have same types and interlacing
+    # Actually, they could be equal with distinct types but same interlacing, but are skipping cross-types compatibility analysis..
+    if (numpy_image1.dtype == numpy_image2.dtype) and expected_interlace_check:
+        assert numpy.array_equal(numpy_image1, numpy_image2)
 
 @pytest.mark.parametrize(**gmic_instance_types)
 def test_gmic_image_to_numpy_ndarray_basic_attributes(gmic_instance_run):

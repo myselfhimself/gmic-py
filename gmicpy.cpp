@@ -366,7 +366,7 @@ static int PyGmicImage_init(PyGmicImage *self, PyObject *args, PyObject *kwargs)
     unsigned int _spectrum;    // Number of image channels (dimension along the C-axis)
     Py_ssize_t dimensions_product;    // All integer parameters multiplied together, will help for allocating (ie. assign()ing)
     Py_ssize_t _data_bytes_size;
-    int _is_shared = (int) false; // Whether image should be shared across gmic operations (if true, operations like resize will fail)
+    int _is_shared = 0; // Whether image should be shared across gmic operations (if true, operations like resize will fail)
     PyObject* bytesObj;        // Incoming bytes buffer object pointer
     bool bytesObj_is_ndarray = false;
     bool bytesObj_is_bytes = false;
@@ -652,9 +652,9 @@ static PyObject * PyGmicImage_to_numpy_array(PyGmicImage * self, PyObject* args,
     float* ptr;
     int buffer_size = 0;
     PyObject* arg_astype = NULL;
-    bool arg_interlace = true;
+    PyObject* arg_interlace = Py_True; // Will interlace the final matrix by default
 
-    if(!PyArg_ParseTupleAndKeywords(args, kwargs, "|Op", (char**)keywords, &arg_astype, &arg_interlace)) {
+    if(!PyArg_ParseTupleAndKeywords(args, kwargs, "|OO", (char**)keywords, &arg_astype, &arg_interlace)) {
         return NULL;
     }
 
@@ -672,8 +672,7 @@ static PyObject * PyGmicImage_to_numpy_array(PyGmicImage * self, PyObject* args,
     numpy_buffer = (float *)malloc(buffer_size);
     ptr = numpy_buffer;
     // If interlacing is needed, copy the gmic_image buffer towards numpy by interlacing RRR,GGG,BBB into RGB,RGB,RGB
-    if (arg_interlace) {
-	printf("deinterlacing");
+    if (arg_interlace == Py_True) {
         for(unsigned int y=0; y<self->_gmic_image._height; y++) {
            for (unsigned int x=0; x<self->_gmic_image._width; x++) {
                for (unsigned int c=0; c<3; c++) {
@@ -683,12 +682,12 @@ static PyObject * PyGmicImage_to_numpy_array(PyGmicImage * self, PyObject* args,
            }
         }
     } else {
-	printf("no interlacing");
-	// If deinterlacing is needed, since this is G'MIC's internal image shape, keep pixel data order as and copy it simply
+        // If deinterlacing is needed, since this is G'MIC's internal image shape, keep pixel data order as and copy it simply
         memcpy(numpy_buffer, self->_gmic_image._data, self->_gmic_image.size()*sizeof(T)); 
     }
     numpy_bytes_buffer = PyBytes_FromStringAndSize((const char*)numpy_buffer, buffer_size);
     free(numpy_buffer);
+    // class numpy.ndarray(shape, dtype=float, buffer=None, offset=0, strides=None, order=None)
     return_ndarray = PyObject_CallFunction(ndarray_type, (const char*) "OOS", shape, dtype, numpy_bytes_buffer);
 
     Py_DECREF(ndarray_type);
@@ -699,11 +698,9 @@ static PyObject * PyGmicImage_to_numpy_array(PyGmicImage * self, PyObject* args,
 
     if(arg_astype != NULL && PyType_Check(arg_astype)) {
         return_ndarray_astype = PyObject_CallMethod(return_ndarray, "astype", "O", arg_astype);  
-	Py_DECREF(return_ndarray);
-        printf("astype: %s(default)\n", (char*)PyUnicode_1BYTE_DATA(PyObject_Repr(arg_astype)));
-	return return_ndarray_astype;
+	    Py_DECREF(return_ndarray);
+	    return return_ndarray_astype;
     } else {
-      printf("astype: float32(default)\n");
       return return_ndarray;
     }
 }
