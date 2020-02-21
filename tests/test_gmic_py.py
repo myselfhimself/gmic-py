@@ -607,7 +607,7 @@ def test_gmic_image_to_numpy_ndarray_exception_on_unimportable_numpy_module(gmic
     import gmic
     images = []
     gmic.run(images=images, command="sp lena")
-    with pytest.raises(ModuleNotFoundError):
+    with pytest.raises(ImportError):
         images[0].to_numpy_array()
 
     # Repair our breaking of the numpy import

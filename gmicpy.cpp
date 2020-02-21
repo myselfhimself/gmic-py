@@ -663,7 +663,9 @@ static PyObject * PyGmicImage_to_numpy_array(PyGmicImage * self, PyObject* args,
 
     // exit raising numpy_module import exception
     if(!numpy_module) {
-        return NULL;
+	// Do not raise a Python >= 3.6 ModuleImportError, but something more compatible with any Python 3.x
+	PyErr_Clear();
+	return PyErr_Format(PyExc_ImportError, "The 'numpy' module cannot be imported. Is it installed or in your Python path?");
     }
 
     ndarray_type = PyObject_GetAttrString(numpy_module, "ndarray");
