@@ -397,8 +397,8 @@ static int PyGmicImage_init(PyGmicImage *self, PyObject *args, PyObject *kwargs)
        bytesObj_ndarray_dtype = PyObject_GetAttrString(bytesObj, "dtype");
        // Ensure dtype kind is a number we can convert (from dtype values here: https://numpy.org/doc/1.18/reference/generated/numpy.dtype.kind.html#numpy.dtype.kind)
        bytesObj_ndarray_dtype_kind = PyObject_GetAttrString(bytesObj_ndarray_dtype, "kind");
-       if (strchr("iuf", (PyUnicode_ReadChar(bytesObj_ndarray_dtype_kind, (Py_ssize_t) 0))) == NULL) {
-           PyErr_Format(PyExc_TypeError, "Parameter 'data' of type 'numpy.ndarray' does not contain numbers ie. its 'dtype.kind'(=%U) is not one of 'i', 'u', 'f'.", bytesObj_ndarray_dtype_kind);
+       if (strchr("biuf", (PyUnicode_ReadChar(bytesObj_ndarray_dtype_kind, (Py_ssize_t) 0))) == NULL) {
+           PyErr_Format(PyExc_TypeError, "Parameter 'data' of type 'numpy.ndarray' does not contain numbers ie. its 'dtype.kind'(=%U) is not one of 'b', 'i', 'u', 'f'.", bytesObj_ndarray_dtype_kind);
 	   // TODO pytest this
            return -1;
        }
@@ -617,25 +617,86 @@ PyGetSetDef PyGmicImage_getsets[] = {
     {NULL}
 };
 
+/**
+ * Predictable Python 3.x 'numpy' module importer.
+ */
+PyObject* import_numpy_module() {
+    PyObject* numpy_module = PyImport_ImportModule("numpy");
 
-static PyObject * PyGmicImage_from_numpy_array(PyGmicImage * self, PyObject* args)
+    // exit raising numpy_module import exception
+    if(!numpy_module) {
+        // Do not raise a Python >= 3.6 ModuleImportError, but something more compatible with any Python 3.x
+        PyErr_Clear();
+        return PyErr_Format(PyExc_ImportError, "The 'numpy' module cannot be imported. Is it installed or in your Python path?");
+    }
+
+    return numpy_module;
+}
+
+/*
+ * GmicImage class method from_numpy_array().
+ * This is a factory class method generating a G'MIC Image from a numpy.ndarray.
+ *
+ *  GmicImage.from_numpy_array(obj: numpy.ndarray, deinterlace=True: bool) -> GmicImage()
+ */
+static PyObject * PyGmicImage_from_numpy_array(PyObject * cls, PyObject* args, PyObject* kwargs)
 {
-    // TODO
-    int retval;
+    int arg_deinterlace = 1; // Will deinterlace the incoming numpy.ndarray by default
+    PyObject* arg_ndarray = NULL;
+    PyObject* ndarray_dtype = NULL;
+    PyObject* numpy_module = NULL;
+    PyObject* new_gmic_image = NULL;
+    PyObject* _data = NULL;
+    static char *keywords[] = {"numpy_array", "deinterlace", NULL};
 
-    if (! PyArg_ParseTuple(args, "f", &self->_gmic_image._data))
-        return Py_False;
+    numpy_module = PyImport_ImportModule("numpy");
+    if(!numpy_module)
+        return NULL;
 
-    retval = (self->_gmic_image)._data != NULL;
+    ndarray_type = PyObject_GetAttrString(numpy_module, "ndarray");
 
-    return Py_BuildValue("i",retval);
+    if (! PyArg_ParseTupleAndKeywords(args, kwargs, "O!|O", &arg_ndarray, &ndarray_type, &arg_deinterlace))
+        return NULL;
+
+    // Get input ndarray.dtype and prevent non-integer/float/bool data types to be processed
+    ndarray_dtype = PyObject_GetAttrString(arg_ndarray, "dtype");
+    // Ensure dtype kind is a number we can convert (from dtype values here: https://numpy.org/doc/1.18/reference/generated/numpy.dtype.kind.html#numpy.dtype.kind)
+    ndarray_dtype_kind = PyObject_GetAttrString(ndarray_dtype, "kind");
+    if (strchr("biuf", (PyUnicode_ReadChar(ndarray_dtype_kind, (Py_ssize_t) 0))) == NULL) {
+        PyErr_Format(PyExc_TypeError, "Parameter 'data' of type 'numpy.ndarray' does not contain numbers ie. its 'dtype.kind'(=%U) is not one of 'b', 'i', 'u', 'f'.", ndarray_dtype_kind);
+        // TODO pytest this
+        return NULL;
+
+    // TODO get unsqueezed shape of numpy array -> GmicImage width, height, depth, spectrum
+    // TODO if deinterlace needed, copy deinterlaced to a _data buffer, else just copy with memcpy
+    // TODO create GmicImage from parameters and return it
+
+    new_gmic_image = PyObject_CallFunction((PyObject*) &PyGmicImageType,
+            // The last argument is a p(redicate), ie. boolean..
+            // but Py_BuildValue() used by PyObject_CallFunction has a slightly different parameters format specification
+                                           (const char*) "SIIIIi",
+                                           _data,
+                                           (unsigned int) images[l]._width,
+                                           (unsigned int) images[l]._height,
+                                           (unsigned int) images[l]._depth,
+                                           (unsigned int) images[l]._spectrum,
+                                           (int) images[l]._is_shared
+    );
+
+    Py_DECREF(ndarray_dtype);
+    Py_DECREF(numpy_module);
+    Py_DECREF(ndarray_dtype_kind);
+
+    return new_gmic_image;
 }
 
 
 /*
- * Object method to_numpy_array().
+ * GmicImage object method to_numpy_array().
  *
  * GmicImage().to_numpy_array(astype=numpy.float32: numpy.dtype, interlace=True: bool) -> numpy.ndarray
+ *
+ * TODO monitor this more closely, there seems to be a memory leak...
  */
 static PyObject * PyGmicImage_to_numpy_array(PyGmicImage * self, PyObject* args, PyObject* kwargs)
 {
@@ -653,20 +714,15 @@ static PyObject * PyGmicImage_to_numpy_array(PyGmicImage * self, PyObject* args,
     float* ptr;
     int buffer_size = 0;
     PyObject* arg_astype = NULL;
-    PyObject* arg_interlace = Py_True; // Will interlace the final matrix by default
+    int arg_interlace = 1; // Will interlace the final matrix by default
 
-    if(!PyArg_ParseTupleAndKeywords(args, kwargs, "|OO", (char**)keywords, &arg_astype, &arg_interlace)) {
+    if(!PyArg_ParseTupleAndKeywords(args, kwargs, "|Op", (char**)keywords, &arg_astype, &arg_interlace)) {
         return NULL;
     }
 
     numpy_module = PyImport_ImportModule("numpy");
-
-    // exit raising numpy_module import exception
-    if(!numpy_module) {
-	// Do not raise a Python >= 3.6 ModuleImportError, but something more compatible with any Python 3.x
-	PyErr_Clear();
-	return PyErr_Format(PyExc_ImportError, "The 'numpy' module cannot be imported. Is it installed or in your Python path?");
-    }
+    if(!numpy_module)
+        return NULL;
 
     ndarray_type = PyObject_GetAttrString(numpy_module, "ndarray");
 
@@ -690,7 +746,7 @@ static PyObject * PyGmicImage_to_numpy_array(PyGmicImage * self, PyObject* args,
     numpy_buffer = (float *)malloc(buffer_size);
     ptr = numpy_buffer;
     // If interlacing is needed, copy the gmic_image buffer towards numpy by interlacing RRR,GGG,BBB into RGB,RGB,RGB
-    if (arg_interlace == Py_True) {
+    if (arg_interlace) {
         for(unsigned int z=0; z<self->_gmic_image._depth; z++) {
             for(unsigned int y=0; y<self->_gmic_image._height; y++) {
                 for (unsigned int x = 0; x < self->_gmic_image._width; x++) {
@@ -727,7 +783,7 @@ static PyObject * PyGmicImage_to_numpy_array(PyGmicImage * self, PyObject* args,
 
 
 static PyMethodDef PyGmicImage_methods[] = {
-    { "from_numpy_array", (PyCFunction)PyGmicImage_from_numpy_array, METH_VARARGS|METH_KEYWORDS, "Make a GmicImage from a numpy.ndarray" },
+    { "from_numpy_array", (PyCFunction)PyGmicImage_from_numpy_array, METH_CLASS|METH_VARARGS|METH_KEYWORDS, "Make a GmicImage from a numpy.ndarray" },
     { "to_numpy_array", (PyCFunction)PyGmicImage_to_numpy_array, METH_VARARGS|METH_KEYWORDS, "Make a numpy.ndarray from a GmicImage" },
     {NULL}  /* Sentinel */
 };
