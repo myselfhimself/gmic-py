@@ -768,6 +768,10 @@ def test_numpy_PIL_modes_to_gmic(gmic_instance_run):
 
     assert_non_empty_file_exists(origin_image_name).unlink()
 
+def test_from_numpy_array_class_method_existence():
+    # should not raise any AttributeError
+    getattr(gmic.Gmic, "from_numpy_array")
+
 
 def test_gmic_module_run_vs_single_instance_run_benchmark():
     from time import time
