@@ -3,6 +3,7 @@
 PYTHON3=${PYTHON3:-python3}
 PIP3=${PIP3:-pip3}
 PYTHON_VERSION=$($PYTHON3 --version | cut -d' ' -f2 | cut -d'.' -f1,2)
+GMIC_VERSION=${GMIC_VERSION:-2.8.4}
 
 function 00_all_steps () {
     1_clean_and_regrab_gmic_src && 2_compile && 3_test_compiled_so && 4_build_wheel && 5_test_wheel && 6_build_sdist && 7_test_sdist
@@ -43,7 +44,6 @@ function 11_send_to_pypi () {
 
 function 1_clean_and_regrab_gmic_src () {
     set -x
-    GMIC_VERSION=2.8.4
     GMIC_ARCHIVE_NAME=gmic_${GMIC_VERSION}*.tar.gz
     GMIC_URL=https://gmic.eu/files/source/gmic_${GMIC_VERSION}.tar.gz
     #GMIC_URL=https://gmic.eu/files/prerelease/gmic_prerelease.tar.gz
