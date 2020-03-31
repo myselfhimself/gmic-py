@@ -67,6 +67,43 @@ def test_run_gmic_instance_run_helloworld(capfd, gmic_instance_run):
     assert "hello world\n" == outerr.out
 
 @pytest.mark.parametrize(**gmic_instance_types)
+def test_run_gmic_instance_run_ppm_vs_pure_python_ppm_equality(gmic_instance_run):
+    ppm_filename_pure_python = 'blue_red_example.ppm'
+    ppm_filename_gmic = 'blue_red_example_gmic.ppm'
+    imgs = []
+    import array
+    
+    # PPM header
+    width = 256
+    height = 128
+    maxval = 255
+    ppm_header = f'P6 {width} {height} {maxval}\n'
+    
+    # PPM image data (filled with blue)
+    image = array.array('B', [0, 0, 255] * width * height)
+    
+    # Fill with red the rectangle with origin at (10, 10) and width x height = 50 x 80 pixels
+    for y in range(10, 90):
+    	for x in range(10, 60):
+    		index = 3 * (y * width + x)
+    		image[index] = 255           # red channel
+    		image[index + 1] = 0         # green channel
+    		image[index + 2] = 0         # blue channel
+    
+    # Save the PPM image as a binary file
+    with open(ppm_filename_pure_python, 'wb') as f:
+    	f.write(bytearray(ppm_header, 'ascii'))
+    	image.tofile(f)
+        
+    gmic_instance_run("256,128,1,3 fill_color 0,0,255 rectangle 10,10,60,90,1,255,0,0 output {}".format(ppm_filename_gmic))
+
+    ppms = []
+    gmic_instance_run("{} {}".format(ppm_filename_gmic, ppm_filename_pure_python), images=ppms)
+    assert_gmic_images_are_identical(ppms[0], ppms[1], cpp_strict=False)
+    assert_non_empty_file_exists(ppm_filename_pure_python).unlink()
+    assert_non_empty_file_exists(ppm_filename_gmic).unlink()
+
+@pytest.mark.parametrize(**gmic_instance_types)
 def test_run_gmic_instance_run_simple_3pixels_png_output(gmic_instance_run):
     png_filename = "a.png"
     gmic_instance_run('input "(0,128,255)" output ' + png_filename)
@@ -181,9 +218,10 @@ def assert_get_proper_print_regex(w, h, search_str):
     import time
     assert re.compile(r"size = \({},{},1,1\) \[{} b of floats\](.*)\n(.*)\n(.*)min = 0".format(round(w), round(h), int(round(w)*round(h)*FLOAT_SIZE_IN_BYTES)), flags=re.MULTILINE).search(search_str) is not None
 
-def assert_gmic_images_are_identical(gmic_image1, gmic_image2):
-    assert gmic_image1 == gmic_image2 # Use of the builtin __eq__ and __ne__ operators relying on C++ CImg data buffers compare, without w,h,d,s check
-    assert not (gmic_image1 != gmic_image2)
+def assert_gmic_images_are_identical(gmic_image1, gmic_image2, cpp_strict=True):
+    if cpp_strict:
+        assert gmic_image1 == gmic_image2 # Use of the builtin __eq__ and __ne__ operators relying on C++ CImg data buffers compare, without w,h,d,s check
+        assert not (gmic_image1 != gmic_image2)
     assert gmic_image1._width == gmic_image2._width
     assert gmic_image1._height == gmic_image2._height
     assert gmic_image1._depth == gmic_image2._depth
