@@ -47,7 +47,7 @@ def test_catch_exceptions(gmic_instance_run):
 def test_run_gmic_ensure_openmp_linked_and_working(capfd, gmic_instance_run):
     import traceback
     import sys
-    gmic_instance_run('v - sp lena eval. "end(call(\'echo_stdout[] \',merge(t,max)))"')
+    gmic_instance_run('v - sp lena eval. "end(run(\'echo_stdout[] \',merge(t,max)))"')
     outerr = capfd.readouterr()
     try:
         assert int(outerr.out.strip()) > 0 # should be "0\n" or "nan\n" if openmp not working
