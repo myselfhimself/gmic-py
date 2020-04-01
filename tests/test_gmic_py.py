@@ -95,7 +95,7 @@ def test_run_gmic_instance_run_ppm_vs_pure_python_ppm_equality(gmic_instance_run
     	f.write(bytearray(ppm_header, 'ascii'))
     	image.tofile(f)
         
-    gmic_instance_run("256,128,1,3 fill_color 0,0,255 rectangle 10,10,60,90,1,255,0,0 output {}".format(ppm_filename_gmic))
+    gmic_instance_run("256,128,1,3 fill_color 0,0,255 rectangle 10,10,59,89,1,255,0,0 output {}".format(ppm_filename_gmic))
 
     ppms = []
     gmic_instance_run("{} {}".format(ppm_filename_gmic, ppm_filename_pure_python), images=ppms)
