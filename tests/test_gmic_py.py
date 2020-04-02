@@ -112,7 +112,7 @@ def test_run_gmic_instance_run_simple_3pixels_png_output(gmic_instance_run):
 @pytest.mark.parametrize(**gmic_instance_types)
 def test_gmic_filters_data_json_validation(gmic_instance_run):
     json_result = []
-    gmic_instance_run('parse_gui blur,json', json_result)
+    gmic_instance_run('parse_gui blur,json', images=json_result)
     assert len(json_result) == 1
     assert type(json_result[0]) == gmic.GmicImage
     json_result_str = json_result[0]._data.decode('utf-8')
