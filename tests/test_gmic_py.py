@@ -109,6 +109,25 @@ def test_run_gmic_instance_run_simple_3pixels_png_output(gmic_instance_run):
     gmic_instance_run('input "(0,128,255)" output ' + png_filename)
     assert_non_empty_file_exists(png_filename).unlink()
 
+@pytest.mark.parametrize(**gmic_instance_types)
+def test_gmic_filters_data_json_validation(gmic_instance_run):
+    json_result = []
+    gmic_instance_run('parse_gui blur,json', json_result)
+    assert len(json_result) == 1
+    assert type(json_result[0]) == gmic.GmicImage
+    json_result_str = json_result[0]._data.decode('utf-8')
+    assert json_result_str.startswith('{')
+    assert json_result_str.endswith('}')
+    import json
+    import re
+    json_decoded_filters = json.loads(json_result_str)
+    assert json_decoded_filters["format_version"] == "gmic_json_1.0"
+    assert re.match(r"\d.\d.\d", json_decoded_filters["gmic_version"])
+    assert len(json_decoded_filters["categories"]) > 10
+    for category_name, category_filters in json_decoded_filters.items():
+        for category_filter in category_filters:
+            assert "blur" in category_filter["name"].lower() or "blur" in category_filter["command"]
+
 
 @pytest.mark.parametrize(**gmic_instance_types)
 def test_run_gmic_instance_run_simple_demo_png_output_and_input(gmic_instance_run):
