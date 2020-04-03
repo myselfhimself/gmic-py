@@ -111,23 +111,39 @@ def test_run_gmic_instance_run_simple_3pixels_png_output(gmic_instance_run):
 
 @pytest.mark.parametrize(**gmic_instance_types)
 def test_gmic_filters_data_json_validation(gmic_instance_run):
+    import json
+    import re
     assert int(gmic.__version__.replace(".", "")) >= 290
     json_result = []
     gmic_instance_run('parse_gui blur,json', images=json_result)
+
+    # Ensure we have properly type results
     assert len(json_result) == 1
     assert type(json_result[0]) == gmic.GmicImage
-    json_result_str = json_result[0]._data.decode('utf-8')
-    assert json_result_str.startswith('{')
-    assert json_result_str.endswith('}')
-    import json
-    import re
+
+    # Ensure the _data_str dynamic attribute's contents is a JSON-parseable
+    # string for this very situation
+    json_result_str = json_result[0]._data_str
     json_decoded_filters = json.loads(json_result_str)
+
+    # The following validation could happen someday with a JSON schema
+    # - Ensure filtering on the 'blur' keywork worked
+    # - Ensure the JSON structure is more or less as expected
     assert json_decoded_filters["format_version"] == "gmic_json_1.0"
     assert re.match(r"\d.\d.\d", json_decoded_filters["gmic_version"])
-    assert len(json_decoded_filters["categories"]) > 10
-    for category_name, category_filters in json_decoded_filters.items():
-        for category_filter in category_filters:
-            assert "blur" in category_filter["name"].lower() or "blur" in category_filter["command"]
+
+    assert len(json_decoded_filters["categories"]) > 5
+    for category in json_decoded_filters['categories']:
+        assert 'name' in category
+        assert 'filters' in category
+        for filter in category['filters']:
+
+            assert 'blur' in filter['name'].lower() or 'blur' in filter['command'].lower()
+            if 'parameters' in filter:
+                for parameter in filter['parameters']:
+                    assert 'type' in parameter
+                    if parameter['type'] not in ('separator', 'note', 'link', 'point'):
+                        assert 'pos' in parameter and 'name' in parameter and 'default' in parameter
 
 
 @pytest.mark.parametrize(**gmic_instance_types)
@@ -351,7 +367,7 @@ def test_gmic_image_readonly_forbidden_write_attributes():
     w = 60
     h = 80
     float_array = struct.pack(*((str(w*h)+'f',) + (0,)*w*h))
-    real_attributes = ("_data", "_width", "_height", "_depth", "_spectrum", "_is_shared")
+    real_attributes = ("_data", "_data_str", "_width", "_height", "_depth", "_spectrum", "_is_shared")
 
     # Ensuring GmicImage's parameters stability after initialization
     i = gmic.GmicImage(float_array, w, h)
