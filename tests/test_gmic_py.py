@@ -68,10 +68,12 @@ def test_run_gmic_instance_run_helloworld(capfd, gmic_instance_run):
 
 @pytest.mark.parametrize(**gmic_instance_types)
 def test_run_gmic_instance_run_ppm_vs_pure_python_ppm_equality(gmic_instance_run):
+    import array
+    import filecmp
     ppm_filename_pure_python = 'blue_red_example.ppm'
     ppm_filename_gmic = 'blue_red_example_gmic.ppm'
     imgs = []
-    import array
+
     
     # PPM header
     width = 256
@@ -94,9 +96,13 @@ def test_run_gmic_instance_run_ppm_vs_pure_python_ppm_equality(gmic_instance_run
     with open(ppm_filename_pure_python, 'wb') as f:
     	f.write(bytearray(ppm_header, 'ascii'))
     	image.tofile(f)
-        
+
     gmic_instance_run("256,128,1,3 fill_color 0,0,255 rectangle 10,10,59,89,1,255,0,0 output {}".format(ppm_filename_gmic))
 
+    # Compare files saved on disk - OS comparison
+    assert filecmp.cmp(ppm_filename_pure_python, ppm_filename_gmic) is True
+
+    # Compare files loaded through gmic - GmicImages comparison
     ppms = []
     gmic_instance_run("{} {}".format(ppm_filename_gmic, ppm_filename_pure_python), images=ppms)
     assert_gmic_images_are_identical(ppms[0], ppms[1], cpp_strict=False)
