@@ -100,7 +100,7 @@ def test_run_gmic_instance_run_ppm_vs_pure_python_ppm_equality(gmic_instance_run
     gmic_instance_run("256,128,1,3 fill_color 0,0,255 rectangle 10,10,59,89,1,255,0,0 output {}".format(ppm_filename_gmic))
 
     # Compare files saved on disk - OS comparison
-    assert filecmp.cmp(ppm_filename_pure_python, ppm_filename_gmic) is True
+    assert filecmp.cmp(ppm_filename_pure_python, ppm_filename_gmic, shallow=False) is True
 
     # Compare files loaded through gmic - GmicImages comparison
     ppms = []
