@@ -183,6 +183,7 @@ static PyObject* run_impl(PyObject* self, PyObject* args, PyObject* kwargs)
             // Grab images into a proper gmic_list after checking their typing
             iter = PyObject_GetIter(input_gmic_images);
             while ((current_image = PyIter_Next(iter))) {
+		// If gmic_list item type is not a GmicImage
                 if (Py_TYPE(current_image) != (PyTypeObject*)&PyGmicImageType) {
 	            // If current image type is a numpy.ndarray
 		    if (PyNumpyArray_Check(current_image)) {
@@ -202,6 +203,7 @@ static PyObject* run_impl(PyObject* self, PyObject* args, PyObject* kwargs)
                         return NULL;
 		   }
                 }
+		// Fill our just created gmic_list at same index with gmic_image coming from Python or just converted from numpy type
 		swap_gmic_image_into_gmic_list((PyGmicImage*) current_image, images, image_position);
 
                 image_position++;
@@ -214,12 +216,12 @@ static PyObject* run_impl(PyObject* self, PyObject* args, PyObject* kwargs)
             image_position = 0;
 
 	    // Bring new images set back into the Python world (change List items in-place)
-	    // First empty the input Python images list without deleting its List object
+	    // First empty the input Python images List object from its items without deleting it (empty list, same reference)
             PySequence_DelSlice(input_gmic_images, 0, PySequence_Length(input_gmic_images));
             cimglist_for(images, l) {
 		// On the fly python GmicImage build (or numpy.ndarray build if there was an ndarray in the input list)
 		// per https://stackoverflow.com/questions/4163018/create-an-object-using-pythons-c-api/4163055#comment85217110_4163055
-		PyObject* _data = PyBytes_FromStringAndSize((const char*)images[l]._data, sizeof(T)*images[l].size());
+		PyObject* _data = PyBytes_FromStringAndSize((const char*)images[l]._data, (Py_ssize_t)sizeof(T)*images[l].size());
 		PyObject* new_gmic_image = NULL;
 		if (must_return_all_items_as_numpy_array) {
 		    // TODO build shape tuple according to real dimensions
@@ -593,7 +595,7 @@ i # Using GmicImage's repr() string representation\n\
 # Output: <gmic.GmicImage object at 0x7f09bfb504f8 with _data address at 0x22dd5b0, w=1 h=1 d=1 s=1 shared=0>\n\
 i(0,0) == 1.0 # Using GmicImage(x,y,z) pixel reading operator after initialization\n\
 gmic.run('resize 200%,200%', i) # Some G'MIC operations may reallocate the image buffer in place without risk\n\
-i._width == i._height == 2 # Use the _width, _height, _depth, _spectrum, _data, _is_shared read-only attributes");
+i._width == i._height == 2 # Use the _width, _height, _depth, _spectrum, _data, _data_str, _is_shared read-only attributes");
 // TODO add gmic.Gmic example
 
 
@@ -617,9 +619,27 @@ PyGmicImage_get__data(PyGmicImage* self, void* closure)
     return PyBytes_FromStringAndSize((char*)self->_gmic_image._data, sizeof(T)*(self->_gmic_image.size()));
 }
 
+static PyObject*
+PyGmicImage_get__data_str(PyGmicImage* self, void* closure)
+{
+    unsigned int image_size = self->_gmic_image.size();
+    PyObject* unicode_json = PyUnicode_New((Py_ssize_t)image_size, 65535);
+
+    for(unsigned int a = 0; a < image_size; a++) {
+        PyUnicode_WriteChar(unicode_json, (Py_ssize_t) a, (Py_UCS4)self->_gmic_image._data[a]);
+    }
+
+    return unicode_json;
+}
+
 PyGetSetDef PyGmicImage_getsets[] = {
     {(char*)"_data",  /* name */
      (getter) PyGmicImage_get__data,
+     NULL, // no setter
+     NULL,  /* doc */
+     NULL /* closure */},
+    {(char*)"_data_str",  /* name */
+     (getter) PyGmicImage_get__data_str,
      NULL, // no setter
      NULL,  /* doc */
      NULL /* closure */},
