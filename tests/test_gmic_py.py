@@ -75,6 +75,7 @@ def test_run_gmic_instance_run_ppm_vs_pure_python_ppm_equality(gmic_instance_run
     imgs = []
 
     
+    # Pure Python ppm generation grabbed and patched from https://solarianprogrammer.com/2017/10/25/ppm-image-python-3/
     # PPM header
     width = 256
     height = 128
