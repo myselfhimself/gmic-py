@@ -79,7 +79,7 @@ def test_run_gmic_instance_run_ppm_vs_pure_python_ppm_equality(gmic_instance_run
     width = 256
     height = 128
     maxval = 255
-    ppm_header = 'P6 {} {} {}\n'.format(width, height, maxval)
+    ppm_header = 'P6\n{} {}\n{}\n'.format(width, height, maxval)
     
     # PPM image data (filled with blue)
     image = array.array('B', [0, 0, 255] * width * height)
