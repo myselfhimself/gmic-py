@@ -214,8 +214,10 @@ static PyObject* run_impl(PyObject* self, PyObject* args, PyObject* kwargs)
             }
 
             // Process images and names
+	    printf("BEFORE GMIC->RUN CIMG LIST HAS %d ITEMS\n", images.size());
 	    printf("RUNNING GMIC->RUN\n");
             ((PyGmic*)self)->_gmic->run(commands_line, images, image_names, 0, 0);
+	    printf("AFTER GMIC->RUN CIMG LIST HAS %d ITEMS\n", images.size());
 
             // Prevent images auto-deallocation by G'MIC
             image_position = 0;
@@ -224,7 +226,9 @@ static PyObject* run_impl(PyObject* self, PyObject* args, PyObject* kwargs)
 	    // First empty the input Python images List object from its items without deleting it (empty list, same reference)
 	    printf("EMPTYING INPUT LIST BEFORE FILLING IT WITH RESULTS\n");
             PySequence_DelSlice(input_gmic_images, 0, PySequence_Length(input_gmic_images));
-	    printf("STARTING CIMG ITERATION\n");
+	    printf("CIMG LIST HAS %d ITEMS\n", images.size());
+	    printf("STARTING CIMG FOR LOOP\n");
+
             cimglist_for(images, l) {
 	        printf("IN CIMG ITERATION\n");
 		// On the fly python GmicImage build (or numpy.ndarray build if there was an ndarray in the input list)
@@ -257,6 +261,8 @@ static PyObject* run_impl(PyObject* self, PyObject* args, PyObject* kwargs)
 	        printf("CIMG ITERATION APPENDING PYGMICIMAGE TO PYLIST\n");
                 PyList_Append(input_gmic_images, new_gmic_image);
             }
+	    printf("CIMG FOR LOOP FINISHED\n");
+	    printf("AFTER GMIC->RUN CIMG LIST HAS %d ITEMS\n", images.size());
 
         // B/ Else if a single GmicImage was provided
 	} else if(Py_TYPE(input_gmic_images) == (PyTypeObject*)&PyGmicImageType) {
