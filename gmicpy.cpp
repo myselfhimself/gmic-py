@@ -175,14 +175,18 @@ static PyObject* run_impl(PyObject* self, PyObject* args, PyObject* kwargs)
     }
 
     if (input_gmic_images != NULL) {
+	    printf("LIST OF IMAGES PROVIDED UNSURE IF WAS A PYLIST\n");
         // A/ If a list of images was provided
 	if(PyList_Check(input_gmic_images)) {
+	    printf("LIST OF IMAGES PROVIDED\n");
             image_position = 0;
             images.assign(Py_SIZE(input_gmic_images));
 
             // Grab images into a proper gmic_list after checking their typing
             iter = PyObject_GetIter(input_gmic_images);
             while ((current_image = PyIter_Next(iter))) {
+
+	    printf("COPYING 1 INPUT LIST ITEM INTO GMIC_LIST\n");
 		// If gmic_list item type is not a GmicImage
                 if (Py_TYPE(current_image) != (PyTypeObject*)&PyGmicImageType) {
 	            // If current image type is a numpy.ndarray
@@ -210,6 +214,7 @@ static PyObject* run_impl(PyObject* self, PyObject* args, PyObject* kwargs)
             }
 
             // Process images and names
+	    printf("RUNNING GMIC->RUN\n");
             ((PyGmic*)self)->_gmic->run(commands_line, images, image_names, 0, 0);
 
             // Prevent images auto-deallocation by G'MIC
@@ -217,16 +222,22 @@ static PyObject* run_impl(PyObject* self, PyObject* args, PyObject* kwargs)
 
 	    // Bring new images set back into the Python world (change List items in-place)
 	    // First empty the input Python images List object from its items without deleting it (empty list, same reference)
+	    printf("EMPTYING INPUT LIST BEFORE FILLING IT WITH RESULTS\n");
             PySequence_DelSlice(input_gmic_images, 0, PySequence_Length(input_gmic_images));
+	    printf("STARTING CIMG ITERATION\n");
             cimglist_for(images, l) {
+	        printf("IN CIMG ITERATION\n");
 		// On the fly python GmicImage build (or numpy.ndarray build if there was an ndarray in the input list)
 		// per https://stackoverflow.com/questions/4163018/create-an-object-using-pythons-c-api/4163055#comment85217110_4163055
 		PyObject* _data = PyBytes_FromStringAndSize((const char*)images[l]._data, (Py_ssize_t)sizeof(T)*images[l].size());
 		PyObject* new_gmic_image = NULL;
 		if (must_return_all_items_as_numpy_array) {
+		    
+	            printf("NUMPY RELATED ITERATION SUBOPERATION\n");
 		    // TODO build shape tuple according to real dimensions
 		    new_gmic_image = PyGmicImage_AS_NUMPYARRAY(Py_BuildValue("(00)", 2, 1), &PyFloat_Type, _data, any_numpy_object);
 		} else {
+	            printf("CIMG ITERATION CREATING NEW PYGMICIMAGE FROM CIMG\n");
                     new_gmic_image = PyObject_CallFunction((PyObject*) &PyGmicImageType,
                                            // The last argument is a p(redicate), ie. boolean..
 		    		       // but Py_BuildValue() used by PyObject_CallFunction has a slightly different parameters format specification
@@ -243,11 +254,13 @@ static PyObject* run_impl(PyObject* self, PyObject* args, PyObject* kwargs)
 		        return NULL;
 		    }
 		}
+	        printf("CIMG ITERATION APPENDING PYGMICIMAGE TO PYLIST\n");
                 PyList_Append(input_gmic_images, new_gmic_image);
             }
 
         // B/ Else if a single GmicImage was provided
 	} else if(Py_TYPE(input_gmic_images) == (PyTypeObject*)&PyGmicImageType) {
+	    printf("SINGLE GMIC IMAGE WAS PROVIDED, NO LIST PROCESSING\n");
             images.assign(1);
 	    swap_gmic_image_into_gmic_list((PyGmicImage*) input_gmic_images, images, 0);
 
@@ -273,6 +286,7 @@ static PyObject* run_impl(PyObject* self, PyObject* args, PyObject* kwargs)
         }
 	// Else if provided 'images' type is unknown (or is a single numpy.ndarray, which unfortunately cannot be updated in place), raise Error
 	else {
+	    printf("UNKNOWN IMAGES TYPE\n");
             PyErr_Format(PyExc_TypeError,
                 "'%.50s' 'images' parameter must be a '%.400s', or list of either '%.400s'(s) or 'numpy.ndarray'(s)",
                 Py_TYPE(input_gmic_images)->tp_name, PyGmicImageType.tp_name, PyGmicImageType.tp_name);
@@ -299,6 +313,7 @@ static PyObject* run_impl(PyObject* self, PyObject* args, PyObject* kwargs)
 	}
 
     } else {
+	    printf("NO IMAGES PARAM PROVIDED, RUNNING GMIC.RUN WITHOUT IT\n");
 	T pixel_type;
         ((PyGmic*)self)->_gmic->run((const char* const) commands_line, (float* const) NULL, (bool* const)NULL, (const T&)pixel_type);
     }
