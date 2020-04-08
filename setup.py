@@ -41,9 +41,9 @@ if pkgconfig.exists('fftw3'):
     extra_link_args += ['-lfftw3_threads']
 
 # Only compile with OpenCV if exists (nice for the 'camera' G'MIC command :-D )
-if pkgconfig.exists('opencv'):
-    define_macros += [('cimg_use_opencv', None)]
-    pkgconfig_list += ['opencv']
+# if pkgconfig.exists('opencv'):
+#     define_macros += [('cimg_use_opencv', None)]
+#     pkgconfig_list += ['opencv']
 
 
 # Disable libcurl only on manylinuxes, because of a buggy audithweel repair constraint
@@ -62,6 +62,10 @@ if sys.platform == 'darwin':
 include_dirs = packages['include_dirs'] + [here, gmic_src_path]
 if sys.platform == 'darwin':
     include_dirs += ['/usr/local/opt/llvm@6/include']
+<<<<<<< HEAD
+=======
+debugging_args = []# ['-O0', '-g'] # Uncomment this for faster compilation with debug symbols and no optimization
+>>>>>>> #35 troubleshooting continued: .config/gmic check (7)
 
 # Open-MP support for MacOSX and Linux
 if sys.platform == 'darwin':

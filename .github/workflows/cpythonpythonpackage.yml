@@ -32,7 +32,9 @@ jobs:
         bash build_tools.bash 2_compile
         find build/
         ldd build/lib.linux-x86_64-3.7/gmic.cpython-37m-x86_64-linux-gnu.so
-        #bash build_tools.bash 3_test_compiled_so test_gmic_filters_data_json_validation[gmic_instance_run]
+        find ~/.config/gmic
+        bash build_tools.bash 3_test_compiled_so test_gmic_filters_data_json_validation[gmic_instance_run] || echo false positive
+        find ~/.config/gmic
     - name: Expose compiled gmic-py module as a CI download
       uses: actions/upload-artifact@v1
       with:

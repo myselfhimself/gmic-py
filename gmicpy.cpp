@@ -498,7 +498,8 @@ static int PyGmicImage_init(PyGmicImage *self, PyObject *args, PyObject *kwargs)
     // Ugly exception catching, probably to catch a cimg::GmicInstanceException()
     catch(...)
     {
-        PyErr_Format(PyExc_MemoryError, "Allocation error in GmicImage::assign(_width=%d,_height=%d,_depth=%d,_spectrum=%d), are you requesting too much memory (%d bytes)?", _width, _height, _depth, _spectrum, _data_bytes_size);
+        dimensions_product = _width*_height*_depth*_spectrum;
+        PyErr_Format(PyExc_MemoryError, "Allocation error in GmicImage::assign(_width=%d,_height=%d,_depth=%d,_spectrum=%d), are you requesting too much memory (%d bytes)?", _width, _height, _depth, _spectrum, dimensions_product*sizeof(T));
         return -1;
     }
 
