@@ -30,14 +30,5 @@ jobs:
         # bash build_tools.bash 00_all_steps 
         bash build_tools.bash 1_clean_and_regrab_gmic_src
         bash build_tools.bash 2_compile
-        find build/
-        ldd build/lib.linux-x86_64-3.7/gmic.cpython-37m-x86_64-linux-gnu.so
-        bash build_tools.bash 3_test_compiled_so test_gmic_filters_data_json_validation[gmic_instance_run] || echo false positive
-        find ~/.config/gmic
-    - name: Expose compiled gmic-py module as a CI download
-      uses: actions/upload-artifact@v1
-      with:
-        name: ubuntu-latest-gmic-py-${{ matrix.python-version }}-binary.so
-        path: build/lib.linux-x86_64-3.7/gmic.cpython-37m-x86_64-linux-gnu.so
-
+        bash build_tools.bash 3_test_compiled_so
         # && bash build_tools.bash 11_send_to_pypi #Note that most probably nothing will be sent to PyPI because of too modern linked libraries 

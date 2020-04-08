@@ -342,6 +342,12 @@ static int PyGmic_init(PyGmic *self, PyObject *args, PyObject *kwargs)
 {
     int result = 0;
     self->_gmic = new gmic();
+
+    // Init resources folder.
+    if (!gmic::init_rc()) {
+      PyErr_Format(PyExc_TypeError, "Unable to create G'MIC resources folder.");
+    }
+
     // If parameters are provided, pipe them to our run() method, and do only exceptions raising without returning anything if things go well
     if(args != Py_None && ((args && (int)PyTuple_Size(args) > 0) || (kwargs && (int)PyDict_Size(kwargs) > 0))) {
         result = (run_impl((PyObject*) self, args, kwargs) != NULL) ? 0 : -1;
