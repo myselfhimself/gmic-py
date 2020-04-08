@@ -8,13 +8,12 @@ import platform
 from setuptools import setup, Extension, find_packages
 import pkgconfig
 
+
 here = path.abspath(path.dirname(__file__))
 gmic_src_path = path.abspath('src/gmic/src')
 
 # List of non-standard '-l*' compiler parameters
 extra_link_args = []
-
-extra_compile_args = ['-std=c++11'] 
 
 # List of libs to get include directories and linkable libraries paths from for compiling
 pkgconfig_list = ['zlib']
@@ -41,9 +40,9 @@ if pkgconfig.exists('fftw3'):
     extra_link_args += ['-lfftw3_threads']
 
 # Only compile with OpenCV if exists (nice for the 'camera' G'MIC command :-D )
-# if pkgconfig.exists('opencv'):
-#     define_macros += [('cimg_use_opencv', None)]
-#     pkgconfig_list += ['opencv']
+if pkgconfig.exists('opencv'):
+    define_macros += [('cimg_use_opencv', None)]
+    pkgconfig_list += ['opencv']
 
 
 # Disable libcurl only on manylinuxes, because of a buggy audithweel repair constraint
@@ -62,43 +61,15 @@ if sys.platform == 'darwin':
 include_dirs = packages['include_dirs'] + [here, gmic_src_path]
 if sys.platform == 'darwin':
     include_dirs += ['/usr/local/opt/llvm@6/include']
-<<<<<<< HEAD
-=======
-debugging_args = []# ['-O0', '-g'] # Uncomment this for faster compilation with debug symbols and no optimization
->>>>>>> #35 troubleshooting continued: .config/gmic check (7)
+debugging_args = ['-O0', '-g'] # Uncomment this for faster compilation with debug symbols and no optimization
 
-# Open-MP support for MacOSX and Linux
+extra_compile_args = ['-std=c++11'] + debugging_args
 if sys.platform == 'darwin':
     extra_compile_args += ['-fopenmp', '-stdlib=libc++']
     extra_link_args += ['-lomp', '-nodefaultlibs', '-lc++'] #options inspired by https://github.com/explosion/spaCy/blob/master/setup.py
 elif sys.platform == 'linux': # Enable openmp for 32bit & 64bit linuxes
     extra_compile_args += ['-fopenmp']
     extra_link_args += ['-lgomp']
-
-# Adding C-preprocessor-detectable define of debugging mode and custom debug-mode compile options
-debugging_args = []
-optimization_args = []
-# set GMICPY_DEBUG to any non-empty string to toggle debug options
-if environ.get('GMICPY_DEBUG', False):
-    print("compiling a debug gmic-py version")
-    if sys.platform == 'windows':
-        debugging_args += ['/DEBUG:FULL']
-    else:
-        debugging_args += ['-O0', '-g3']
-    define_macros += [('gmicpy_debug', None)]
-else:
-   print("compiling an optimized gmic-py version")
-   optimization_args += ['-O2', '-g0']
-
-# set GMICPY_SANITIZER to any non-empty string to toggle memory sanitizing options (GCC, maybe CLang)
-if environ.get('GMICPY_SANITIZER', False):
-    print("adding sanitizer support for memory leaks checking, make sure you set LD_PRELOAD=....libasan.so for running, see build_tools.bash for reference")
-    debugging_args += ['-fsanitize=address']
-    extra_link_args += ['-lasan', '-fsanitize=address']
-    libraries.insert(0, 'asan')
-    define_macros += [('gmicpy_sanitizer', None)]
-
-extra_compile_args += debugging_args + optimization_args
 
 print("Define macros:")
 print(define_macros)
