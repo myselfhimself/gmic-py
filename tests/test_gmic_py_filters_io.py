@@ -35,7 +35,8 @@ def test_gmic_filter_io(filter_id, filter_params):
     global gmic_instance
     print(filter_id)
     print(filter_params)
-    gmic_command = "{} {} output ".format(filter_id, ",".join(filter_params))
+    gmic_command = "sp leno {} {} output ".format(filter_id, ",".join(filter_params))
+
     gmic_py_output_file = os.path.realpath("out_gmicpy.png")
     gmic_py_command = gmic_command + gmic_py_output_file
 
