@@ -111,6 +111,4 @@ def test_gmic_filter_io(filter_id, filter_params):
     os.system(gmic_cli_command)
     
     # assert output files equality
-    samefiles = filecmp.cmp(gmic_py_output_file, gmic_cli_output_file, shallow=False)
-
-    assert samefiles
+    assert filecmp.cmp(gmic_py_output_file, gmic_cli_output_file, shallow=False)
