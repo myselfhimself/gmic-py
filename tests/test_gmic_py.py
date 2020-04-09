@@ -117,7 +117,7 @@ def test_run_gmic_instance_run_simple_3pixels_png_output(gmic_instance_run):
     assert_non_empty_file_exists(png_filename).unlink()
 
 @pytest.mark.parametrize(**gmic_instance_types)
-def test_gmic_filters_data_json_validation(gmic_instance_run):
+def test_gmic_filters_data_json_validation_and_gmicimage__data_str_attribute(gmic_instance_run):
     import json
     import re
     assert int(gmic.__version__.replace(".", "")) >= 290
@@ -128,12 +128,14 @@ def test_gmic_filters_data_json_validation(gmic_instance_run):
     gmic_instance_run('parse_gui blur,json', images=json_result)
 
     # Ensure we have properly type results
+    # If the below result is 0 (no item), .config/gmic (or OS-home settings dir) was probably not created
     assert len(json_result) == 1
     assert type(json_result[0]) == gmic.GmicImage
 
     # Ensure the _data_str dynamic attribute's contents is a JSON-parseable
     # string for this very situation
     json_result_str = json_result[0]._data_str
+    assert type(json_result_str) == str
     json_decoded_filters = json.loads(json_result_str)
 
     # The following validation could happen someday with a JSON schema
