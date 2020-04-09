@@ -119,16 +119,22 @@ function 3_test_compiled_so () {
     if ! [ -z "$1" ]; then
         PYTEST_EXPRESSION_PARAM="-k $1"
     fi
-    $PIP3 uninstall gmic -y; cd ./build/lib*$PYTHON_VERSION*/ ; LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH ; $PIP3 install -r ../../dev-requirements.txt ; pwd; ls; $PYTHON3 -m pytest ../../tests/ $PYTEST_EXPRESSION_PARAM -n 4 -vvv -rxXs || { echo "Fatal error while running pytests" ; exit 1 ; } ; cd ../..
+    $PIP3 uninstall gmic -y; cd ./build/lib*$PYTHON_VERSION*/ ; LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH ; $PIP3 install -r ../../dev-requirements.txt ; pwd; ls; $PYTHON3 -m pytest -n 4 ../../tests/ $PYTEST_EXPRESSION_PARAM -vvv -rxXs || { echo "Fatal error while running pytests" ; exit 1 ; } ; cd ../..
 }    
 
 function 31_test_compiled_so_filters_io () {
     # Example usage: <this_script.bash> 3_test_compiled_so_filters_io
-    if ! [ -z "$1" ]; then
-        3_test_compiled_so "test_gmic_filter_io[$1]"
-    else
-        3_test_compiled_so test_gmic_filter_io
+    if [ -d ./build/lib*$PYTHON_VERSION*/test-images ]; then
+        rm -rf ./build/lib*$PYTHON_VERSION*/test-images
     fi
+    if ! [ -z "$1" ]; then
+        PYTEST_EXPRESSION_PARAM="-k test_gmic_filter_io[$1]"
+        PYTEST_NB_THREADS=
+    else
+        PYTEST_EXPRESSION_PARAM=
+        PYTEST_NB_THREADS="-n 4"
+    fi
+    $PIP3 uninstall gmic -y; cd ./build/lib*$PYTHON_VERSION*/ ; LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH ; $PIP3 install -r ../../dev-requirements.txt ; pwd; ls; $PYTHON3 -m pytest ../../tests/test_gmic_py_filters_io.py $PYTEST_EXPRESSION_PARAM $PYTEST_NB_THREADS -vvv -rxXs || { echo "Fatal error while running pytests" ; exit 1 ; } ; cd ../..
 }    
 
 function 4_build_wheel () {
