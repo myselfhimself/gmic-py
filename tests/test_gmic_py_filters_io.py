@@ -7,7 +7,22 @@ import pytest
 
 import gmic
 
+import PIL.Image
+
+"""
+This big parameterized test suite helps to compare gmic-cli vs. gmic-py output idempotence of all gui filters for a fixed input.
+You should run it nightly or not often, as it is time-consuming.
+
+Any plug-ins, add-ons etc.. relying on gmic-py may want to imitate this strategy and ensure eg. that the UIs they provide
+keep yielding the same result as their exposed gmic-py's filters themselves.
+
+This could be coupled with non-regression I/O results (ie. archived sets of fixed parameters and input images -> fixed dated/versioned outputs)
+to ensure result stability across versions. Not implementing this for now.
+"""
+
+GMIC_IMAGES_DIFFERENCE_PIL_MAX_PERCENT = 2 # If images differ more than 2%, the test is deemed as failing 
 GMIC_FILTERS_URL_PATTERN = 'https://gmic.eu/filters{}.json'
+GMIC_FILTERS_FILENAME_PATTERN = 'filters{}.json'
 GMIC_FILTERS_TEST_BLACKLIST = (
         'gui_download_all_data', #no image output
         'fractalize', #too long
@@ -22,21 +37,45 @@ GMIC_IMAGES_DIRECTORY = 'test-images'
 gmic_instance = gmic.Gmic()
 gmic_instance.run('update') # allows more filter to work
 
-"""
-This big parameterized test helps to compare gmic-cli vs. gmic-py output idempotence of all gui filters for a fixed input.
-You should run it nightly or not often, as it is time-consuming.
 
-Any plug-ins, add-ons etc.. relying on gmic-py may want to imitate this strategy and ensure eg. that the UIs they provide
-keep yielding the same result as their exposed gmic-py's filters themselves.
+def get_images_difference_percent(filename1, filename2):
+    # From https://rosettacode.org/wiki/Percentage_difference_between_images
+    # Return: value between 0 and 100
+    i1 = PIL.Image.open(filename1)
+    i2 = PIL.Image.open(filename2)
+    assert i1.mode == i2.mode, "Different kinds of images."
+    assert i1.size == i2.size, "Different sizes."
+    
+    pairs = zip(i1.getdata(), i2.getdata())
+    if len(i1.getbands()) == 1:
+        # for gray-scale jpegs
+        dif = sum(abs(p1-p2) for p1,p2 in pairs)
+    else:
+        dif = sum(abs(c1-c2) for p1,p2 in pairs for c1,c2 in zip(p1,p2))
+    
+    ncomponents = i1.size[0] * i1.size[1] * 3
 
-This could be coupled with non-regression I/O results (ie. archived sets of fixed parameters and input images -> fixed dated/versioned outputs)
-to ensure result stability across versions. Not implementing this for now.
-"""
+    return (dif / 255.0 * 100.0) / ncomponents
+
+
 
 def get_gmic_filters_json_str():
-    json_url = GMIC_FILTERS_URL_PATTERN.format(gmic.__version__.replace('.', ''))
-    with urllib.request.urlopen(json_url) as response:
-        json_str = response.read().decode('utf-8')
+    gmic_version_suffix = gmic.__version__.replace('.', '')
+    json_filename = GMIC_FILTERS_FILENAME_PATTERN.format(gmic_version_suffix)
+
+    # Use filters JSON description file if exists, else download it first from gmic.eu
+    if not os.path.exists(json_filename):
+        print("downloading json file")
+        json_url = GMIC_FILTERS_URL_PATTERN.format(gmic_version_suffix)
+        with urllib.request.urlopen(json_url) as response:
+            json_str = response.read()
+            with open(json_filename, 'wb') as json_file:
+                json_file.write(json_str)
+    else:
+        print("reusing json file")
+
+    with open(json_filename) as json_file:
+        json_str = json_file.read()
 
     return json_str
 
@@ -112,4 +151,4 @@ def test_gmic_filter_io(filter_id, filter_params):
     os.system(gmic_cli_command)
     
     # assert output files equality
-    assert filecmp.cmp(gmic_py_output_file, gmic_cli_output_file, shallow=False)
+    assert filecmp.cmp(gmic_py_output_file, gmic_cli_output_file, shallow=False) or get_images_difference_percent(gmic_py_output_file, gmic_cli_output_file) <= GMIC_IMAGES_DIFFERENCE_PIL_MAX_PERCENT
