@@ -43,3 +43,9 @@ jobs:
 
         echo "Running gmic-py vs. gmic-cli non-regression pytests" 
         bash build_tools.bash 31_test_compiled_so_filters_io
+
+    - name: Upload images directory 
+      uses: actions/upload-artifact@v1
+      with:
+        name: test-images 
+        path: test-images
