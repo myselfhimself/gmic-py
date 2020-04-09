@@ -111,7 +111,7 @@ function 3_test_compiled_so () {
     if ! [ -z "$1" ]; then
         PYTEST_EXPRESSION_PARAM="-k $1"
     fi
-    $PIP3 uninstall gmic -y; cd ./build/lib*$PYTHON_VERSION*/ ; LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH ; $PIP3 install -r ../../dev-requirements.txt ; pwd; ls; $PYTHON3 -m pytest ../../tests/ $PYTEST_EXPRESSION_PARAM -vvv -rxXs -n 3 || { echo "Fatal error while running pytests" ; exit 1 ; } ; cd ../..
+    $PIP3 uninstall gmic -y; cd ./build/lib*$PYTHON_VERSION*/ ; LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH ; $PIP3 install -r ../../dev-requirements.txt ; pwd; ls; $PYTHON3 -m pytest -n 4 ../../tests/ $PYTEST_EXPRESSION_PARAM -vvv -rxXs || { echo "Fatal error while running pytests" ; exit 1 ; } ; cd ../..
 }    
 
 function 31_test_compiled_so_filters_io () {
