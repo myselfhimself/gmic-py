@@ -16,6 +16,7 @@ GMIC_FILTERS_TEST_BLACKLIST = (
         )
 GMIC_FILTERS_USELESS_PARAMETERS = ('note', 'separator', 'link')
 GMIC_FILTERS_SUPPORTED_PARAMETERS = ('int', 'float', 'choice') # Filters with other types of parameters are unsupported for now
+GMIC_FILTERS_RANDOM_SEED = '781123'
 GMIC_IMAGES_DIRECTORY = 'test-images'
 
 gmic_instance = gmic.Gmic()
@@ -93,7 +94,7 @@ def test_gmic_filter_io(filter_id, filter_params):
     global gmic_instance
     print(filter_id)
     print(filter_params)
-    gmic_command = "sp leno {} {} output ".format(filter_id, ",".join(filter_params))
+    gmic_command = "sp leno -srand {} {} {} output ".format(GMIC_FILTERS_RANDOM_SEED, filter_id, ",".join(filter_params))
 
     if not os.path.exists(GMIC_IMAGES_DIRECTORY):
         os.mkdir(GMIC_IMAGES_DIRECTORY)
