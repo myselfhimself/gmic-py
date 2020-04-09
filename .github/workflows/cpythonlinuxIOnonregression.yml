@@ -1,0 +1,41 @@
+name: CPython gmic-py vs gmic-cli Linux I/O non-regression
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 4
+      matrix:
+        python-version: [3.7]
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v1
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Compile and run IO non regression tests on .so
+      working-directory: ./
+      env:
+        PYTHON3: python3
+        PIP3: pip3
+        GMIC_VERSION: 2.9.0
+      run: |
+        for apt_file in `grep -lr microsoft /etc/apt/sources.list.d/`; do sudo rm $apt_file; done
+
+        echo "Compiling gmic-py without any G'MIC debian packages influence for now"
+        sudo apt-get update; sudo apt-get install -y libfftw3-dev libcurl4-openssl-dev libpng-dev zlib1g-dev libomp5 libomp-dev
+        bash build_tools.bash 1_clean_and_regrab_gmic_src
+        bash build_tools.bash 2_compile
+
+        echo "Downloading gmic latest from a fresh debian PPA"
+        sudo add-apt-repository ppa:otto-kesselgulasch/gimp
+        sudo apt-get update
+        sudo apt-get install gmic
+        gmic --version
+
+        echo "Running gmic-py vs. gmic-cli non-regression pytests" 
+        bash build_tools.bash 31_test_compiled_so_filters_io
