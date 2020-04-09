@@ -1,6 +1,9 @@
 name: CPython gmic-py vs gmic-cli Linux I/O non-regression
 
-on: [push]
+on:
+  push:
+  schedule:
+    - cron: '0 0 * * *' # Every night, midnight
 
 jobs:
   build:
