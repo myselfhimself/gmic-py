@@ -94,7 +94,7 @@ def test_gmic_filter_io(filter_id, filter_params):
     global gmic_instance
     print(filter_id)
     print(filter_params)
-    gmic_command = "sp leno -srand {} {} {} output ".format(GMIC_FILTERS_RANDOM_SEED, filter_id, ",".join(filter_params))
+    gmic_command = "sp leno -srand {} {} {} output[0] ".format(GMIC_FILTERS_RANDOM_SEED, filter_id, ",".join(filter_params))
 
     if not os.path.exists(GMIC_IMAGES_DIRECTORY):
         os.mkdir(GMIC_IMAGES_DIRECTORY)

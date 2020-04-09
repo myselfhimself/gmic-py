@@ -124,7 +124,11 @@ function 3_test_compiled_so () {
 
 function 31_test_compiled_so_filters_io () {
     # Example usage: <this_script.bash> 3_test_compiled_so_filters_io
-    3_test_compiled_so test_gmic_filter_io
+    if ! [ -z "$1" ]; then
+        3_test_compiled_so "test_gmic_filter_io[$1]"
+    else
+        3_test_compiled_so test_gmic_filter_io
+    fi
 }    
 
 function 4_build_wheel () {
