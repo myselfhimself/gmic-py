@@ -2,3 +2,4 @@ pkgconfig
 numpy
 Pillow
 pytest
+pytest-xdist #allow parallelization
