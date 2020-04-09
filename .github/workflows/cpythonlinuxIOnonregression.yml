@@ -42,7 +42,7 @@ jobs:
         gmic --version
 
         echo "Running gmic-py vs. gmic-cli non-regression pytests" 
-        bash build_tools.bash 31_test_compiled_so_filters_io
+        bash build_tools.bash 31_test_compiled_so_filters_io demo_ra
 
     - name: Upload images directory 
       if: always()
