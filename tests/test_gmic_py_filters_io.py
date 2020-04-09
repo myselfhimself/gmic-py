@@ -16,6 +16,7 @@ GMIC_FILTERS_TEST_BLACKLIST = (
         )
 GMIC_FILTERS_USELESS_PARAMETERS = ('note', 'separator', 'link')
 GMIC_FILTERS_SUPPORTED_PARAMETERS = ('int', 'float', 'choice') # Filters with other types of parameters are unsupported for now
+GMIC_IMAGES_DIRECTORY = 'test-images'
 
 gmic_instance = gmic.Gmic()
 gmic_instance.run('update') # allows more filter to work
@@ -94,10 +95,13 @@ def test_gmic_filter_io(filter_id, filter_params):
     print(filter_params)
     gmic_command = "sp leno {} {} output ".format(filter_id, ",".join(filter_params))
 
-    gmic_py_output_file = os.path.realpath("out_gmicpy.png")
+    if not os.path.exists(GMIC_IMAGES_DIRECTORY):
+        os.mkdir(GMIC_IMAGES_DIRECTORY)
+
+    gmic_py_output_file = os.path.realpath(os.path.join(GMIC_IMAGES_DIRECTORY, "{}_gmicpy.png".format(filter_id)))
     gmic_py_command = gmic_command + gmic_py_output_file
 
-    gmic_cli_output_file = os.path.realpath("out_gmiccli.png")
+    gmic_cli_output_file = os.path.realpath(os.path.join(GMIC_IMAGES_DIRECTORY, "{}_gmiccli.png".format(filter_id)))
     gmic_cli_command = "gmic " + gmic_command + gmic_cli_output_file
 
     print(gmic_py_command)
@@ -108,11 +112,5 @@ def test_gmic_filter_io(filter_id, filter_params):
     
     # assert output files equality
     samefiles = filecmp.cmp(gmic_py_output_file, gmic_cli_output_file, shallow=False)
-
-    # clean generated files
-    if os.path.exists(gmic_py_output_file):
-      os.unlink(gmic_py_output_file)
-    if os.path.exists(gmic_cli_output_file):
-      os.unlink(gmic_cli_output_file)
 
     assert samefiles
