@@ -36,6 +36,7 @@ GMIC_IMAGES_DIRECTORY = 'test-images'
 
 gmic_instance = gmic.Gmic()
 gmic_instance.run('update') # allows more filter to work
+os.system("gmic update") # same
 
 
 def get_images_difference_percent(filename1, filename2):
