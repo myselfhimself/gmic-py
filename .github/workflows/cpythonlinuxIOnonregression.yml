@@ -35,7 +35,7 @@ jobs:
       id: cache-gmic-py
       uses: pat-s/always-upload-cache@v1.1.4
       with:
-        path: build/
+        path: build/lib.linux-x86_64-3.7/gmic.cpython-37m-x86_64-linux-gnu.so
         key: ${{ runner.os }}-gmic-py-${{ env.GMIC_VERSION }}-${{ hashFiles('**/gmicpy.cpp') }}-${{ hashFiles('**/gmicpy.h') }}-${{ hashFiles('**/setup.py') }}
     - name: Build gmic-cli if needed
       run: |
