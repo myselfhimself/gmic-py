@@ -44,7 +44,7 @@ jobs:
     - name: Build gmic-py if needed
       run: |
         sudo apt-get install -y libfftw3-dev libcurl4-openssl-dev libpng-dev zlib1g-dev libomp5 libomp-dev
-        bash build_tools.bash 1b_clean_and_regrab_gmic_src
+        bash build_tools.bash 1_clean_and_regrab_gmic_src
         bash build_tools.bash 2_compile
       if: steps.cache-gmic-py.outputs.cache-hit != 'true'
     - name: run IO non regression tests using compiled gmic-py and gmic-cli
