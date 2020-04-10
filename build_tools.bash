@@ -66,7 +66,7 @@ function 1_clean_and_regrab_gmic_src () {
     [ "$1" == "cli" ] && OPT_LIBS=" -O0 " make OPENCV_CFLAGS='' OPENCV_LIBS="" cli
     ls
     cd ../..
-    rm -f ${GMIC_ARCHIVE_GLOB}
+    # rm -f ${GMIC_ARCHIVE_GLOB}
     cd ..
     echo
     echo "src/ dir now contains fresh gmic source ($GMIC_VERSION):"
