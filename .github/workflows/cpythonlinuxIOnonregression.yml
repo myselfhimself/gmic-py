@@ -33,7 +33,6 @@ jobs:
         echo "Building gmic CLI executable $GMIC_VERSION from source"
         bash build_tools.bash 1b_clean_and_regrab_gmic_src_and_make_cli
         export PATH=$PATH:$(readlink -f src/gmic/src)
-        /home/jd/Productions/GMIC/gmic-py/src/gmic/src
         gmic --version
 
         echo "Compiling gmic-py $GMIC_VERSION"
