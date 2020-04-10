@@ -26,13 +26,14 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Cache compiled gmic-cli
       id: cache-gmic-cli
-      uses: actions/cache@v1
+      uses: pat-s/always-upload-cache@v1.1.4
+      # uses: actions/cache@v1
       with:
         path: gmic
         key: ${{ runner.os }}-gmic-cli-${{ env.GMIC_VERSION }}
     - name: Cache compiled gmic-py
       id: cache-gmic-py
-      uses: actions/cache@v1
+      uses: pat-s/always-upload-cache@v1.1.4
       with:
         path: build/
         key: ${{ runner.os }}-gmic-py-${{ env.GMIC_VERSION }}-${{ hashFiles('**/gmicpy.cpp') }}-${{ hashFiles('**/gmicpy.h') }}-${{ hashFiles('**/setup.py') }}
