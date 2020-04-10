@@ -131,7 +131,8 @@ function 31_test_compiled_so_filters_io () {
         PYTEST_NB_THREADS=
     else
         PYTEST_EXPRESSION_PARAM=
-        PYTEST_NB_THREADS="-n 4"
+        # PYTEST_NB_THREADS="-n 4"
+        PYTEST_NB_THREADS=
     fi
     find ~/.config/gmic
     $PIP3 uninstall gmic -y; cd ./build/lib*$PYTHON_VERSION*/ ; LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH ; $PIP3 install -r ../../dev-requirements.txt ; pwd; ls; $PYTHON3 -m pytest ../../tests/test_gmic_py_filters_io.py $PYTEST_EXPRESSION_PARAM $PYTEST_NB_THREADS -vvv -rxXs || { echo "Fatal error while running pytests" ; exit 1 ; } ; cd ../..
