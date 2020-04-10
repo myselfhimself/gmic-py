@@ -25,10 +25,11 @@ GMIC_IMAGES_DIFFERENCE_PIL_MAX_PERCENT = 8 # If images differ more than 8%, the 
 GMIC_FILTERS_URL_PATTERN = 'https://gmic.eu/filters{}.json'
 GMIC_FILTERS_FILENAME_PATTERN = 'filters{}.json'
 GMIC_FILTERS_TEST_BLACKLIST = (
-        'gui_download_all_data', #no image output
-        'fractalize', #too long
+        'gui_download_all_data', # no image output
+        'fractalize', # too long
         'fx_mask_color', # opens X11 display which is blocking
-        'jeje_turing_pattern' #too long
+        'jeje_turing_pattern', # too long
+        '_none_' # obvious
         )
 GMIC_FILTERS_USELESS_PARAMETERS = ('note', 'separator', 'link')
 """
