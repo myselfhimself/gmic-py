@@ -21,7 +21,7 @@ This could be coupled with non-regression I/O results (ie. archived sets of fixe
 to ensure result stability across versions. Not implementing this for now.
 """
 
-GMIC_IMAGES_DIFFERENCE_PIL_MAX_PERCENT = 2 # If images differ more than 2%, the test is deemed as failing 
+GMIC_IMAGES_DIFFERENCE_PIL_MAX_PERCENT = 8 # If images differ more than 8%, the test is deemed as failing 
 GMIC_FILTERS_URL_PATTERN = 'https://gmic.eu/filters{}.json'
 GMIC_FILTERS_FILENAME_PATTERN = 'filters{}.json'
 GMIC_FILTERS_TEST_BLACKLIST = (
