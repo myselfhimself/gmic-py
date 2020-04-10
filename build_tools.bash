@@ -3,7 +3,7 @@
 PYTHON3=${PYTHON3:-python3}
 PIP3=${PIP3:-pip3}
 PYTHON_VERSION=$($PYTHON3 --version | cut -d' ' -f2 | cut -d'.' -f1,2)
-GMIC_VERSION=${GMIC_VERSION:-2.8.4}
+GMIC_VERSION=${GMIC_VERSION:-2.9.0}
 
 function 00_all_steps () {
     1_clean_and_regrab_gmic_src && 2_compile && 3_test_compiled_so && 4_build_wheel && 5_test_wheel && 6_build_sdist && 7_test_sdist
@@ -59,7 +59,8 @@ function 1_clean_and_regrab_gmic_src () {
     cd src/gmic*/
     rm -rf $(ls | grep -v src)
     cd src
-    ls | grep -vE "gmic\.cpp|gmic\.h|gmic_stdlib\.h|CImg\.h" | xargs rm -rf
+    [ "$1" != "cli" ] && ls | grep -vE "gmic\.cpp|gmic\.h|gmic_stdlib\.h|CImg\.h" | xargs rm -rf
+    [ "$1" == "cli" ] && OPT_LIBS=" -O0 " make cli
     ls
     cd ../..
     rm -f ${GMIC_ARCHIVE_GLOB}
@@ -69,6 +70,10 @@ function 1_clean_and_regrab_gmic_src () {
     echo "src/ dir now contains fresh gmic source ($GMIC_VERSION):"
     find src/
     set +x
+}
+
+function 1b_clean_and_regrab_gmic_src_and_make_cli () {
+    1_clean_and_regrab_gmic_src cli
 }
 
 function 22_docker_run_all_steps () {

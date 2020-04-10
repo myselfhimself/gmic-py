@@ -29,16 +29,16 @@ jobs:
       run: |
         for apt_file in `grep -lr microsoft /etc/apt/sources.list.d/`; do sudo rm $apt_file; done
 
-        # Fresh PPA for obtaining gmic-cli later on
-        sudo add-apt-repository ppa:otto-kesselgulasch/gimp
-
-        echo "Compiling gmic-py without any G'MIC debian packages influence for now"
+        echo "Compiling gmic-py $GMIC_VERSION"
         sudo apt-get update; sudo apt-get install -y libfftw3-dev libcurl4-openssl-dev libpng-dev zlib1g-dev libomp5 libomp-dev
         bash build_tools.bash 1_clean_and_regrab_gmic_src
         bash build_tools.bash 2_compile
 
-        echo "Downloading gmic latest from a fresh debian PPA"
-        sudo apt-get install gmic
+        echo "Building gmic CLI executable $GMIC_VERSION from source"
+        bash 1b_clean_and_regrab_gmic_src_and_make_cli
+        sudo apt-get install readlink
+        export PATH=$PATH:$(readlink -f src/gmic/src)
+        /home/jd/Productions/GMIC/gmic-py/src/gmic/src
         gmic --version
 
         echo "Running gmic-py vs. gmic-cli non-regression pytests" 
