@@ -22,7 +22,7 @@ jobs:
       uses: actions/setup-python@v1
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Cache compiled gmic-cli ${{ jobs.build.env.GMIC_VERSION }}
+    - name: Cache compiled gmic-cli
       id: cache-gmic-cli
       uses: actions/cache@v1
       with:
