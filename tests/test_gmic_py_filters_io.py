@@ -31,7 +31,17 @@ GMIC_FILTERS_TEST_BLACKLIST = (
         'jeje_turing_pattern' #too long
         )
 GMIC_FILTERS_USELESS_PARAMETERS = ('note', 'separator', 'link')
-GMIC_FILTERS_SUPPORTED_PARAMETERS = ('int', 'float', 'choice') # Filters with other types of parameters are unsupported for now
+"""
+Fields with non-empty "default" attribute:
+grep -E '"default": "[^"]+"' filters290.json | grep -Eo '"type": "[^"]+"' | sort | uniq
+"type": "bool"
+"type": "choice"
+"type": "color"
+"type": "float"
+"type": "int"
+"type": "text" <=== very variable uses, unsupported for now
+"""
+GMIC_FILTERS_SUPPORTED_PARAMETERS = ('int', 'float', 'choice', 'bool', 'color') # Filters with other types of parameters are unsupported for now
 GMIC_FILTERS_RANDOM_SEED = '781123'
 GMIC_IMAGES_DIRECTORY = 'test-images'
 
@@ -96,8 +106,10 @@ def get_generated_filter_params(filter_dict):
         if parameter_type not in GMIC_FILTERS_USELESS_PARAMETERS:
             if parameter_type not in GMIC_FILTERS_SUPPORTED_PARAMETERS:
                 raise NotImplementedError('Filter {}\'s {} parameter ({}) must be of supported type {} for now.'.format(filter_dict['command'], (parameter['name'] if 'name' in parameter else '<unnamed>'), parameter['type'], GMIC_FILTERS_SUPPORTED_PARAMETERS))
-            if 'default' in parameter: # parameter_type == 'int':
+            if 'default' in parameter:
                 generated_parameters_values.append(parameter['default']) # TODO use fuzzying there?
+            else:
+                raise NotImplementedError('Filter {}\'s {} parameter ({}) is one of supported type {} but has no "default" value.'.format(filter_dict['command'], (parameter['name'] if 'name' in parameter else '<unnamed>'), parameter['type'], GMIC_FILTERS_SUPPORTED_PARAMETERS))
 
     return generated_parameters_values
 
