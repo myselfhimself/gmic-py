@@ -63,7 +63,7 @@ function 1_clean_and_regrab_gmic_src () {
     rm -rf $(ls | grep -v src)
     cd src
     # [ "$1" != "cli" ] && ls | grep -vE "gmic\.cpp|gmic\.h|gmic_stdlib\.h|CImg\.h" | xargs rm -rf
-    [ "$1" == "cli" ] && OPT_LIBS=" -O0 " make cli
+    [ "$1" == "cli" ] && OPT_LIBS=" -O0 " make OPENCV_CFLAGS='' OPENCV_LIBS="" cli
     ls
     cd ../..
     rm -f ${GMIC_ARCHIVE_GLOB}
