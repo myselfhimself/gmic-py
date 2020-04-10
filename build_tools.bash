@@ -59,9 +59,10 @@ function 1_clean_and_regrab_gmic_src () {
     # Keep only gmic source's src directory
     mv src/gmic*/ src/gmic
     cd src/gmic
+
     rm -rf $(ls | grep -v src)
     cd src
-    [ "$1" != "cli" ] && ls | grep -vE "gmic\.cpp|gmic\.h|gmic_stdlib\.h|CImg\.h" | xargs rm -rf
+    # [ "$1" != "cli" ] && ls | grep -vE "gmic\.cpp|gmic\.h|gmic_stdlib\.h|CImg\.h" | xargs rm -rf
     [ "$1" == "cli" ] && OPT_LIBS=" -O0 " make cli
     ls
     cd ../..
