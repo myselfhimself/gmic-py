@@ -48,7 +48,7 @@ jobs:
       if: steps.cache-gmic-py.outputs.cache-hit != 'true'
     - name: run IO non regression tests using compiled gmic-py and gmic-cli
       working-directory: ./
-     run: |
+      run: |
         for apt_file in `grep -lr microsoft /etc/apt/sources.list.d/`; do sudo rm $apt_file; done
 
         export PATH=$PATH:$(readlink -f src/gmic/src)
