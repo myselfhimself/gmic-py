@@ -58,7 +58,7 @@ function 1_clean_and_regrab_gmic_src () {
     tar xzvf src/${GMIC_ARCHIVE_GLOB} -C src/ || { echo "Fatal gmic src archive extracting error" ; exit 1; }
     # Keep only gmic source's src directory
     mv src/gmic*/ src/gmic
-    cd src/gmic*/
+    cd src/gmic
     rm -rf $(ls | grep -v src)
     cd src
     [ "$1" != "cli" ] && ls | grep -vE "gmic\.cpp|gmic\.h|gmic_stdlib\.h|CImg\.h" | xargs rm -rf
@@ -66,7 +66,6 @@ function 1_clean_and_regrab_gmic_src () {
     ls
     cd ../..
     rm -f ${GMIC_ARCHIVE_GLOB}
-    mv gmic-${GMIC_VERSION}*/ gmic
     cd ..
     echo
     echo "src/ dir now contains fresh gmic source ($GMIC_VERSION):"
