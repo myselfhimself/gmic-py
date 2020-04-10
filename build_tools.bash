@@ -68,7 +68,6 @@ function 1_clean_and_regrab_gmic_src () {
     ls
     cd ../..
     # rm -f ${GMIC_ARCHIVE_GLOB}
-    cd ..
     echo
     echo "src/ dir now contains fresh gmic source ($GMIC_VERSION):"
     find src/

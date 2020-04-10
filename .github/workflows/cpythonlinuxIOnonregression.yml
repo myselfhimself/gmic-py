@@ -36,8 +36,6 @@ jobs:
         gmic --version
 
         echo "Compiling gmic-py $GMIC_VERSION"
-
-        bash build_tools.bash 1_clean_and_regrab_gmic_src
         bash build_tools.bash 2_compile
 
         echo "Running gmic-py vs. gmic-cli non-regression pytests" 
