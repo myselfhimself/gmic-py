@@ -1,3 +1,4 @@
+# Important: this test suite requires that you have gmic cli executable of the same version as gmic-py in your PATH!
 import os
 import filecmp
 import urllib.request
