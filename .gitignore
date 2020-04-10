@@ -1,3 +1,6 @@
 .idea/
 src/
 out.json
+build/
+dist/
+gmic
