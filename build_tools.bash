@@ -57,25 +57,26 @@ function 1_clean_and_regrab_gmic_src () {
         wget ${GMIC_URL} -P src/ --no-check-certificate || { echo "Fatal gmic src archive download error" ; exit 1; }
     fi
     tar xzvf src/${GMIC_ARCHIVE_GLOB} -C src/ || { echo "Fatal gmic src archive extracting error" ; exit 1; }
-    # Keep only gmic source's src directory
     mv src/gmic*/ src/gmic
-    cd src/gmic
+    # cd src/gmic
 
-    rm -rf $(ls | grep -v src)
-    cd src
-    # [ "$1" != "cli" ] && ls | grep -vE "gmic\.cpp|gmic\.h|gmic_stdlib\.h|CImg\.h" | xargs rm -rf
-    [ "$1" == "cli" ] && OPT_LIBS=" -O0 " make OPENCV_CFLAGS='' OPENCV_LIBS="" cli && mv gmic ../../.. #gmic executable will be in the project root
-    ls
-    cd ../../..
-    pwd
-    echo
+    # rm -rf $(ls | grep -v src)
+    # cd src
+    # #ls | grep -vE "gmic\.cpp|gmic\.h|gmic_stdlib\.h|CImg\.h" | xargs rm -rf
+    # ls
+    # cd ../../..
+    # pwd
+    # echo
     echo "src/ dir now contains fresh gmic source ($GMIC_VERSION):"
     find src/
     set +x
 }
 
 function 1b_clean_and_regrab_gmic_src_and_make_cli () {
-    1_clean_and_regrab_gmic_src cli
+    1_clean_and_regrab_gmic_src
+    cd src/gmic/src
+    OPT_LIBS=" -O0 " make OPENCV_CFLAGS='' OPENCV_LIBS="" cli && mv gmic ../../.. && echo "Compiled gmic cli executable now at: $(readlink -f gmic)"
+    cd ../../..
 }
 
 function 22_docker_run_all_steps () {
