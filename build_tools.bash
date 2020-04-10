@@ -131,6 +131,12 @@ function 3_test_compiled_so () {
 }    
 
 function 31_test_compiled_so_filters_io () {
+    if ! [ -f ./build/lib*$PYTHON_VERSION*/*.so ]; then
+	echo "Run 2_compile step first"; exit 1
+    fi
+    if ! [ -x "$(command -v gmic)" ]; then
+	echo "gmic CLI executable is not in PATH or current directory, compile and increase its visibility first"; exit 1
+    fi
     # Example usage: <this_script.bash> 3_test_compiled_so_filters_io
     if [ -d ./build/lib*$PYTHON_VERSION*/test-images ]; then
         rm -rf ./build/lib*$PYTHON_VERSION*/test-images
