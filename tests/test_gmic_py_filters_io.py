@@ -29,7 +29,12 @@ GMIC_FILTERS_TEST_BLACKLIST = (
         'fractalize', # too long
         'fx_mask_color', # opens X11 display which is blocking
         'jeje_turing_pattern', # too long
-        '_none_' # obvious
+        '_none_', # obvious
+        'fx_gmic_demos', # too interactive
+        'fx_emulate_film_instant_consumer', # unknown command
+        'fx_emulate_film_instant_pro', # unknown command
+        'fx_emulate_film_instant_consumer', # unknown command
+        'fx_colorize_comics', # unknown command
         )
 GMIC_FILTERS_USELESS_PARAMETERS = ('note', 'separator', 'link')
 """
@@ -42,7 +47,7 @@ grep -E '"default": "[^"]+"' filters290.json | grep -Eo '"type": "[^"]+"' | sort
 "type": "int"
 "type": "text" <=== very variable uses, unsupported for now
 """
-GMIC_FILTERS_SUPPORTED_PARAMETERS = ('int', 'float', 'choice', 'bool', 'color') # Filters with other types of parameters are unsupported for now
+GMIC_FILTERS_SUPPORTED_PARAMETERS = ('int', 'float', 'choice', 'bool', 'color', 'text') # Filters with other types of parameters are unsupported for now
 GMIC_FILTERS_RANDOM_SEED = '781123'
 GMIC_IMAGES_DIRECTORY = 'test-images'
 
