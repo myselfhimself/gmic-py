@@ -1,4 +1,5 @@
 import contextlib
+import inspect
 import os
 import pathlib
 import re
@@ -123,15 +124,15 @@ def test_run_gmic_instance_run_simple_3pixels_png_output(gmic_instance_run):
 def gmic_any_user_file(gmic_file_path=None):
     # DIY non-pytest fixture
     # If gmic_file_path is omitted, a temporary .gmic-suffixed file is created and yielded (use an with: statement)
+    import random
+    gmicpy_testing_command = 'gmicpy_command_' + str(random.randint(0, 999))
     new_gmic_command = \
-"""#@cli gmicpy_testing_command
-#@cli : Nothing interesting
-gmicpy_testing_command:
+"""{}:
 repeat $! split_opacity
 l[0] c 0,255 *[$>] -1 +[$>] 255 endl
 a c
 done
-"""
+""".format(gmicpy_testing_command)
     is_making_temp_file = gmic_file_path is None
     if is_making_temp_file:
         import tempfile
@@ -140,7 +141,7 @@ done
         gmic_file_handle.flush()
         gmic_file_path = gmic_file_handle.name
 
-        yield gmic_file_path
+        yield gmicpy_testing_command, gmic_file_path
 
         gmic_file_handle.close()
     else:
@@ -155,25 +156,29 @@ done
         new_gmic_command_file.write(new_gmic_command)
         new_gmic_command_file.close()
 
-        yield
+        yield gmicpy_testing_command
 
         os.unlink(gmic_file_path)
         if existed:
             os.rename(backup_path, gmic_file_path)
 
-
 @pytest.mark.parametrize(**gmic_instance_types)
-def test_gmic_user_file_autoload_and_use(gmic_instance_run, capfd):
+def test_gmic_user_file_autoload_and_use(gmic_instance_run, request, capfd):
     # Testing gmic user file auto-load for any type of G'MIC run technique
     # 1. Hack the file to auto-load, injecting a custom command into it
     gmic.run("echo_stdout $_path_user")
     gmic_home_user_file = capfd.readouterr().out.strip()
     assert gmic_home_user_file is not ""
 
-    with gmic_any_user_file(gmic_home_user_file):
-        print(gmic_home_user_file)
+    with gmic_any_user_file(gmic_home_user_file) as gmicpy_testing_command:
+        # If gmic_instance_run is the current fixture (ie. run() method of a same instance singleton)
+        # reinitialize it, it was created too early in the suite and is not fresh with autoloaded conf
+        if inspect.isbuiltin(gmic_instance_run) and gmic_instance_run is not gmic.run:
+            g = gmic.Gmic()
+            gmic_instance_run = g.run
+
         # 2. Check that our custom command was auto-loaded as expected
-        gmic_instance_run('sp leno gmicpy_testing_command')
+        gmic_instance_run('sp leno ' + gmicpy_testing_command)
 
 
 @pytest.mark.parametrize(**gmic_instance_types)
@@ -182,14 +187,15 @@ def test_gmic_user_file_explicit_load_and_use(gmic_instance_run, capfd):
     # So only the gmic.Gmic().run method will succeed
     must_fail = gmic_instance_run is gmic.Gmic or gmic_instance_run is gmic.run
 
-    with gmic_any_user_file() as custom_gmic_file:
+    with gmic_any_user_file() as (gmicpy_testing_command, custom_gmic_file):
         gmic_instance_run('m ' + custom_gmic_file)
 
+
         if must_fail:
-            with pytest.raises(Exception):
-                gmic_instance_run('sp leno gmicpy_testing_command')
+            with pytest.raises(Exception, match=r".*Unknown command or filename '{}'.*".format(gmicpy_testing_command)):
+                gmic_instance_run('sp leno ' + gmicpy_testing_command)
         else:
-                gmic_instance_run('sp leno gmicpy_testing_command')
+                gmic_instance_run('sp leno ' + gmicpy_testing_command)
 
 
 @pytest.mark.parametrize(**gmic_instance_types)
