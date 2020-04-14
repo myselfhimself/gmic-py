@@ -27,79 +27,74 @@ GMIC_FILTERS_URL_PATTERN = 'https://gmic.eu/filters{}.json'
 GMIC_FILTERS_FILENAME_PATTERN = 'filters{}.json'
 GMIC_FILTERS_TEST_BLACKLIST = (
         'gui_download_all_data', # no image output
-        'fractalize', # too long
+        #'fractalize', # too long
         'fx_mask_color', # opens X11 display which is blocking
-        'jeje_turing_pattern', # too long
+        #'jeje_turing_pattern', # too long
         '_none_', # obvious
         'fx_gmic_demos', # too interactive
-        'fx_emulate_film_instant_consumer', # unknown command
-        'fx_emulate_film_instant_pro', # unknown command
-        'fx_emulate_film_instant_consumer', # unknown command
-        'fx_colorize_comics', # unknown command
-        'fx_stylize', # buggy cli local subcommand error
+        #'fx_emulate_film_instant_consumer', # unknown command
+        #'fx_emulate_film_instant_pro', # unknown command
+        #'fx_emulate_film_instant_consumer', # unknown command
+        #'fx_colorize_comics', # unknown command
+        #'fx_stylize', # buggy cli local subcommand error
         'samj_Ecraser_Etirer_V2', # buggy cli vs. python 1-pixel width error
         'samj_Ecraser_Etirer', # buggy cli vs. python 1-pixel width error
-        'fx_montage', # custom layout text parameter has badly-formatted default value
+        #'fx_montage', # custom layout text parameter has badly-formatted default value
         'samj_Texture_Granuleuse', # 30% image difference between two runs
         'fx_gcd_etch', # 20% image difference between two runs
         'Couleurs_Metalliques_samj_en', # 30% image difference between two runs
-        'fx_custom_transform', # personal difficulty to build a correct command from specification
-        'fx_apply_RGBcurve', # personal difficulty to understand error
-        'fx_apply_RGBcurve1', # personal difficulty to understand error
+        #'fx_custom_transform', # personal difficulty to build a correct command from specification
+        #'fx_apply_RGBcurve', # personal difficulty to understand error
+        #'fx_apply_RGBcurve1', # personal difficulty to understand error
         'fx_texture_afre_broken', # unknown y50_afre subcommand
         'fx_shapeism', # 19% image difference
         'Couleurs_Metalliques', # 32% image difference
-        'fx_gb_mp', # strange syntax error
-        'fx_gb_mcfx', # strange syntax error
-        'fx_gb_ub', # strange syntax error
-        'gtutor_blur_img', # local subcommand range error
-        'fx_apply_RGBcurve0', # strange syntax error
-        'exfusion', # strange syntax error
-        'exfusion3', # strange syntax error
-        'fx_watermark_fourier', # strangely set argument $2
-        'luminance_nr', # strange parameters error
-        'fx_gcd_crmt_tile', # arguments error
-        'fx_custom_deformation', # arguments error
-        'fx_watermark_visible', # arguments error
+        #'fx_gb_mp', # strange syntax error
+        #'fx_gb_mcfx', # strange syntax error
+        #'fx_gb_ub', # strange syntax error
+        #'gtutor_blur_img', # local subcommand range error
+        #'fx_apply_RGBcurve0', # strange syntax error
+        #'exfusion', # strange syntax error
+        #'exfusion3', # strange syntax error
+        #'fx_watermark_fourier', # strangely set argument $2
+        #'luminance_nr', # strange parameters error
+        #'fx_gcd_crmt_tile', # arguments error
+        #'fx_custom_deformation', # arguments error
+        #'fx_watermark_visible', # arguments error
         'gcd_wiremap', # 39% image difference
-        'jeje_deconvolve', # arguments error
+        #'jeje_deconvolve', # arguments error
         'jpr_line_edges', # 24% image difference
-        'fx_blend_fade', # unknown subcommand trigonometry error
-        'fx_blend', # unknown subcommand trigonometry error
-        'fx_OldSquiggly', # unknown subcommand error
-        'nr3', # arguments error
+        #'fx_blend_fade', # unknown subcommand trigonometry error
+        #'fx_blend', # unknown subcommand trigonometry error
+        #'fx_OldSquiggly', # unknown subcommand error
+        #'nr3', # arguments error
         'samj_en_Courtepointe', # needs display
         'samj_Courtepointe', # needs display
-        'iain_savenoiseprint', # strange syntax error
-        'spot_mask', # strange subcommand syntax error
+        #'iain_savenoiseprint', # strange syntax error
+        #'spot_mask', # strange subcommand syntax error
         'fx_boxfitting', # 19% image difference
         'Denim_samj_en', # 29% image difference
         'Denim_samj', # 29% image difference
-        'fx_compose_graphixcolor', # subcommand syntax error
+        #'fx_compose_graphixcolor', # subcommand syntax error
         'jeje_freqy_pattern', # 40% image difference
         'fx_metalgrain', # 24% image difference
         'samj_Motifs_7200_VarianteC', # 27% image difference
         'samj_Soft_Random_Shades', # 14% image difference
         'fx_pack_sprites', # 29% image difference
         'fx_circle_art', # 27% image difference
-        'fx_scaledown3', # inner syntax error
-        'fx_quick_copyright', # arguments error
-        'fx_equation_parametric0', # CLI run fail
-        'fx_equation_plot', # CLI run fail
-        'fx_OOBS', # buffer selection error
-        'fx_text_pointcloud3d', # CLI run error
+        #'fx_scaledown3', # inner syntax error
+        #'fx_quick_copyright', # arguments error
+        #'fx_equation_plot', # CLI run fail
+        #'fx_OOBS', # buffer selection error
+        #'fx_text_pointcloud3d', # CLI run error
         'fx_tk_stereogram', # 10.9% image difference
-        'gimp_recolorize_20130115_modifie', # rv range error
+        #'gimp_recolorize_20130115_modifie', # rv range error
         'samj_test_A', # 27% image difference
-        'gui_rep_objvf', # variance error
-        'fx_fourier_picture_watermark', # buffer selection error
-        'fx_emulate_film_negative_color', # unknown command
-        'fx_inpaint_patch1', # argument error
-        'fx_cupid1', # argument error
-        'fx_heart1', # argument error
-        'fx_equation_parametric1', # CLI run error
-        'gui_rep_tfrac', # CLI run error
-        'fx_vibrato', # invalid selection error
+        #'gui_rep_objvf', # variance error
+        #'fx_fourier_picture_watermark', # buffer selection error
+        #'fx_emulate_film_negative_color', # unknown command
+        #'fx_inpaint_patch1', # argument error
+        #'fx_vibrato', # invalid selection error
         )
 GMIC_FILTERS_USELESS_PARAMETERS = ('note', 'separator', 'link')
 """
@@ -113,6 +108,7 @@ grep -E '"default": "[^"]+"' filters290.json | grep -Eo '"type": "[^"]+"' | sort
 "type": "text" <=== very variable uses, unsupported for now
 """
 GMIC_FILTERS_SUPPORTED_PARAMETERS = ('int', 'float', 'choice', 'bool', 'color', 'text') # Filters with other types of parameters are unsupported for now
+GMIC_FILTERS_ALLOWED_LANG = ('en',) # Skipping 'fr', 'ja' etc
 GMIC_FILTERS_RANDOM_SEED = '781123'
 GMIC_IMAGES_DIRECTORY = 'test-images'
 GMIC_AVAILABLE_INPUT_IMAGES = ["sp " + a for a in "apples | balloons | barbara | boats | bottles | butterfly | cameraman | car | cat | cliff | chick | colorful | david | dog | duck | eagle | elephant | earth | flower | fruits | gmicky | gmicky_mahvin | gmicky_wilber | greece | gummy | house | inside | landscape | leaf | lena | leno | lion | mandrill | monalisa | monkey | parrots | pencils | peppers | portrait0 | portrait1 | portrait2 | portrait3 | portrait4 | portrait5 | portrait6".split(" | ")]
@@ -167,8 +163,8 @@ def get_gmic_filters_json_str():
 
     return json_str
 
-def is_filter_testable_for_now(filter_dict):
-    return filter_dict['command'] not in GMIC_FILTERS_TEST_BLACKLIST and is_filter_non_pure_documentation(filter_dict)
+def is_filter_testable_for_now(filter_dict, already_parsed_filter_commands):
+    return filter_dict['lang'] in GMIC_FILTERS_ALLOWED_LANG and filter_dict['command'] not in already_parsed_filter_commands and filter_dict['command'] not in GMIC_FILTERS_TEST_BLACKLIST and is_filter_non_pure_documentation(filter_dict)
 
 def is_filter_non_pure_documentation(filter_dict):
     for parameter in filter_dict['parameters']:
@@ -203,7 +199,7 @@ def get_gmic_filters_inputs():
     filters_json_dict = json.loads(filters_json_str)
     for category in filters_json_dict['categories']:
         for filter_dict in category['filters']:
-            if is_filter_testable_for_now(filter_dict):
+            if is_filter_testable_for_now(filter_dict, ids):
                 filter_command = filter_dict['command']
                 try:
                     filter_test_params = get_generated_filter_params(filter_dict)
@@ -231,16 +227,17 @@ def test_gmic_filter_io(filter_inputs, filter_id, filter_params):
     print(filter_inputs)
     print(filter_id)
     print(filter_params)
-    gmic_command = "{} -srand {} {} {} output[0] ".format(" ".join(filter_inputs), GMIC_FILTERS_RANDOM_SEED, filter_id, ",".join(filter_params))
+    gmic_cli_subcommand = "{} -srand {} {} \"{}\" output[0] ".format(" ".join(filter_inputs), GMIC_FILTERS_RANDOM_SEED, filter_id, ",".join(filter_params))
+    gmic_py_subcommand = "{} -srand {} {} {} output[0] ".format(" ".join(filter_inputs), GMIC_FILTERS_RANDOM_SEED, filter_id, ",".join(filter_params))
 
     if not os.path.exists(GMIC_IMAGES_DIRECTORY):
         os.mkdir(GMIC_IMAGES_DIRECTORY)
 
     gmic_py_output_file = os.path.realpath(os.path.join(GMIC_IMAGES_DIRECTORY, "{}_gmicpy.png".format(filter_id)))
-    gmic_py_command = gmic_command + gmic_py_output_file
+    gmic_py_command = gmic_py_subcommand + gmic_py_output_file
 
     gmic_cli_output_file = os.path.realpath(os.path.join(GMIC_IMAGES_DIRECTORY, "{}_gmiccli.png".format(filter_id)))
-    gmic_cli_command = "gmic " + gmic_command + gmic_cli_output_file
+    gmic_cli_command = "gmic {} \"{}\"".format(gmic_cli_subcommand, gmic_cli_output_file)
 
     print(gmic_py_command)
     gmic_instance.run(gmic_py_command)
