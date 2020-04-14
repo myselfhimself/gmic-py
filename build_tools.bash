@@ -142,7 +142,7 @@ function 31_test_compiled_so_filters_io () {
         rm -rf ./build/lib*$PYTHON_VERSION*/test-images
     fi
     if ! [ -z "$1" ]; then
-        PYTEST_EXPRESSION_PARAM="-k test_gmic_filter_io[$1]"
+        PYTEST_EXPRESSION_PARAM="-k $1"
         PYTEST_NB_THREADS=
     else
         PYTEST_EXPRESSION_PARAM=
