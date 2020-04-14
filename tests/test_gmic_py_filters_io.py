@@ -115,7 +115,8 @@ GMIC_AVAILABLE_INPUT_IMAGES = ["sp " + a for a in "apples | balloons | barbara |
 GMIC_FILTERS_WITH_SPECIAL_INPUTS = {
         'afre_halfhalf': {'input_images_count': 2},
         'rep_z_render': {'input_images_count': 3},
-        'gui_rep_regm': {'input_images_count': 2}
+        'gui_rep_regm': {'input_images_count': 2},
+        'fx_stylize': {'input_images_count': 2}
         }
 gmic_instance = gmic.Gmic()
 gmic_instance.run('update') # allows more filter to work
@@ -129,14 +130,14 @@ def get_images_difference_percent(filename1, filename2):
     i2 = PIL.Image.open(filename2)
     assert i1.mode == i2.mode, "Different kinds of images."
     assert i1.size == i2.size, "Different sizes."
-    
+
     pairs = zip(i1.getdata(), i2.getdata())
     if len(i1.getbands()) == 1:
         # for gray-scale jpegs
         dif = sum(abs(p1-p2) for p1,p2 in pairs)
     else:
         dif = sum(abs(c1-c2) for p1,p2 in pairs for c1,c2 in zip(p1,p2))
-    
+
     ncomponents = i1.size[0] * i1.size[1] * 3
 
     return (dif / 255.0 * 100.0) / ncomponents
@@ -216,7 +217,7 @@ def get_gmic_filters_inputs():
                 continue
 
     # TODO use an intermediated ordered dict for easy debugging, before generating a list
-    # Referring to function parameters of parametrize here: https://docs.pytest.org/en/latest/reference.html#pytest-mark-parametrize 
+    # Referring to function parameters of parametrize here: https://docs.pytest.org/en/latest/reference.html#pytest-mark-parametrize
     #return {'argnames': ['filter_id', 'filter_params'], 'argvalues': [('fx_painting', ['3', '3', '3', '200', '0'])], 'ids': ['fx_painting']}
     return {'argnames': ['filter_inputs', 'filter_id', 'filter_params'], 'argvalues': argvalues, 'ids': ids}
 
@@ -244,6 +245,6 @@ def test_gmic_filter_io(filter_inputs, filter_id, filter_params):
 
     print(gmic_cli_command)
     os.system(gmic_cli_command)
-    
+
     # assert output files equality
     assert filecmp.cmp(gmic_py_output_file, gmic_cli_output_file, shallow=False) or get_images_difference_percent(gmic_py_output_file, gmic_cli_output_file) <= GMIC_IMAGES_DIFFERENCE_PIL_MAX_PERCENT
