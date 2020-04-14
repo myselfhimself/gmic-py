@@ -1,5 +1,8 @@
-import re
+import contextlib
+import os
 import pathlib
+import re
+
 
 import pytest
 import gmic
@@ -74,17 +77,17 @@ def test_run_gmic_instance_run_ppm_vs_pure_python_ppm_equality(gmic_instance_run
     ppm_filename_gmic = 'blue_red_example_gmic.ppm'
     imgs = []
 
-    
+
     # Pure Python ppm generation grabbed and patched from https://solarianprogrammer.com/2017/10/25/ppm-image-python-3/
     # PPM header
     width = 256
     height = 128
     maxval = 255
     ppm_header = 'P6\n{} {}\n{}\n'.format(width, height, maxval)
-    
+
     # PPM image data (filled with blue)
     image = array.array('B', [0, 0, 255] * width * height)
-    
+
     # Fill with red the rectangle with origin at (10, 10) and width x height = 50 x 80 pixels
     for y in range(10, 90):
     	for x in range(10, 60):
@@ -92,7 +95,7 @@ def test_run_gmic_instance_run_ppm_vs_pure_python_ppm_equality(gmic_instance_run
     		image[index] = 255           # red channel
     		image[index + 1] = 0         # green channel
     		image[index + 2] = 0         # blue channel
-    
+
     # Save the PPM image as a binary file
     with open(ppm_filename_pure_python, 'wb') as f:
     	f.write(bytearray(ppm_header, 'ascii'))
@@ -115,6 +118,79 @@ def test_run_gmic_instance_run_simple_3pixels_png_output(gmic_instance_run):
     png_filename = "a.png"
     gmic_instance_run('input "(0,128,255)" output ' + png_filename)
     assert_non_empty_file_exists(png_filename).unlink()
+
+@contextlib.contextmanager
+def gmic_any_user_file(gmic_file_path=None):
+    # DIY non-pytest fixture
+    # If gmic_file_path is omitted, a temporary .gmic-suffixed file is created and yielded (use an with: statement)
+    new_gmic_command = \
+"""#@cli gmicpy_testing_command
+#@cli : Nothing interesting
+gmicpy_testing_command:
+repeat $! split_opacity
+l[0] c 0,255 *[$>] -1 +[$>] 255 endl
+a c
+done
+"""
+    is_making_temp_file = gmic_file_path is None
+    if is_making_temp_file:
+        import tempfile
+        gmic_file_handle = tempfile.NamedTemporaryFile(suffix=".gmic", mode="w+", delete=False)
+        gmic_file_handle.write(new_gmic_command)
+        gmic_file_handle.flush()
+        gmic_file_path = gmic_file_handle.name
+
+        yield gmic_file_path
+
+        gmic_file_handle.close()
+    else:
+        backup_path = gmic_file_path + "_backup"
+
+        existed = os.path.exists(gmic_file_path)
+
+        if existed:
+            os.rename(gmic_file_path, backup_path)
+            assert os.path.exists(backup_path)
+        new_gmic_command_file = open(gmic_file_path, "w")
+        new_gmic_command_file.write(new_gmic_command)
+        new_gmic_command_file.close()
+
+        yield
+
+        os.unlink(gmic_file_path)
+        if existed:
+            os.rename(backup_path, gmic_file_path)
+
+
+@pytest.mark.parametrize(**gmic_instance_types)
+def test_gmic_user_file_autoload_and_use(gmic_instance_run, capfd):
+    # Testing gmic user file auto-load for any type of G'MIC run technique
+    # 1. Hack the file to auto-load, injecting a custom command into it
+    gmic.run("echo_stdout $_path_user")
+    gmic_home_user_file = capfd.readouterr().out.strip()
+    assert gmic_home_user_file is not ""
+
+    with gmic_any_user_file(gmic_home_user_file):
+        print(gmic_home_user_file)
+        # 2. Check that our custom command was auto-loaded as expected
+        gmic_instance_run('sp leno gmicpy_testing_command')
+
+
+@pytest.mark.parametrize(**gmic_instance_types)
+def test_gmic_user_file_explicit_load_and_use(gmic_instance_run, capfd):
+    # Running more than one gmic instance should fail this test, because we need loaded gmic files to persist across runs
+    # So only the gmic.Gmic().run method will succeed
+    must_fail = gmic_instance_run is gmic.Gmic or gmic_instance_run is gmic.run
+
+    with gmic_any_user_file() as custom_gmic_file:
+        gmic_instance_run('m ' + custom_gmic_file)
+
+        if must_fail:
+            with pytest.raises(Exception):
+                gmic_instance_run('sp leno gmicpy_testing_command')
+        else:
+                gmic_instance_run('sp leno gmicpy_testing_command')
+
 
 @pytest.mark.parametrize(**gmic_instance_types)
 def test_gmic_filters_data_json_validation_and_gmicimage__data_str_attribute(gmic_instance_run):
@@ -799,7 +875,7 @@ def test_numpy_ndarray_RGB_2D_image_integrity_through_numpyPIL_or_gmic_with_gmic
 
     # 1. Generate lena bitmap, save it to disk
     gmic_instance_run("sp lena -output " + im1_name)
-    
+
     # 2. Load disk lena through PIL/numpy, make it a GmicImage
     image_from_numpy = numpy.array(PIL.Image.open(im1_name))
     assert type(image_from_numpy) == numpy.ndarray
@@ -882,5 +958,4 @@ def test_gmic_module_run_vs_single_instance_run_benchmark():
 
 # Useful for some IDEs with debugging support
 if __name__ == "__main__":
-    import os
     pytest.main([os.path.abspath(os.path.dirname(__file__))])

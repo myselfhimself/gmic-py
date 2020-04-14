@@ -320,6 +320,7 @@ static PyObject* run_impl(PyObject* self, PyObject* args, PyObject* kwargs)
   Py_RETURN_NONE;
 }
 
+/** Instancing of any c++ gmic::gmic G'MIC language interpreter object (Python: gmic.Gmic) **/
 static int PyGmic_init(PyGmic *self, PyObject *args, PyObject *kwargs)
 {
     int result = 0;
@@ -329,6 +330,12 @@ static int PyGmic_init(PyGmic *self, PyObject *args, PyObject *kwargs)
     if (!gmic::init_rc()) {
       PyErr_Format(PyExc_TypeError, "Unable to create G'MIC resources folder.");
     }
+
+    // Load general and user scripts if they exist
+    // Since this project is a library the G'MIC "update" command that runs an internet download, is never triggered
+    // the user should run it him/herself.
+    self->_gmic->run("m $_path_rc/update$_version.gmic");
+    self->_gmic->run("m $_path_user");
 
     // If parameters are provided, pipe them to our run() method, and do only exceptions raising without returning anything if things go well
     if(args != Py_None && ((args && (int)PyTuple_Size(args) > 0) || (kwargs && (int)PyDict_Size(kwargs) > 0))) {
