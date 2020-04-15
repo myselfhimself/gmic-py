@@ -244,7 +244,7 @@ def test_gmic_filter_io(filter_inputs, filter_id, filter_params):
     # Escape parameters before piping them to gmic-py and gmic-cli
     filter_params_cli = copy.copy(filter_params)
     for pos, param in enumerate(filter_params):
-        if type(param) is str and not isint(param) and not isfloat(param) and not param.endswith(GMIC_OUTPUT_FILE_EXTENSION):
+        if type(param) is str and not all(isint(param_subelement) or isfloat(param_subelement) for param_subelement in param.split(',')) and not isint(param) and not isfloat(param) and not param.endswith(GMIC_OUTPUT_FILE_EXTENSION):
             filter_params[pos] = '"{}"'.format(param.replace('"','\\"'))
             # One of the worst CLI expression that works thanks to escaping similar to the one below:
             # gmic sp parrots -srand 781123 fx_watermark_fourier \"\(a\) b\'o\\\"nsoir\",53 output[0]  "/home/jd/Productions/GMIC/gmic-py/build/lib.linux-x86_64-3.7/test-images/fx_watermark_fourier_gmiccli.png"
