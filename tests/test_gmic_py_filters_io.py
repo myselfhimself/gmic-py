@@ -1,9 +1,10 @@
 # Important: this test suite requires that you have gmic cli executable of the same version as gmic-py in your PATH!
-import os
+import copy
 import filecmp
-import urllib.request
 import json
 import random
+import os
+import urllib.request
 
 import pytest
 
@@ -23,78 +24,72 @@ to ensure result stability across versions. Not implementing this for now.
 """
 
 GMIC_IMAGES_DIFFERENCE_PIL_MAX_PERCENT = 10 # If images differ more than 8%, the test is deemed as failing
+GMIC_OUTPUT_FILE_EXTENSION = '.png'
 GMIC_FILTERS_URL_PATTERN = 'https://gmic.eu/filters{}.json'
 GMIC_FILTERS_FILENAME_PATTERN = 'filters{}.json'
 GMIC_FILTERS_TEST_BLACKLIST = (
         'gui_download_all_data', # no image output
-        #'fractalize', # too long
         'fx_mask_color', # opens X11 display which is blocking
-        #'jeje_turing_pattern', # too long
         '_none_', # obvious
         'fx_gmic_demos', # too interactive
-        #'fx_emulate_film_instant_consumer', # unknown command
-        #'fx_emulate_film_instant_pro', # unknown command
-        #'fx_emulate_film_instant_consumer', # unknown command
-        #'fx_colorize_comics', # unknown command
-        #'fx_stylize', # buggy cli local subcommand error
         'samj_Ecraser_Etirer_V2', # buggy cli vs. python 1-pixel width error
         'samj_Ecraser_Etirer', # buggy cli vs. python 1-pixel width error
-        #'fx_montage', # custom layout text parameter has badly-formatted default value
         'samj_Texture_Granuleuse', # 30% image difference between two runs
         'fx_gcd_etch', # 20% image difference between two runs
         'Couleurs_Metalliques_samj_en', # 30% image difference between two runs
-        #'fx_custom_transform', # personal difficulty to build a correct command from specification
-        #'fx_apply_RGBcurve', # personal difficulty to understand error
-        #'fx_apply_RGBcurve1', # personal difficulty to understand error
         'fx_texture_afre_broken', # unknown y50_afre subcommand
         'fx_shapeism', # 19% image difference
         'Couleurs_Metalliques', # 32% image difference
-        #'fx_gb_mp', # strange syntax error
-        #'fx_gb_mcfx', # strange syntax error
-        #'fx_gb_ub', # strange syntax error
-        #'gtutor_blur_img', # local subcommand range error
-        #'fx_apply_RGBcurve0', # strange syntax error
-        #'exfusion', # strange syntax error
-        #'exfusion3', # strange syntax error
-        #'fx_watermark_fourier', # strangely set argument $2
-        #'luminance_nr', # strange parameters error
-        #'fx_gcd_crmt_tile', # arguments error
-        #'fx_custom_deformation', # arguments error
-        #'fx_watermark_visible', # arguments error
+        'fx_gb_mcfx', # strange syntax error
+        'fx_gb_ub', # strange syntax error
+        'luminance_nr', # strange parameters error
         'gcd_wiremap', # 39% image difference
-        #'jeje_deconvolve', # arguments error
+        'jeje_deconvolve', # arguments error
         'jpr_line_edges', # 24% image difference
-        #'fx_blend_fade', # unknown subcommand trigonometry error
-        #'fx_blend', # unknown subcommand trigonometry error
-        #'fx_OldSquiggly', # unknown subcommand error
-        #'nr3', # arguments error
+        'nr3', # undefined fft argument 8
         'samj_en_Courtepointe', # needs display
         'samj_Courtepointe', # needs display
-        #'iain_savenoiseprint', # strange syntax error
-        #'spot_mask', # strange subcommand syntax error
+        'iain_savenoiseprint', # invalid selection
+        'spot_mask', # ian denoise subcommand syntax error
         'fx_boxfitting', # 19% image difference
         'Denim_samj_en', # 29% image difference
         'Denim_samj', # 29% image difference
-        #'fx_compose_graphixcolor', # subcommand syntax error
         'jeje_freqy_pattern', # 40% image difference
         'fx_metalgrain', # 24% image difference
         'samj_Motifs_7200_VarianteC', # 27% image difference
         'samj_Soft_Random_Shades', # 14% image difference
         'fx_pack_sprites', # 29% image difference
         'fx_circle_art', # 27% image difference
-        #'fx_scaledown3', # inner syntax error
-        #'fx_quick_copyright', # arguments error
-        #'fx_equation_plot', # CLI run fail
-        #'fx_OOBS', # buffer selection error
-        #'fx_text_pointcloud3d', # CLI run error
+        'fx_rorschach', # 27% image difference
+        'fx_quick_copyright', # arguments error
         'fx_tk_stereogram', # 10.9% image difference
-        #'gimp_recolorize_20130115_modifie', # rv range error
+        'gimp_recolorize_20130115_modifie', # rv range error
         'samj_test_A', # 27% image difference
-        #'gui_rep_objvf', # variance error
-        #'fx_fourier_picture_watermark', # buffer selection error
-        #'fx_emulate_film_negative_color', # unknown command
-        #'fx_inpaint_patch1', # argument error
-        #'fx_vibrato', # invalid selection error
+        'gui_rep_objvf', # variance error
+        'fx_fourier_picture_watermark', # buffer selection error
+        'fx_vibrato', # invalid selection error
+        'samj_reptile_en', # 16% image difference
+        'samj_reptile', # 42% image difference
+        'fx_charred_plastic', # 368% image difference
+        'samj_en_chalkitup', # 11% image difference
+        'fx_Squiggly', # 15% image difference
+        'samj_Pointillisme', # 34% image difference
+        'samj_Contours_Blancs', # 10.3% image difference
+        'fx_custom_deformation', # undefined argument 5
+        'fx_custom_transform', # undefined argument 3
+        'fx_apply_RGBcurve', # missing .dlm file
+        'gtutor_blur_img', # invalid selection
+        'exfusion', # invalid selection
+        'exfusion3', # invalid selection
+        'iain_fast_formula', # undefined variable endlocal
+        'fx_gb_mp', # unmatching brackets
+        'XY_hardsketchbw_samj', # parameter 13 error
+        'samj_Motifs_7200_VarianteB', # 11% image difference
+        'fx_compose_graphixcolor', # command keep invalid
+        'fx_scaledown3', # invalid argument
+        'fx_OOBS', # invalid selection
+        'red_eye', # 59% image difference
+        'samj_test_Dither_Color', # 16% image difference
         )
 GMIC_FILTERS_USELESS_PARAMETERS = ('note', 'separator', 'link')
 """
@@ -105,7 +100,7 @@ grep -E '"default": "[^"]+"' filters290.json | grep -Eo '"type": "[^"]+"' | sort
 "type": "color"
 "type": "float"
 "type": "int"
-"type": "text" <=== very variable uses, unsupported for now
+"type": "text"
 """
 GMIC_FILTERS_SUPPORTED_PARAMETERS = ('int', 'float', 'choice', 'bool', 'color', 'text') # Filters with other types of parameters are unsupported for now
 GMIC_FILTERS_ALLOWED_LANG = ('en',) # Skipping 'fr', 'ja' etc
@@ -221,6 +216,23 @@ def get_gmic_filters_inputs():
     #return {'argnames': ['filter_id', 'filter_params'], 'argvalues': [('fx_painting', ['3', '3', '3', '200', '0'])], 'ids': ['fx_painting']}
     return {'argnames': ['filter_inputs', 'filter_id', 'filter_params'], 'argvalues': argvalues, 'ids': ids}
 
+# from https://stackoverflow.com/a/15357477/420684
+def isfloat(x):
+    try:
+        a = float(x)
+    except ValueError:
+        return False
+    else:
+        return True
+
+def isint(x):
+    try:
+        a = float(x)
+        b = int(a)
+    except ValueError:
+        return False
+    else:
+        return a == b
 
 @pytest.mark.parametrize(**get_gmic_filters_inputs())
 def test_gmic_filter_io(filter_inputs, filter_id, filter_params):
@@ -228,16 +240,25 @@ def test_gmic_filter_io(filter_inputs, filter_id, filter_params):
     print(filter_inputs)
     print(filter_id)
     print(filter_params)
-    gmic_cli_subcommand = "{} -srand {} {} \"{}\" output[0] ".format(" ".join(filter_inputs), GMIC_FILTERS_RANDOM_SEED, filter_id, ",".join(filter_params))
+
+    # Escape parameters before piping them to gmic-py and gmic-cli
+    filter_params_cli = copy.copy(filter_params)
+    for pos, param in enumerate(filter_params):
+        if type(param) is str and not isint(param) and not isfloat(param) and not param.endswith(GMIC_OUTPUT_FILE_EXTENSION):
+            filter_params[pos] = '"{}"'.format(param.replace('"','\\"'))
+            # One of the worst CLI expression that works thanks to escaping similar to the one below:
+            # gmic sp parrots -srand 781123 fx_watermark_fourier \"\(a\) b\'o\\\"nsoir\",53 output[0]  "/home/jd/Productions/GMIC/gmic-py/build/lib.linux-x86_64-3.7/test-images/fx_watermark_fourier_gmiccli.png"
+            filter_params_cli[pos] = '\\"{}\\"'.format(param.replace('(', '\\(').replace(')', '\\)').replace("'", "\\'").replace('"','\\\\\\"'))
+    gmic_cli_subcommand = "{} -srand {} {} {} output[0] ".format(" ".join(filter_inputs), GMIC_FILTERS_RANDOM_SEED, filter_id, ",".join(filter_params_cli))
     gmic_py_subcommand = "{} -srand {} {} {} output[0] ".format(" ".join(filter_inputs), GMIC_FILTERS_RANDOM_SEED, filter_id, ",".join(filter_params))
 
     if not os.path.exists(GMIC_IMAGES_DIRECTORY):
         os.mkdir(GMIC_IMAGES_DIRECTORY)
 
-    gmic_py_output_file = os.path.realpath(os.path.join(GMIC_IMAGES_DIRECTORY, "{}_gmicpy.png".format(filter_id)))
-    gmic_py_command = gmic_py_subcommand + gmic_py_output_file
+    gmic_py_output_file = os.path.realpath(os.path.join(GMIC_IMAGES_DIRECTORY, "{}_gmicpy{}".format(filter_id, GMIC_OUTPUT_FILE_EXTENSION)))
+    gmic_py_command = "{} \"{}\"".format(gmic_py_subcommand, gmic_py_output_file)
 
-    gmic_cli_output_file = os.path.realpath(os.path.join(GMIC_IMAGES_DIRECTORY, "{}_gmiccli.png".format(filter_id)))
+    gmic_cli_output_file = os.path.realpath(os.path.join(GMIC_IMAGES_DIRECTORY, "{}_gmiccli{}".format(filter_id, GMIC_OUTPUT_FILE_EXTENSION)))
     gmic_cli_command = "gmic {} \"{}\"".format(gmic_cli_subcommand, gmic_cli_output_file)
 
     print(gmic_py_command)
