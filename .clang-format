@@ -1,0 +1,19 @@
+# A clang-format style that approximates Python's PEP 7
+# Useful for IDE integration
+# Mash-up between Pygame and CloseIO project's config
+BasedOnStyle: Google
+AllowShortLoopsOnASingleLine: false
+AlwaysBreakAfterReturnType: All
+AllowShortIfStatementsOnASingleLine: false
+AlignAfterOpenBracket: Align
+BreakBeforeBraces: Stroustrup
+ColumnLimit: 79
+DerivePointerAlignment: false
+IndentWidth: 4
+Language: Cpp
+PointerAlignment: Right
+ReflowComments: true
+SpaceBeforeParens: ControlStatements
+SpacesInParentheses: false
+TabWidth: 4
+UseTab: Never

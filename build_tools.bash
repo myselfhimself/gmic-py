@@ -86,9 +86,25 @@ function 22_docker_run_all_steps () {
 
 function 2_compile () {
     set -x
+
     $PIP3 install -r dev-requirements.txt || { echo "Fatal pip install of dev-requirements.txt error" ; exit 1; }
     $PYTHON3 setup.py build 2>&1 || { echo "Fatal setup.py build error" ; exit 1; }
     set +x
+}
+
+function 21_check_c_style () {
+    [ -x "$(command -v clang-format)" ] || { echo "Install clang-format for formatting check" ; exit 1; }
+    clang-format gmicpy.cpp > gmicpy.cpp_formatted
+    clang-format gmicpy.h > gmicpy.h_formatted
+    diff gmicpy.cpp gmicpy.cpp_formatted
+    diff gmicpy.h gmicpy.h_formatted
+    rm gmicpy.cpp_formatted gmicpy.h_formatted
+}
+
+function 22_reformat_c_style () {
+    [ -x "$(command -v clang-format)" ] || { echo "Install clang-format for formatting check" ; exit 1; }
+    clang-format -i gmicpy.cpp
+    clang-format -i gmicpy.h
 }
 
 function 33_build_manylinux () {
