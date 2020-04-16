@@ -11,6 +11,8 @@ using namespace std;
 
 //------- G'MIC MAIN TYPES ----------//
 
+static PyObject *GmicException;
+
 static PyTypeObject PyGmicImageType = { PyVarObject_HEAD_INIT(NULL, 0)
                                     "gmic.GmicImage"   /* tp_name */
                                 };
@@ -310,11 +312,10 @@ static PyObject* run_impl(PyObject* self, PyObject* args, PyObject* kwargs)
     Py_XDECREF(input_gmic_image_names);
 
   } catch (gmic_exception& e) {
-    // TODO bind a new GmicException type?
-    PyErr_SetString(PyExc_Exception, e.what());
+    PyErr_SetString(GmicException, e.what());
     return NULL;
   } catch (std::exception& e) {
-    PyErr_SetString(PyExc_Exception, e.what());
+    PyErr_SetString(GmicException, e.what());
     return NULL;
   }
   Py_RETURN_NONE;
@@ -328,7 +329,7 @@ static int PyGmic_init(PyGmic *self, PyObject *args, PyObject *kwargs)
 
     // Init resources folder.
     if (!gmic::init_rc()) {
-      PyErr_Format(PyExc_TypeError, "Unable to create G'MIC resources folder.");
+      PyErr_Format(GmicException, "Unable to create G'MIC resources folder.");
     }
 
     // Load general and user scripts if they exist
@@ -919,6 +920,14 @@ PyGmicImage_richcompare(PyObject *self, PyObject *other, int op)
 PyMODINIT_FUNC PyInit_gmic() {
     PyObject* m;
 
+    // The GmicException inherits Python's builtin Exception.
+    // Used for non-precise errors raised from this module.
+    GmicException = PyErr_NewExceptionWithDoc(
+        "gmic.GmicException", /* char *name */
+        "Base exception class of the Gmic module.", /* char *doc */
+        NULL, /* PyObject *base */
+        NULL /* PyObject *dict */);
+
     PyGmicImageType.tp_new = PyType_GenericNew;
     PyGmicImageType.tp_basicsize=sizeof(PyGmicImage);
     PyGmicImageType.tp_dealloc=(destructor) PyGmicImage_dealloc;
@@ -952,9 +961,11 @@ PyMODINIT_FUNC PyInit_gmic() {
 
     Py_INCREF(&PyGmicImageType);
     Py_INCREF(&PyGmicType);
+    Py_INCREF(GmicException);
     PyModule_AddObject(m, "GmicImage", (PyObject *)&PyGmicImageType); // Add GmicImage object to the module
     PyModule_AddObject(m, "Gmic", (PyObject *)&PyGmicType); // Add Gmic object to the module
-    PyModule_AddObject(m, "__version__", gmicpy_version_info);
+    PyModule_AddObject(m, "GmicException", (PyObject *)GmicException); // Add Gmic object to the module
+    PyModule_AddObject(m, "__version__", PyUnicode_Join(PyUnicode_FromString("."), PyUnicode_FromString(xstr(gmic_version))));
     PyModule_AddObject(m, "__build__", gmicpy_build_info);
     // For more debugging, the user can look at __spec__ automatically set by setup.py
 

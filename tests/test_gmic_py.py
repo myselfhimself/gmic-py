@@ -44,7 +44,7 @@ def test_gmic_module_has_version_and_build_attributes():
 
 @pytest.mark.parametrize(**gmic_instance_types)
 def test_catch_exceptions(gmic_instance_run):
-    with pytest.raises(Exception, match=r".*Unknown command or filename.*"):
+    with pytest.raises(gmic.GmicException, match=r".*Unknown command or filename.*"):
         gmic_instance_run('badly formatted command')
 
 @pytest.mark.parametrize(**gmic_instance_types)
@@ -192,7 +192,7 @@ def test_gmic_user_file_explicit_load_and_use(gmic_instance_run, capfd):
 
 
         if must_fail:
-            with pytest.raises(Exception, match=r".*Unknown command or filename '{}'.*".format(gmicpy_testing_command)):
+            with pytest.raises(gmic.GmicException, match=r".*Unknown command or filename '{}'.*".format(gmicpy_testing_command)):
                 gmic_instance_run('sp leno ' + gmicpy_testing_command)
         else:
                 gmic_instance_run('sp leno ' + gmicpy_testing_command)
@@ -558,7 +558,7 @@ def test_gmic_instance_run_parameters_fuzzying_basic(gmic_instance_run):
         gmic_instance_run(gmic.GmicImage(struct.pack('1f', 1.0)))
 
     # 1 GmicImage, no correct command
-    with pytest.raises(Exception, match=r".*Unknown command or filename 'hey'.*"):
+    with pytest.raises(gmic.GmicException, match=r".*Unknown command or filename 'hey'.*"):
         gmic_instance_run(images=gmic.GmicImage(struct.pack('1f', 1.0)), command="hey")
 
     # 1 non-GmicImage, 1 correct command
