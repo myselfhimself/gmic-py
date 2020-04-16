@@ -2,6 +2,8 @@ name: CPython gmic-py vs gmic-cli Linux I/O non-regression
 
 on:
   push:
+    paths:
+    - "**cpythonlinuxIOnonregression.yml" # current file
   schedule:
     - cron: '0 0 * * *' # Every night, midnight
 
@@ -26,14 +28,13 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Cache compiled gmic-cli
       id: cache-gmic-cli
-      uses: pat-s/always-upload-cache@v1.1.4
-      # uses: actions/cache@v1
+      uses: actions/cache@v1
       with:
         path: gmic
         key: ${{ runner.os }}-gmic-cli-${{ env.GMIC_VERSION }}
     - name: Cache compiled gmic-py
       id: cache-gmic-py
-      uses: pat-s/always-upload-cache@v1.1.4
+      uses: actions/cache@v1
       with:
         path: build/lib.linux-x86_64-3.7/gmic.cpython-37m-x86_64-linux-gnu.so
         key: ${{ runner.os }}-gmic-py-${{ env.GMIC_VERSION }}-${{ hashFiles('**/gmicpy.cpp') }}-${{ hashFiles('**/gmicpy.h') }}-${{ hashFiles('**/setup.py') }}
