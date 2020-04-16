@@ -205,8 +205,6 @@ def test_gmic_filters_data_json_validation_and_gmicimage__data_str_attribute(gmi
     assert int(gmic.__version__.replace(".", "")) >= 290
     json_result = []
     gmic_instance_run('update')
-    gmic_instance_run('m $_path_rc/update$_version.gmic')
-    gmic_instance_run('m $_path_user')
     gmic_instance_run('parse_gui blur,json', images=json_result)
 
     # Ensure we have properly type results
