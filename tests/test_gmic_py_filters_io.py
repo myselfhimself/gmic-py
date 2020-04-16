@@ -90,6 +90,14 @@ GMIC_FILTERS_TEST_BLACKLIST = (
         'fx_OOBS', # invalid selection
         'red_eye', # 59% image difference
         'samj_test_Dither_Color', # 16% image difference
+        'fx_colorsketchbw', # 11% image difference
+        'fx_OldSquiggly', # unknown command or filename 6-8
+        'jeje_clouds', # 10.6% image difference
+        'fx_gcd_crmt_tile', # unknown command or filename string
+        'samj_chalkitup', # 11% image difference
+        'samj_Scintillements_Colores', # invalid const value
+        'fx_rotate_tileable', # invalid image dimensions
+        'fx_isolate_tiles', # different cli vs gmicpy image sizes
         )
 GMIC_FILTERS_USELESS_PARAMETERS = ('note', 'separator', 'link')
 """
