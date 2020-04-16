@@ -41,9 +41,9 @@
 #if cimg_OS==0
 #define OS_type "unknown"
 #elif cimg_OS==1
-#define OS_type "windows"
-#elif cimg_OS==2
 #define OS_type "unix"
+#elif cimg_OS==2
+#define OS_type "windows"
 #endif
 
 #ifdef gmicpy_debug
