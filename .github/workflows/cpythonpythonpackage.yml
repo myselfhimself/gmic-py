@@ -30,8 +30,6 @@ jobs:
         sudo apt-get install clang-format
         # bash build_tools.bash 00_all_steps 
         bash build_tools.bash 21_check_c_style # should stop this script on style error
-        pip install yapf
-        yapf --style-help
         bash build_tools.bash 23_check_python_style # should stop this script on style error
 
         bash build_tools.bash 1_clean_and_regrab_gmic_src
