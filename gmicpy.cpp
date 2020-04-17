@@ -7,8 +7,6 @@
 
 #include "structmember.h"
 
-// TODO interlaced => interleaved (wording)
-
 using namespace std;
 
 //------- G'MIC MAIN TYPES ----------//
@@ -400,7 +398,6 @@ run_impl(PyObject *self, PyObject *args, PyObject *kwargs)
         Py_XDECREF(input_gmic_image_names);
     }
     catch (gmic_exception &e) {
-        // TODO bind a new GmicException type?
         PyErr_SetString(GmicException, e.what());
         return NULL;
     }
@@ -850,14 +847,14 @@ import_numpy_module()
  * This is a factory class method generating a G'MIC Image from a
  * numpy.ndarray.
  *
- *  GmicImage.from_numpy_array(obj: numpy.ndarray, deinterlace=True: bool) ->
+ *  GmicImage.from_numpy_array(obj: numpy.ndarray, deinterleave=True: bool) ->
  * GmicImage()
  */
 static PyObject *
 PyGmicImage_from_numpy_array(PyObject *cls, PyObject *args, PyObject *kwargs)
 {
-    int arg_deinterlace =
-        1;  // Will deinterlace the incoming numpy.ndarray by default
+    int arg_deinterleave =
+        1;  // Will deinterleave the incoming numpy.ndarray by default
     PyObject *arg_ndarray = NULL;
     PyObject *ndarray_type = NULL;
     PyObject *ndarray_dtype = NULL;
@@ -869,7 +866,7 @@ PyGmicImage_from_numpy_array(PyObject *cls, PyObject *args, PyObject *kwargs)
     PyObject *numpy_module = NULL;
     PyObject *new_gmic_image = NULL;
     PyObject *_data_bytesObj = NULL;
-    char const *keywords[] = {"numpy_array", "deinterlace", NULL};
+    char const *keywords[] = {"numpy_array", "deinterleave", NULL};
 
     numpy_module = PyImport_ImportModule("numpy");
     if (!numpy_module)
@@ -879,7 +876,7 @@ PyGmicImage_from_numpy_array(PyObject *cls, PyObject *args, PyObject *kwargs)
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!|p", (char **)keywords,
                                      &arg_ndarray, &ndarray_type,
-                                     &arg_deinterlace))
+                                     &arg_deinterleave))
         return NULL;
 
     // Get input ndarray.dtype and prevent non-integer/float/bool data types to
@@ -927,7 +924,7 @@ PyGmicImage_from_numpy_array(PyObject *cls, PyObject *args, PyObject *kwargs)
         NULL,  // tentative passing of a empty _data
         _width, _height, _depth, _spectrum);
 
-    // TODO if deinterlace needed, copy deinterlaced to a _data buffer with
+    // TODO if deinterleave needed, copy deinterleaved to a _data buffer with
     // type casting, else just copy with type casting
 
     _data_bytesObj = PyObject_CallMethod(arg_ndarray, "tobytes", NULL);
@@ -935,7 +932,7 @@ PyGmicImage_from_numpy_array(PyObject *cls, PyObject *args, PyObject *kwargs)
 
     // TODO adapt input buffer step to incoming type if
     // (strcmp(bytesObj_ndarray_dtype_name_str, "uint8") == 0) {
-    if (!arg_deinterlace) {
+    if (!arg_deinterleave) {
         for (unsigned int x = 0; x < _width; x++) {
             for (unsigned int y = 0; y < _height; y++) {
                 for (unsigned int z = 0; z < _depth; z++) {
@@ -982,14 +979,14 @@ PyGmicImage_from_numpy_array(PyObject *cls, PyObject *args, PyObject *kwargs)
  * GmicImage object method to_numpy_array().
  *
  * GmicImage().to_numpy_array(astype=numpy.float32: numpy.dtype,
- * interlace=True: bool) -> numpy.ndarray
+ * interleave=True: bool) -> numpy.ndarray
  *
  * TODO monitor this more closely, there seems to be a memory leak...
  */
 static PyObject *
 PyGmicImage_to_numpy_array(PyGmicImage *self, PyObject *args, PyObject *kwargs)
 {
-    char const *keywords[] = {"astype", "interlace", NULL};
+    char const *keywords[] = {"astype", "interleave", NULL};
     PyObject *numpy_module = NULL;
     PyObject *ndarray_type = NULL;
     PyObject *return_ndarray = NULL;
@@ -1002,10 +999,10 @@ PyGmicImage_to_numpy_array(PyGmicImage *self, PyObject *args, PyObject *kwargs)
     float *ptr;
     int buffer_size = 0;
     PyObject *arg_astype = NULL;
-    int arg_interlace = 1;  // Will interlace the final matrix by default
+    int arg_interleave = 1;  // Will interleave the final matrix by default
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|Op", (char **)keywords,
-                                     &arg_astype, &arg_interlace)) {
+                                     &arg_astype, &arg_interleave)) {
         return NULL;
     }
 
@@ -1040,7 +1037,7 @@ PyGmicImage_to_numpy_array(PyGmicImage *self, PyObject *args, PyObject *kwargs)
     ptr = numpy_buffer;
     // If interlacing is needed, copy the gmic_image buffer towards numpy by
     // interlacing RRR,GGG,BBB into RGB,RGB,RGB
-    if (arg_interlace) {
+    if (arg_interleave) {
         for (unsigned int z = 0; z < self->_gmic_image._depth; z++) {
             for (unsigned int y = 0; y < self->_gmic_image._height; y++) {
                 for (unsigned int x = 0; x < self->_gmic_image._width; x++) {
