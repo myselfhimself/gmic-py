@@ -6,7 +6,7 @@ PYTHON_VERSION=$($PYTHON3 --version | cut -d' ' -f2 | cut -d'.' -f1,2)
 GMIC_VERSION=${GMIC_VERSION:-2.9.0}
 
 function 00_all_steps () {
-    1_clean_and_regrab_gmic_src && 2_compile && 3_test_compiled_so && 4_build_wheel && 5_test_wheel && 6_build_sdist && 7_test_sdist
+    21_check_c_style && 23_check_python_style && 1_clean_and_regrab_gmic_src && 2_compile && 3_test_compiled_so && 4_build_wheel && 5_test_wheel && 6_build_sdist && 7_test_sdist
     echo "This is the final file tree:"
     find .
 }
