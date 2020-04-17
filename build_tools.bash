@@ -108,13 +108,13 @@ function 22_reformat_c_style () {
 }
 
 function 23_check_python_style () {
-    [ -x "$(command -v black)" ] || { echo "Install black for Python formatting check" ; exit 1; }
+    pip install black
     black --version
     black --check setup.py tests/ examples/
 }
 
 function 24_reformat_python_style () {
-    [ -x "$(command -v black)" ] || { echo "Install black for Python formatting check" ; exit 1; }
+    pip install black
     black setup.py tests/ examples/
 }
 
