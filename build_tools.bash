@@ -116,14 +116,14 @@ function 22_reformat_c_style () {
 }
 
 function 23_check_python_style () {
-    [ -x "$(command -v yapf)" ] || { echo "Install yapf for Python formatting check" ; exit 1; }
-    yapf --version
-    yapf --diff --recursive setup.py tests/ examples/
+    [ -x "$(command -v black)" ] || { echo "Install black for Python formatting check" ; exit 1; }
+    black --version
+    black --check setup.py tests/ examples/
 }
 
 function 24_reformat_python_style () {
-    [ -x "$(command -v yapf)" ] || { echo "Install yapf for Python formatting check" ; exit 1; }
-    yapf -i --recursive setup.py tests/ examples/
+    [ -x "$(command -v black)" ] || { echo "Install black for Python formatting check" ; exit 1; }
+    black setup.py tests/ examples/
 }
 
 function 33_build_manylinux () {
