@@ -40,11 +40,17 @@ nb_random_dtypes_to_test = 3
 dtypes_testing_subset = [None] + list(
     numpy.random.choice(numpy_dtypes_base, nb_random_dtypes_to_test)
 )
-interlace_toggling_subset = (None, True, False)
+interleave_toggling_subset = (None, True, False)
 numpy_dtypes1 = {"argnames": "dtype1", "argvalues": dtypes_testing_subset}
 numpy_dtypes2 = {"argnames": "dtype2", "argvalues": dtypes_testing_subset}
-interlace_toggles1 = {"argnames": "interlace1", "argvalues": interlace_toggling_subset}
-interlace_toggles2 = {"argnames": "interlace2", "argvalues": interlace_toggling_subset}
+interleave_toggles1 = {
+    "argnames": "interleave1",
+    "argvalues": interleave_toggling_subset,
+}
+interleave_toggles2 = {
+    "argnames": "interleave2",
+    "argvalues": interleave_toggling_subset,
+}
 
 FLOAT_SIZE_IN_BYTES = 4
 
@@ -1059,7 +1065,7 @@ def test_gmic_image_to_numpy_ndarray_exception_on_unimportable_numpy_module(
     sys.modules["numpy"] = old_numpy_sys_value
 
 
-def gmic_image_to_numpy_array_default_interlace_param(i):
+def gmic_image_to_numpy_array_default_interleave_param(i):
     return i if i is not None else True
 
 
@@ -1069,29 +1075,29 @@ def gmic_image_to_numpy_array_default_dtype_param(d):
 
 @pytest.mark.parametrize(**numpy_dtypes1)
 @pytest.mark.parametrize(**numpy_dtypes2)
-@pytest.mark.parametrize(**interlace_toggles1)
-@pytest.mark.parametrize(**interlace_toggles2)
+@pytest.mark.parametrize(**interleave_toggles1)
+@pytest.mark.parametrize(**interleave_toggles2)
 @pytest.mark.parametrize(
     "gmic_command",
     ["""16,16,16,3 fill_color 255,222,30""", "sp apples"],
     ids=["2dsample", "3dsample"],
 )
 def test_gmic_image_to_numpy_array_fuzzying(
-    dtype1, dtype2, interlace1, interlace2, gmic_command
+    dtype1, dtype2, interleave1, interleave2, gmic_command
 ):
-    expected_interlace_check = gmic_image_to_numpy_array_default_interlace_param(
-        interlace1
-    ) == gmic_image_to_numpy_array_default_interlace_param(interlace2)
+    expected_interleave_check = gmic_image_to_numpy_array_default_interleave_param(
+        interleave1
+    ) == gmic_image_to_numpy_array_default_interleave_param(interleave2)
     params1 = {}
     params2 = {}
     if dtype1 is not None:
         params1["astype"] = dtype1
     if dtype2 is not None:
         params2["astype"] = dtype2
-    if interlace1 is not None:
-        params1["interlace"] = interlace1
-    if interlace2 is not None:
-        params2["interlace"] = interlace2
+    if interleave1 is not None:
+        params1["interleave"] = interleave1
+    if interleave2 is not None:
+        params2["interleave"] = interleave2
 
     single_image_list = []
     gmic.run(images=single_image_list, command=gmic_command)
@@ -1121,7 +1127,7 @@ def test_gmic_image_to_numpy_array_fuzzying(
     assert numpy_image2.dtype == dtype2
     # Ensure arrays are equal only if we have same types and interlacing
     # Actually, they could be equal with distinct types but same interlacing, but are skipping cross-types compatibility analysis..
-    if (numpy_image1.dtype == numpy_image2.dtype) and expected_interlace_check:
+    if (numpy_image1.dtype == numpy_image2.dtype) and expected_interleave_check:
         assert numpy.array_equal(numpy_image1, numpy_image2)
 
 
@@ -1133,8 +1139,8 @@ def test_gmic_image_to_numpy_ndarray_basic_attributes(gmic_instance_run):
     single_image_list = []
     gmic_instance_run(images=single_image_list, command="sp apples")
     gmic_image = single_image_list[0]
-    # we do not interlace to keep the same data structure for later comparison
-    numpy_image = gmic_image.to_numpy_array(interlace=False)
+    # we do not interleave to keep the same data structure for later comparison
+    numpy_image = gmic_image.to_numpy_array(interleave=False)
     assert numpy_image.dtype == numpy.float32
     assert numpy_image.shape == (
         gmic_image._width,
