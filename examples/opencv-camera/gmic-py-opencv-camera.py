@@ -1,5 +1,7 @@
 import gmic
-gmic.run("""  camera w ${"fitscreen {[w,h]}"},0,"G'MIC Webcam Demo"
+
+gmic.run(
+    """  camera w ${"fitscreen {[w,h]}"},0,"G'MIC Webcam Demo"
   for {*}" && "!{*,ESC}
     rm camera
     +b 0.5% lightrays. , n. 0,255 blend add,0.9
@@ -8,4 +10,5 @@ gmic.run("""  camera w ${"fitscreen {[w,h]}"},0,"G'MIC Webcam Demo"
   done
   camera 0,0
 
-""")
+"""
+)
