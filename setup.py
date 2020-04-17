@@ -8,7 +8,6 @@ import platform
 from setuptools import setup, Extension, find_packages
 import pkgconfig
 
-
 here = path.abspath(path.dirname(__file__))
 gmic_src_path = path.abspath('src/gmic/src')
 
@@ -20,7 +19,9 @@ pkgconfig_list = ['zlib']
 
 # Macros to toggle (gmic or CImg will do C/C++ #ifdef checks on them, testing mostly only their existence)
 # cimg_date and cimg_date are true variables, the value of which is checked in the C/C++ source
-define_macros = [('gmic_build', None), ('cimg_date', '""'), ('cimg_time', '""'), ('gmic_is_parallel', None), ('cimg_use_zlib', None)]
+define_macros = [('gmic_build', None), ('cimg_date', '""'),
+                 ('cimg_time', '""'), ('gmic_is_parallel', None),
+                 ('cimg_use_zlib', None)]
 
 # Only require x11 if found
 if pkgconfig.exists('x11'):
@@ -44,16 +45,17 @@ if pkgconfig.exists('opencv'):
     define_macros += [('cimg_use_opencv', None)]
     pkgconfig_list += ['opencv']
 
-
 # Disable libcurl only on manylinuxes, because of a buggy audithweel repair constraint
 # See https://github.com/pypa/manylinux/issues/411
 # On any other platform, use libcurl if installed, else G'MIC falls back nicely to installed curl executable
-if 'manylinux' not in environ.get('PLAT','') and pkgconfig.exists('libcurl'):
+if 'manylinux' not in environ.get('PLAT', '') and pkgconfig.exists('libcurl'):
     define_macros += [('cimg_use_curl', None)]
     pkgconfig_list += ['libcurl']
 
 packages = pkgconfig.parse(" ".join(pkgconfig_list))
-libraries = packages['libraries'] + ['pthread'] # removed core-dumping 'gomp' temporarily (for manylinux builds)
+libraries = packages['libraries'] + [
+    'pthread'
+]  # removed core-dumping 'gomp' temporarily (for manylinux builds)
 
 library_dirs = packages['library_dirs'] + [here, gmic_src_path]
 if sys.platform == 'darwin':
@@ -61,13 +63,17 @@ if sys.platform == 'darwin':
 include_dirs = packages['include_dirs'] + [here, gmic_src_path]
 if sys.platform == 'darwin':
     include_dirs += ['/usr/local/opt/llvm@6/include']
-debugging_args = ['-O0', '-g'] # Uncomment this for faster compilation with debug symbols and no optimization
+debugging_args = [
+    '-O0', '-g'
+]  # Uncomment this for faster compilation with debug symbols and no optimization
 
 extra_compile_args = ['-std=c++11'] + debugging_args
 if sys.platform == 'darwin':
     extra_compile_args += ['-fopenmp', '-stdlib=libc++']
-    extra_link_args += ['-lomp', '-nodefaultlibs', '-lc++'] #options inspired by https://github.com/explosion/spaCy/blob/master/setup.py
-elif sys.platform == 'linux': # Enable openmp for 32bit & 64bit linuxes
+    extra_link_args += [
+        '-lomp', '-nodefaultlibs', '-lc++'
+    ]  #options inspired by https://github.com/explosion/spaCy/blob/master/setup.py
+elif sys.platform == 'linux':  # Enable openmp for 32bit & 64bit linuxes
     extra_compile_args += ['-fopenmp']
     extra_link_args += ['-lgomp']
 
@@ -75,15 +81,16 @@ print("Define macros:")
 print(define_macros)
 
 # Static CPython gmic.so embedding libgmic.so.2
-gmic_module = Extension('gmic',
-                    include_dirs = include_dirs,
-                    libraries = libraries,
-                    library_dirs = library_dirs,
-                    sources = ['gmicpy.cpp', path.join(gmic_src_path, 'gmic.cpp')],
-                    define_macros=define_macros,
-                    extra_compile_args = extra_compile_args,
-                    extra_link_args = extra_link_args,
-                    language='c++')
+gmic_module = Extension(
+    'gmic',
+    include_dirs=include_dirs,
+    libraries=libraries,
+    library_dirs=library_dirs,
+    sources=['gmicpy.cpp', path.join(gmic_src_path, 'gmic.cpp')],
+    define_macros=define_macros,
+    extra_compile_args=extra_compile_args,
+    extra_link_args=extra_link_args,
+    language='c++')
 
 # Get the long description from the README file
 with open(path.join(here, 'README.md'), encoding='utf-8') as f:
@@ -285,4 +292,3 @@ setup(
 
     ext_modules = [gmic_module]
 )
-
