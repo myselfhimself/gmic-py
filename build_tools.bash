@@ -117,6 +117,7 @@ function 22_reformat_c_style () {
 
 function 23_check_python_style () {
     [ -x "$(command -v yapf)" ] || { echo "Install yapf for Python formatting check" ; exit 1; }
+    yapf --version
     yapf --diff --recursive setup.py tests/ examples/
 }
 
