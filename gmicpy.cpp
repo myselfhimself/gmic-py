@@ -608,9 +608,8 @@ PyGmicImage_init(PyGmicImage *self, PyObject *args, PyObject *kwargs)
         // We are doing string comparison here instead of introspecting the
         // dtype.kind.num which is expected to be a unique identifier of type
         // Slightly simpler to read.. slightly slower to run
-        if (strcmp(bytesObj_ndarray_dtype_name_str, "uint8") == 0) {
-        }
-        else {
+        if (!(strcmp(bytesObj_ndarray_dtype_name_str, "uint8") == 0 ||
+              strcmp(bytesObj_ndarray_dtype_name_str, "float32") == 0)) {
             PyErr_Format(PyExc_TypeError,
                          "Parameter 'data' of type 'numpy.ndarray' has an "
                          "understandable shape for us, but its data type '%s' "
