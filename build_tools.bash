@@ -117,9 +117,7 @@ function 21_check_c_style () {
 
 function 22_reformat_c_style () {
     [ -x "$(command -v clang-format)" ] || { echo "Install clang-format for C/C++ reformatting" ; exit 1; }
-    clang-format -i gmicpy.cpp
-    clang-format -i gmicpy.h
-    echo 'C/C++ formatting with clang-format ✔️'
+    clang-format -i gmicpy.cpp && clang-format -i gmicpy.h && echo 'C/C++ formatting with clang-format ✔️'
 }
 
 function 23_check_python_style () {
@@ -130,8 +128,7 @@ function 23_check_python_style () {
 
 function 24_reformat_python_style () {
     pip install black
-    black setup.py tests/ examples/
-    echo 'Python formatting using black ✔️'
+    black setup.py tests/ examples/ && echo 'Python formatting using black ✔️'
 }
 
 function 33_build_manylinux () {
