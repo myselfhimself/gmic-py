@@ -1,6 +1,7 @@
 #include "gmicpy.h"
 
 #include <Python.h>
+#include <stdint.h>
 #include <stdio.h>
 
 #include <iostream>
@@ -501,7 +502,12 @@ PyGmicImage_init(PyGmicImage *self, PyObject *args, PyObject *kwargs)
             &_height, &_depth, &_spectrum, &_is_shared))
         return -1;
 
-    if (bytesObj != NULL) {
+    // Default bytesObj value to None
+    if (bytesObj == NULL) {
+        bytesObj = Py_None;
+    }
+
+    if (bytesObj != Py_None) {
         bytesObj_is_bytes = (bool)PyBytes_Check(bytesObj);
         bytesObj_is_ndarray = PyNumpyArray_Check(bytesObj);
         if (!bytesObj_is_ndarray && !bytesObj_is_bytes) {
@@ -512,17 +518,31 @@ PyGmicImage_init(PyGmicImage *self, PyObject *args, PyObject *kwargs)
             return -1;
         }
     }
-    else {  // if bytesObj is NULL
-        if (_width == 1 && _height == 1 && _depth == 1 && _spectrum == 1) {
+    else {  // if bytesObj is None, attempt to set it as an empty bytes object
+            // following image dimensions
+        // If dimensions are OK, create a pixels-count-zero-filled
+        // bytesarray-based bytes object to be ingested by the _data parameter
+        if (_width >= 1 && _height >= 1 && _depth >= 1 && _spectrum >= 1) {
+            bytesObj = PyObject_CallFunction(
+                (PyObject *)&PyBytes_Type, "O",
+                PyObject_CallFunction(
+                    (PyObject *)&PyByteArray_Type, "I",
+                    _width * _height * _depth * _spectrum * sizeof(T), NULL),
+                NULL);
+            Py_INCREF(bytesObj);
+            bytesObj_is_bytes = true;
+            // TODO pytest this
+        }
+        else {  // If dimensions are not OK, raise exception
             PyErr_Format(PyExc_TypeError,
                          "If you do not provide a 'data' parameter, make at "
-                         "least one of the dimensions >1.");
+                         "least all dimensions >=1.");
             // TODO pytest this
             return -1;
         }
     }
 
-    // Importing numpy.ndarray shape and import buffer after deinterlacing it
+    // Importing numpy.ndarray shape and import buffer after deinterleaving it
     // We are skipping any need for a C API include of numpy, to use either
     // python-language level API or common-python structure access
     if (bytesObj_is_ndarray) {
@@ -609,7 +629,8 @@ PyGmicImage_init(PyGmicImage *self, PyObject *args, PyObject *kwargs)
         // dtype.kind.num which is expected to be a unique identifier of type
         // Slightly simpler to read.. slightly slower to run
         if (!(strcmp(bytesObj_ndarray_dtype_name_str, "uint8") == 0 ||
-              strcmp(bytesObj_ndarray_dtype_name_str, "float32") == 0)) {
+              strcmp(bytesObj_ndarray_dtype_name_str, "float32") == 0 ||
+              strcmp(bytesObj_ndarray_dtype_name_str, "int64") == 0)) {
             PyErr_Format(PyExc_TypeError,
                          "Parameter 'data' of type 'numpy.ndarray' has an "
                          "understandable shape for us, but its data type '%s' "
@@ -674,6 +695,8 @@ PyGmicImage_init(PyGmicImage *self, PyObject *args, PyObject *kwargs)
             }
         }
     }
+
+    Py_XDECREF(bytesObj);
 
     return 0;
 }
@@ -852,8 +875,8 @@ import_numpy_module()
 static PyObject *
 PyGmicImage_from_numpy_array(PyObject *cls, PyObject *args, PyObject *kwargs)
 {
-    int arg_deinterleave =
-        1;  // Will deinterleave the incoming numpy.ndarray by default
+    PyObject *py_arg_deinterleave =
+        Py_True;  // Will deinterleave the incoming numpy.ndarray by default
     PyObject *arg_ndarray = NULL;
     PyObject *ndarray_type = NULL;
     PyObject *ndarray_dtype = NULL;
@@ -873,9 +896,10 @@ PyGmicImage_from_numpy_array(PyObject *cls, PyObject *args, PyObject *kwargs)
 
     ndarray_type = PyObject_GetAttrString(numpy_module, "ndarray");
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!|p", (char **)keywords,
-                                     &arg_ndarray, &ndarray_type,
-                                     &arg_deinterleave))
+    if (!PyArg_ParseTupleAndKeywords(
+            args, kwargs, (const char *)"O!|O!", (char **)keywords,
+            (PyTypeObject *)ndarray_type, &arg_ndarray, &PyBool_Type,
+            &py_arg_deinterleave))
         return NULL;
 
     // Get input ndarray.dtype and prevent non-integer/float/bool data types to
@@ -903,10 +927,11 @@ PyGmicImage_from_numpy_array(PyObject *cls, PyObject *args, PyObject *kwargs)
     // (numpy tends to squeeze dimensions when calling the standard
     // array().shape, we circuvent this)
     ndarray_as_3d_unsqueezed_view =
-        PyObject_CallMethod(numpy_module, "atleast_3d", NULL);
+        PyObject_CallMethod(numpy_module, "atleast_3d", "O", arg_ndarray);
     ndarray_as_3d_unsqueezed_view_expanded_dims = PyObject_CallMethod(
         numpy_module, "expand_dims", "OI", ndarray_as_3d_unsqueezed_view,
         2);  // Adding z axis if absent
+    // After this the shape should be (w, h, 1, 3)
     ndarray_shape_tuple = PyObject_GetAttrString(
         ndarray_as_3d_unsqueezed_view_expanded_dims, "shape");
     _width =
@@ -919,48 +944,52 @@ PyGmicImage_from_numpy_array(PyObject *cls, PyObject *args, PyObject *kwargs)
         (unsigned int)PyLong_AsSize_t(PyTuple_GetItem(ndarray_shape_tuple, 3));
 
     new_gmic_image = PyObject_CallFunction(
-        (PyObject *)&PyGmicImageType, (const char *)"SIIII",
-        NULL,  // tentative passing of a empty _data
+        (PyObject *)&PyGmicImageType, (const char *)"OIIII",
+        Py_None,  // This empty _data buffer will be regenerated by the
+                  // constructor as a zero-filled bytes object
         _width, _height, _depth, _spectrum);
 
     // TODO if deinterleave needed, copy deinterleaved to a _data buffer with
     // type casting, else just copy with type casting
 
     _data_bytesObj = PyObject_CallMethod(arg_ndarray, "tobytes", NULL);
-    unsigned char *ptr = (unsigned char *)PyBytes_AsString(_data_bytesObj);
+    uint64_t *ptr = (uint64_t *)PyBytes_AsString(_data_bytesObj);
 
     // TODO adapt input buffer step to incoming type if
     // (strcmp(bytesObj_ndarray_dtype_name_str, "uint8") == 0) {
-    if (!arg_deinterleave) {
-        for (unsigned int x = 0; x < _width; x++) {
-            for (unsigned int y = 0; y < _height; y++) {
-                for (unsigned int z = 0; z < _depth; z++) {
-                    for (unsigned int c = 0; c < _spectrum; c++) {
-                        // if (strcmp(bytesObj_ndarray_dtype_name_str, "uint8")
-                        // == 0) { //TODO ptr step should be uint8 size
-                        ((PyGmicImage *)new_gmic_image)
-                            ->_gmic_image(x, y, z, c) =
-                            (T) * ((uint8_t *)ptr++);
-                    }
-                }
-            }
-        }
-    }
-    else {
-        // TODO adapt input buffer step to incoming type if
-        // (strcmp(bytesObj_ndarray_dtype_name_str, "uint8") == 0) {
+    // no deinterleaving
+    if (!PyObject_IsTrue(py_arg_deinterleave)) {
         for (unsigned int c = 0; c < _spectrum; c++) {
             for (unsigned int z = 0; z < _depth; z++) {
                 for (unsigned int y = 0; y < _height; y++) {
                     for (unsigned int x = 0; x < _width; x++) {
+                        // if (strcmp(bytesObj_ndarray_dtype_name_str, "uint8")
+                        // == 0) { //TODO ptr step should be uint8 size
                         ((PyGmicImage *)new_gmic_image)
-                            ->_gmic_image(x, y, z, c) = (T) * (ptr++);
+                            ->_gmic_image(x, y, z, c) =
+                            (T) * ((uint64_t *)ptr++);
+                    }
+                }
+            }
+        }
+    }
+    else {  // deinterleaving
+            // TODO adapt input buffer step to incoming type if
+            // (strcmp(bytesObj_ndarray_dtype_name_str, "uint8") == 0) {
+        for (unsigned int z = 0; z < _depth; z++) {
+            for (unsigned int y = 0; y < _height; y++) {
+                for (unsigned int x = 0; x < _width; x++) {
+                    for (unsigned int c = 0; c < _spectrum; c++) {
+                        ((PyGmicImage *)new_gmic_image)
+                            ->_gmic_image(x, y, z, c) =
+                            (T) * ((uint64_t *)ptr++);
                     }
                 }
             }
         }
     }
 
+    Py_XDECREF(py_arg_deinterleave);
     Py_DECREF(arg_ndarray);
     Py_DECREF(ndarray_dtype);
     Py_DECREF(ndarray_dtype_kind);
@@ -1030,12 +1059,13 @@ PyGmicImage_to_numpy_array(PyGmicImage *self, PyObject *args, PyObject *kwargs)
                       PyLong_FromSize_t((size_t)self->_gmic_image._spectrum));
     }
     shape = PyList_AsTuple(_shape);
+    // TODO flexible dtype
     dtype = PyObject_GetAttrString(numpy_module, "float32");
     buffer_size = sizeof(T) * self->_gmic_image.size();
     numpy_buffer = (float *)malloc(buffer_size);
     ptr = numpy_buffer;
-    // If interlacing is needed, copy the gmic_image buffer towards numpy by
-    // interlacing RRR,GGG,BBB into RGB,RGB,RGB
+    // If interleaving is needed, copy the gmic_image buffer towards numpy by
+    // interleaving RRR,GGG,BBB into RGB,RGB,RGB
     if (arg_interleave) {
         for (unsigned int z = 0; z < self->_gmic_image._depth; z++) {
             for (unsigned int y = 0; y < self->_gmic_image._height; y++) {
@@ -1048,8 +1078,9 @@ PyGmicImage_to_numpy_array(PyGmicImage *self, PyObject *args, PyObject *kwargs)
         }
     }
     else {
-        // If deinterlacing is needed, since this is G'MIC's internal image
-        // shape, keep pixel data order as and copy it simply
+        // TODO flexible dtype
+        // If deinterleaving is not needed, since this is G'MIC's internal
+        // image shape, keep pixel data order as and copy it simply
         memcpy(numpy_buffer, self->_gmic_image._data,
                self->_gmic_image.size() * sizeof(T));
     }
