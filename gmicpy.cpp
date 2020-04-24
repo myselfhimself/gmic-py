@@ -488,11 +488,6 @@ PyGmicImage_init(PyGmicImage *self, PyObject *args, PyObject *kwargs)
     PyObject *bytesObj = NULL;  // Incoming bytes buffer object pointer
     bool bytesObj_is_ndarray = false;
     bool bytesObj_is_bytes = false;
-    PyObject *bytesObj_ndarray_dtype;
-    PyObject *bytesObj_ndarray_shape;
-    Py_ssize_t bytesObj_ndarray_shape_size;
-    PyObject *bytesObj_ndarray_dtype_kind;
-    char *bytesObj_ndarray_dtype_name_str;
     char const *keywords[] = {"data",     "width",  "height", "depth",
                               "spectrum", "shared", NULL};
 
@@ -546,102 +541,14 @@ PyGmicImage_init(PyGmicImage *self, PyObject *args, PyObject *kwargs)
     // We are skipping any need for a C API include of numpy, to use either
     // python-language level API or common-python structure access
     if (bytesObj_is_ndarray) {
-        // Get ndarray.dtype
-        bytesObj_ndarray_dtype = PyObject_GetAttrString(bytesObj, "dtype");
-        // Ensure dtype kind is a number we can convert (from dtype values
-        // here:
-        // https://numpy.org/doc/1.18/reference/generated/numpy.dtype.kind.html#numpy.dtype.kind)
-        bytesObj_ndarray_dtype_kind =
-            PyObject_GetAttrString(bytesObj_ndarray_dtype, "kind");
-        if (strchr("biuf", (PyUnicode_ReadChar(bytesObj_ndarray_dtype_kind,
-                                               (Py_ssize_t)0))) == NULL) {
-            PyErr_Format(PyExc_TypeError,
-                         "Parameter 'data' of type 'numpy.ndarray' does not "
-                         "contain numbers ie. its 'dtype.kind'(=%U) is not "
-                         "one of 'b', 'i', 'u', 'f'.",
-                         bytesObj_ndarray_dtype_kind);
-            // TODO pytest this
-            return -1;
-        }
-
-        bytesObj_ndarray_shape = PyObject_GetAttrString(bytesObj, "shape");
-        bytesObj_ndarray_shape_size = PyTuple_GET_SIZE(bytesObj_ndarray_shape);
-        switch (bytesObj_ndarray_shape_size) {
-            // TODO maybe skip other images than 2D or 3D
-            case 1:
-                PyErr_Format(
-                    PyExc_TypeError,
-                    "Parameter 'data' of type 'numpy.ndarray' is 1D with "
-                    "single-channel, this is not supported yet.");
-                return -1;
-                //_width = (unsigned int)
-                // PyLong_AsSize_t(PyTuple_GetItem(bytesObj_ndarray_shape_size,
-                // 0));
-            case 2:
-                PyErr_Format(
-                    PyExc_TypeError,
-                    "Parameter 'data' of type 'numpy.ndarray' is 1D with "
-                    "multiple channels, this is not supported yet.");
-                return -1;
-                // TODO set _width, height
-            case 3:
-                _width = (unsigned int)PyLong_AsSize_t(
-                    PyTuple_GetItem(bytesObj_ndarray_shape, 0));
-                _height = (unsigned int)PyLong_AsSize_t(
-                    PyTuple_GetItem(bytesObj_ndarray_shape, 1));
-                _depth = 1;
-                _spectrum = (unsigned int)PyLong_AsSize_t(
-                    PyTuple_GetItem(bytesObj_ndarray_shape, 2));
-                break;
-            case 4:
-                _width = (unsigned int)PyLong_AsSize_t(
-                    PyTuple_GetItem(bytesObj_ndarray_shape, 0));
-                _height = (unsigned int)PyLong_AsSize_t(
-                    PyTuple_GetItem(bytesObj_ndarray_shape, 1));
-                _depth = (unsigned int)PyLong_AsSize_t(
-                    PyTuple_GetItem(bytesObj_ndarray_shape, 2));
-                _spectrum = (unsigned int)PyLong_AsSize_t(
-                    PyTuple_GetItem(bytesObj_ndarray_shape, 3));
-                break;
-            default:
-                if (bytesObj_ndarray_shape_size < 1) {
-                    PyErr_Format(
-                        PyExc_TypeError,
-                        "Parameter 'data' of type 'numpy.ndarray' has an "
-                        "empty shape. This is not supported by this binding.");
-                }
-                else {  // case >4
-                    PyErr_Format(PyExc_TypeError,
-                                 "Parameter 'data' of type 'numpy.ndarray' "
-                                 "has a shape larger than 3D x 1-256 "
-                                 "channels. This is not supported by G'MIC.");
-                }
-                return -1;
-        }
-
-        bytesObj_ndarray_dtype_name_str =
-            (char *)PyUnicode_AsUTF8(PyObject_GetAttrString(
-                bytesObj_ndarray_dtype, (const char *)"name"));
-        // See also Pillow Image modes:
-        // https://pillow.readthedocs.io/en/3.1.x/handbook/concepts.html#concept-modes
-        // TODO float64,float64 uint16, uint32, float32, float16, float8
-        // We are doing string comparison here instead of introspecting the
-        // dtype.kind.num which is expected to be a unique identifier of type
-        // Slightly simpler to read.. slightly slower to run
-        if (!(strcmp(bytesObj_ndarray_dtype_name_str, "uint8") == 0 ||
-              strcmp(bytesObj_ndarray_dtype_name_str, "float32") == 0 ||
-              strcmp(bytesObj_ndarray_dtype_name_str, "int64") == 0)) {
-            PyErr_Format(PyExc_TypeError,
-                         "Parameter 'data' of type 'numpy.ndarray' has an "
-                         "understandable shape for us, but its data type '%s' "
-                         "is not supported yet(?).",
-                         bytesObj_ndarray_dtype_name_str);
-            return -1;
-        }
+        PyErr_Format(PyExc_TypeError, "from_numpy_array must be used here");
+        // TODO use from_numpy_array without recursive loop
+        // TODO pytest this
+        return -1;
     }
-
-    // Bytes object spatial dimensions vs. bytes-length checking
-    if (bytesObj_is_bytes) {
+    else  // if bytesObj_is_bytes
+    {
+        // Bytes object spatial dimensions vs. bytes-length checking
         dimensions_product = _width * _height * _depth * _spectrum;
         _data_bytes_size = PyBytes_Size(bytesObj);
         if ((Py_ssize_t)(dimensions_product * sizeof(T)) != _data_bytes_size) {
@@ -680,20 +587,7 @@ PyGmicImage_init(PyGmicImage *self, PyObject *args, PyObject *kwargs)
                PyBytes_Size(bytesObj));
     }
     else {  // if bytesObj is numpy
-        PyObject *bytesObjNumpyBytes =
-            PyObject_CallMethod(bytesObj, "tobytes", NULL);
-        unsigned char *ptr =
-            (unsigned char *)PyBytes_AsString(bytesObjNumpyBytes);
-        for (unsigned int y = 0; y < _height; y++) {
-            for (unsigned int x = 0; x < _width; x++) {
-                unsigned char R = *(ptr++);
-                unsigned char G = *(ptr++);
-                unsigned char B = *(ptr++);
-                self->_gmic_image(x, y, 0, 0) = (float)R;
-                self->_gmic_image(x, y, 0, 1) = (float)G;
-                self->_gmic_image(x, y, 0, 2) = (float)B;
-            }
-        }
+        // TODO
     }
 
     Py_XDECREF(bytesObj);
@@ -1013,30 +907,29 @@ PyGmicImage_from_numpy_array(PyObject *cls, PyObject *args, PyObject *kwargs)
  * GmicImage object method to_numpy_array().
  *
  * GmicImage().to_numpy_array(astype=numpy.float32: numpy.dtype,
- * interleave=True: bool) -> numpy.ndarray
+ * interleave=True: bool, squeeze_shape=True: bool) -> numpy.ndarray
  *
- * TODO monitor this more closely, there seems to be a memory leak...
  */
 static PyObject *
 PyGmicImage_to_numpy_array(PyGmicImage *self, PyObject *args, PyObject *kwargs)
 {
-    char const *keywords[] = {"astype", "interleave", NULL};
+    char const *keywords[] = {"astype", "interleave", "squeeze_shape", NULL};
     PyObject *numpy_module = NULL;
     PyObject *ndarray_type = NULL;
     PyObject *return_ndarray = NULL;
-    PyObject *return_ndarray_astype = NULL;
-    PyObject *_shape = NULL;
-    PyObject *shape = NULL;
-    PyObject *dtype = NULL;
+    PyObject *ndarray_shape_tuple = NULL;
+    PyObject *ndarray_shape_list = NULL;
+    PyObject *float32_dtype = NULL;
     PyObject *numpy_bytes_buffer = NULL;
     float *numpy_buffer = NULL;
-    float *ptr;
+    float *ndarray_bytes_buffer_ptr = NULL;
     int buffer_size = 0;
     PyObject *arg_astype = NULL;
-    int arg_interleave = 1;  // Will interleave the final matrix by default
+    int arg_interleave = 1;  // Will interleave the final matrix by default, for easier matplotlib/PIL handling
+    int arg_squeeze_shape = 1;  // Will squeeze the final shape by default, for easier python-matplotlib display
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|Op", (char **)keywords,
-                                     &arg_astype, &arg_interleave)) {
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|Opp", (char **)keywords,
+                                     &arg_astype, &arg_interleave, &arg_squeeze_shape)) {
         return NULL;
     }
 
@@ -1046,30 +939,19 @@ PyGmicImage_to_numpy_array(PyGmicImage *self, PyObject *args, PyObject *kwargs)
 
     ndarray_type = PyObject_GetAttrString(numpy_module, "ndarray");
 
-    // Create shape by squeezing 1-dimension dimensions from it first
-    _shape = PyList_New(0);
-    if (self->_gmic_image._width > 1) {
-        PyList_Append(_shape,
-                      PyLong_FromSize_t((size_t)self->_gmic_image._width));
-    }
-    if (self->_gmic_image._height > 1) {
-        PyList_Append(_shape,
-                      PyLong_FromSize_t((size_t)self->_gmic_image._height));
-    }
-    if (self->_gmic_image._depth > 1) {
-        PyList_Append(_shape,
-                      PyLong_FromSize_t((size_t)self->_gmic_image._depth));
-    }
-    if (self->_gmic_image._spectrum > 1) {
-        PyList_Append(_shape,
-                      PyLong_FromSize_t((size_t)self->_gmic_image._spectrum));
-    }
-    shape = PyList_AsTuple(_shape);
-    // TODO flexible dtype
-    dtype = PyObject_GetAttrString(numpy_module, "float32");
+    ndarray_shape_tuple = PyList_New(0);
+    PyList_Append(ndarray_shape_tuple, PyLong_FromSize_t((size_t)self->_gmic_image._width));
+    PyList_Append(ndarray_shape_tuple,
+                  PyLong_FromSize_t((size_t)self->_gmic_image._height));
+
+    PyList_Append(ndarray_shape_tuple, PyLong_FromSize_t((size_t)self->_gmic_image._depth));
+    PyList_Append(ndarray_shape_tuple,
+                  PyLong_FromSize_t((size_t)self->_gmic_image._spectrum));
+    ndarray_shape_list = PyList_AsTuple(ndarray_shape_tuple);
+    float32_dtype = PyObject_GetAttrString(numpy_module, "float32");
     buffer_size = sizeof(T) * self->_gmic_image.size();
     numpy_buffer = (float *)malloc(buffer_size);
-    ptr = numpy_buffer;
+    ndarray_bytes_buffer_ptr = numpy_buffer;
     // If interleaving is needed, copy the gmic_image buffer towards numpy by
     // interleaving RRR,GGG,BBB into RGB,RGB,RGB
     if (arg_interleave) {
@@ -1077,14 +959,13 @@ PyGmicImage_to_numpy_array(PyGmicImage *self, PyObject *args, PyObject *kwargs)
             for (unsigned int y = 0; y < self->_gmic_image._height; y++) {
                 for (unsigned int x = 0; x < self->_gmic_image._width; x++) {
                     for (unsigned int c = 0; c < 3; c++) {
-                        (*ptr++) = self->_gmic_image(x, y, z, c);
+                        (*ndarray_bytes_buffer_ptr++) = self->_gmic_image(x, y, z, c);
                     }
                 }
             }
         }
     }
     else {
-        // TODO flexible dtype
         // If deinterleaving is not needed, since this is G'MIC's internal
         // image shape, keep pixel data order as and copy it simply
         memcpy(numpy_buffer, self->_gmic_image._data,
@@ -1093,27 +974,36 @@ PyGmicImage_to_numpy_array(PyGmicImage *self, PyObject *args, PyObject *kwargs)
     numpy_bytes_buffer =
         PyBytes_FromStringAndSize((const char *)numpy_buffer, buffer_size);
     free(numpy_buffer);
-    // class numpy.ndarray(shape, dtype=float, buffer=None, offset=0,
+    // class numpy.ndarray(<our shape>, dtype=<float32>, buffer=<our bytes>, offset=0,
     // strides=None, order=None)
     return_ndarray = PyObject_CallFunction(ndarray_type, (const char *)"OOS",
-                                           shape, dtype, numpy_bytes_buffer);
+                                           ndarray_shape_list, float32_dtype, numpy_bytes_buffer);
+
+    if(arg_squeeze_shape) {
+        return_ndarray = PyObject_CallMethod(numpy_module, "squeeze", "O", return_ndarray);
+        if(!return_ndarray) {
+                                    PyErr_Format(
+                            GmicException,
+                            "'%.50s' failed to be numpy.squeeze'd.",
+                            ((PyTypeObject *)Py_TYPE(ndarray_type))->tp_name);
+        }
+    }
+
+    // arg_astype should be according to ndarray.astype's documentation, a
+    // string, python type or numpy.dtype delegating this type check to the
+    // astype() method
+    if (return_ndarray != NULL && arg_astype != NULL) {
+        return_ndarray = PyObject_CallMethod(return_ndarray, "astype", "O", arg_astype);
+    }
 
     Py_DECREF(ndarray_type);
-    Py_DECREF(shape);
-    Py_DECREF(_shape);
-    Py_DECREF(dtype);
+    Py_DECREF(ndarray_shape_list);
+    Py_DECREF(ndarray_shape_tuple);
+    Py_DECREF(float32_dtype);
     Py_DECREF(numpy_bytes_buffer);
     Py_DECREF(numpy_module);
 
-    if (arg_astype != NULL && PyType_Check(arg_astype)) {
-        return_ndarray_astype =
-            PyObject_CallMethod(return_ndarray, "astype", "O", arg_astype);
-        Py_DECREF(return_ndarray);
-        return return_ndarray_astype;
-    }
-    else {
-        return return_ndarray;
-    }
+    return return_ndarray;
 }
 
 static PyMethodDef PyGmicImage_methods[] = {
