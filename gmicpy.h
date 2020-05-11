@@ -38,6 +38,12 @@
 #define libcurl_enabled 0
 #endif
 
+#ifdef gmic_py_numpy
+#define numpy_enabled 1
+#else
+#define numpy_enabled 0
+#endif
+
 #if cimg_OS == 0
 #define OS_type "unknown"
 #elif cimg_OS == 1
@@ -50,6 +56,7 @@
     PyUnicode_FromFormat(                                                   \
         "zlib_enabled:%d libpng_enabled:%d display_enabled:%d "             \
         "fftw3_enabled:%d libcurl_enabled:%d openmp_enabled:%d cimg_OS:%d " \
+        "numpy_enabled:%d "                                                 \
         "OS_type:%s",                                                       \
         zlib_enabled, libpng_enabled, display_enabled, fftw3_enabled,       \
-        libcurl_enabled, cimg_use_openmp, cimg_OS, OS_type)
+        libcurl_enabled, cimg_use_openmp, cimg_OS, numpy_enabled, OS_type)
