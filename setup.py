@@ -26,6 +26,7 @@ define_macros = [
     ("cimg_time", '""'),
     ("gmic_is_parallel", None),
     ("cimg_use_zlib", None),
+    ("gmic_py_numpy", None),  # Numpy support
 ]
 
 # Only require x11 if found

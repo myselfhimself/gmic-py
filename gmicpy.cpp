@@ -126,6 +126,9 @@ run_impl(PyObject *self, PyObject *args, PyObject *kwargs)
     PyObject *current_image = NULL;
     PyObject *current_image_name = NULL;
     PyObject *iter = NULL;
+
+    // TODO isolate numpy related code into foreign functions or not, with
+    // #ifdefs
     bool must_return_all_items_as_numpy_array = false;
     PyObject *any_numpy_object = NULL;
 
@@ -486,6 +489,10 @@ PyGmicImage_init(PyGmicImage *self, PyObject *args, PyObject *kwargs)
         0;  // Whether image should be shared across gmic operations (if true,
             // operations like resize will fail)
     PyObject *bytesObj = NULL;  // Incoming bytes buffer object pointer
+    // TODO use this temporary buffer for numpy.ndarray inputs
+    // PyObject *tmp_numpy_gmic_image =
+    //     NULL;  // Used to setup an image that we will memcpy from input
+    //            // numpy.ndarray into self->gmic_image
     bool bytesObj_is_ndarray = false;
     bool bytesObj_is_bytes = false;
     char const *keywords[] = {"data",     "width",  "height", "depth",
@@ -500,6 +507,9 @@ PyGmicImage_init(PyGmicImage *self, PyObject *args, PyObject *kwargs)
     // Default bytesObj value to None
     if (bytesObj == NULL) {
         bytesObj = Py_None;
+    }
+    else {
+        Py_INCREF(bytesObj);
     }
 
     if (bytesObj != Py_None) {
@@ -562,33 +572,39 @@ PyGmicImage_init(PyGmicImage *self, PyObject *args, PyObject *kwargs)
         }
     }
 
-    // Importing input data to an internal buffer
-    try {
-        self->_gmic_image.assign(_width, _height, _depth, _spectrum);
-    }
-    // Ugly exception catching, probably to catch a
-    // cimg::GmicInstanceException()
-    catch (...) {
-        dimensions_product = _width * _height * _depth * _spectrum;
-        PyErr_Format(
-            PyExc_MemoryError,
-            "Allocation error in "
-            "GmicImage::assign(_width=%d,_height=%d,_depth=%d,_spectrum=%d), "
-            "are you requesting too much memory (%d bytes)?",
-            _width, _height, _depth, _spectrum,
-            dimensions_product * sizeof(T));
-        return -1;
-    }
-
-    self->_gmic_image._is_shared = _is_shared;
-
     if (bytesObj_is_bytes) {
+        // Importing input data to an internal buffer
+        try {
+            self->_gmic_image.assign(_width, _height, _depth, _spectrum);
+        }
+        // Ugly exception catching, probably to catch a
+        // cimg::GmicInstanceException()
+        catch (...) {
+            dimensions_product = _width * _height * _depth * _spectrum;
+            PyErr_Format(PyExc_MemoryError,
+                         "Allocation error in "
+                         "GmicImage::assign(_width=%d,_height=%d,_depth=%d,_"
+                         "spectrum=%d), "
+                         "are you requesting too much memory (%d bytes)?",
+                         _width, _height, _depth, _spectrum,
+                         dimensions_product * sizeof(T));
+            return -1;
+        }
+
         memcpy(self->_gmic_image._data, PyBytes_AsString(bytesObj),
                PyBytes_Size(bytesObj));
     }
+#ifdef gmic_py_numpy
     else {  // if bytesObj is numpy
-        // TODO
+        PyErr_Format(GmicException,
+                     "Piping a GmicImage constructor with a numpy.ndarray is "
+                     "not implemented yet");
+        return -1;  // TODO create buffer and dimensions separately from numpy
+                    // array and tie them an empty GmicImage
     }
+#endif
+
+    self->_gmic_image._is_shared = _is_shared;
 
     Py_XDECREF(bytesObj);
 
@@ -737,6 +753,7 @@ PyGetSetDef PyGmicImage_getsets[] = {{(char *)"_data", /* name */
                                       NULL /* closure */},
                                      {NULL}};
 
+#ifdef gmic_py_numpy
 /**
  * Predictable Python 3.x 'numpy' module importer.
  */
@@ -747,10 +764,8 @@ import_numpy_module()
 
     // exit raising numpy_module import exception
     if (!numpy_module) {
-        // Do not raise a Python >= 3.6 ModuleImportError, but something more
-        // compatible with any Python 3.x
         PyErr_Clear();
-        return PyErr_Format(PyExc_ImportError,
+        return PyErr_Format(GmicException,
                             "The 'numpy' module cannot be imported. Is it "
                             "installed or in your Python path?");
     }
@@ -786,7 +801,7 @@ PyGmicImage_from_numpy_array(PyObject *cls, PyObject *args, PyObject *kwargs)
     T *ndarray_data_bytesObj_ptr = NULL;
     char const *keywords[] = {"numpy_array", "deinterleave", NULL};
 
-    numpy_module = PyImport_ImportModule("numpy");
+    numpy_module = import_numpy_module();
     if (!numpy_module)
         return NULL;
 
@@ -925,26 +940,31 @@ PyGmicImage_to_numpy_array(PyGmicImage *self, PyObject *args, PyObject *kwargs)
     float *ndarray_bytes_buffer_ptr = NULL;
     int buffer_size = 0;
     PyObject *arg_astype = NULL;
-    int arg_interleave = 1;  // Will interleave the final matrix by default, for easier matplotlib/PIL handling
-    int arg_squeeze_shape = 1;  // Will squeeze the final shape by default, for easier python-matplotlib display
+    int arg_interleave = 1;     // Will interleave the final matrix by default,
+                                // for easier matplotlib/PIL handling
+    int arg_squeeze_shape = 1;  // Will squeeze the final shape by default, for
+                                // easier python-matplotlib display
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|Opp", (char **)keywords,
-                                     &arg_astype, &arg_interleave, &arg_squeeze_shape)) {
+                                     &arg_astype, &arg_interleave,
+                                     &arg_squeeze_shape)) {
         return NULL;
     }
 
-    numpy_module = PyImport_ImportModule("numpy");
+    numpy_module = import_numpy_module();
     if (!numpy_module)
         return NULL;
 
     ndarray_type = PyObject_GetAttrString(numpy_module, "ndarray");
 
     ndarray_shape_tuple = PyList_New(0);
-    PyList_Append(ndarray_shape_tuple, PyLong_FromSize_t((size_t)self->_gmic_image._width));
+    PyList_Append(ndarray_shape_tuple,
+                  PyLong_FromSize_t((size_t)self->_gmic_image._width));
     PyList_Append(ndarray_shape_tuple,
                   PyLong_FromSize_t((size_t)self->_gmic_image._height));
 
-    PyList_Append(ndarray_shape_tuple, PyLong_FromSize_t((size_t)self->_gmic_image._depth));
+    PyList_Append(ndarray_shape_tuple,
+                  PyLong_FromSize_t((size_t)self->_gmic_image._depth));
     PyList_Append(ndarray_shape_tuple,
                   PyLong_FromSize_t((size_t)self->_gmic_image._spectrum));
     ndarray_shape_list = PyList_AsTuple(ndarray_shape_tuple);
@@ -959,7 +979,8 @@ PyGmicImage_to_numpy_array(PyGmicImage *self, PyObject *args, PyObject *kwargs)
             for (unsigned int y = 0; y < self->_gmic_image._height; y++) {
                 for (unsigned int x = 0; x < self->_gmic_image._width; x++) {
                     for (unsigned int c = 0; c < 3; c++) {
-                        (*ndarray_bytes_buffer_ptr++) = self->_gmic_image(x, y, z, c);
+                        (*ndarray_bytes_buffer_ptr++) =
+                            self->_gmic_image(x, y, z, c);
                     }
                 }
             }
@@ -974,18 +995,19 @@ PyGmicImage_to_numpy_array(PyGmicImage *self, PyObject *args, PyObject *kwargs)
     numpy_bytes_buffer =
         PyBytes_FromStringAndSize((const char *)numpy_buffer, buffer_size);
     free(numpy_buffer);
-    // class numpy.ndarray(<our shape>, dtype=<float32>, buffer=<our bytes>, offset=0,
-    // strides=None, order=None)
+    // class numpy.ndarray(<our shape>, dtype=<float32>, buffer=<our bytes>,
+    // offset=0, strides=None, order=None)
     return_ndarray = PyObject_CallFunction(ndarray_type, (const char *)"OOS",
-                                           ndarray_shape_list, float32_dtype, numpy_bytes_buffer);
+                                           ndarray_shape_list, float32_dtype,
+                                           numpy_bytes_buffer);
 
-    if(arg_squeeze_shape) {
-        return_ndarray = PyObject_CallMethod(numpy_module, "squeeze", "O", return_ndarray);
-        if(!return_ndarray) {
-                                    PyErr_Format(
-                            GmicException,
-                            "'%.50s' failed to be numpy.squeeze'd.",
-                            ((PyTypeObject *)Py_TYPE(ndarray_type))->tp_name);
+    if (arg_squeeze_shape) {
+        return_ndarray =
+            PyObject_CallMethod(numpy_module, "squeeze", "O", return_ndarray);
+        if (!return_ndarray) {
+            PyErr_Format(GmicException,
+                         "'%.50s' failed to be numpy.squeeze'd.",
+                         ((PyTypeObject *)Py_TYPE(ndarray_type))->tp_name);
         }
     }
 
@@ -993,7 +1015,8 @@ PyGmicImage_to_numpy_array(PyGmicImage *self, PyObject *args, PyObject *kwargs)
     // string, python type or numpy.dtype delegating this type check to the
     // astype() method
     if (return_ndarray != NULL && arg_astype != NULL) {
-        return_ndarray = PyObject_CallMethod(return_ndarray, "astype", "O", arg_astype);
+        return_ndarray =
+            PyObject_CallMethod(return_ndarray, "astype", "O", arg_astype);
     }
 
     Py_DECREF(ndarray_type);
@@ -1005,13 +1028,17 @@ PyGmicImage_to_numpy_array(PyGmicImage *self, PyObject *args, PyObject *kwargs)
 
     return return_ndarray;
 }
+#endif
+// end ifdef gmic_py_numpy
 
 static PyMethodDef PyGmicImage_methods[] = {
+#ifdef gmic_py_numpy
     {"from_numpy_array", (PyCFunction)PyGmicImage_from_numpy_array,
      METH_CLASS | METH_VARARGS | METH_KEYWORDS,
      "Make a GmicImage from a numpy.ndarray"},
     {"to_numpy_array", (PyCFunction)PyGmicImage_to_numpy_array,
      METH_VARARGS | METH_KEYWORDS, "Make a numpy.ndarray from a GmicImage"},
+#endif
     {NULL} /* Sentinel */
 };
 
