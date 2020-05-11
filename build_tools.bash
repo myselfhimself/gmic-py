@@ -190,9 +190,18 @@ function 5_test_wheel () {
 }
 
 function --help () {
+    # declares an array with the emojis we want to support
+    EMOJIS=(🍇 🍈 🍉 🍊 🍋 🍌 🍍 🥭 🍎 🍏 🍐 🍑 🍒 🍓 🥝 🍅 🥥 🥑 🍆 🥔 🥕 🌽 🌶 🥒 🥬 🥦)
+    
+    # selects a random element from the EMOJIS set
+
+    echo "☀️  G'MIC Python Binding Development & Build Tools ☀️ "
     echo "Usage: $0 function_name"
     echo "Functions:"
-    grep "^function" $0
+    for a in $(grep "^function" $0 | cut -d' ' -f2) ; do
+        SELECTED_EMOJI=${EMOJIS[$RANDOM % ${#EMOJIS[@]}]};
+        echo $SELECTED_EMOJI $a
+    done
 }
 
 if [ $# -gt 0 ]; then
