@@ -63,8 +63,8 @@ Note that `gmic-py`'s package installer links to your machine's existing `libpng
 | Build target                                                 | Basic gmic-py<sup>0</sup> |  ppm/bmp I/O    |  libpng I/O    | OpenMP | libcURL        | OpenCV         |
 | -----------                                                  | ------------------------- | -----------     | ----------     |------- | -------        |--------        |
 | Build from source<sup>1</sup>                                | ✓                         | ✓               | ✓ <sup>2</sup> | ✓      | ✓ <sup>2</sup> | ✓ <sup>2</sup> |
-| DIY Linux 32&64bit <sup>1</sup>                              | ✓                         | ✓               | ✓ <sup>2</sup> | ✓      | ✓ <sup>2</sup> | ✓ <sup>2</sup> |
-| Pre-compiled Linux i686 & x86\_64 py3.4-3.8 (gcc)<sup>m</sup>| ✓                         | ✓               | ✓              | ✓      | ✗ <sup>3</sup> | ✗              |
+| Github CI Ubuntu Linux 32&64bit <sup>1</sup>                              | ✓                         | ✓               | ✓ <sup>2</sup> | ✓      | ✓ <sup>2</sup> | ✓ <sup>2</sup> |
+| Pre-compiled Linux i686 & x86\_64 py3.5-3.8 (gcc)<sup>m</sup>| ✓                         | ✓               | ✓              | ✓      | ✓ <sup>3</sup> | ✗              |
 | Pre-compiled MacOS 64 py3.5-3.8 (clang)                      | ✓                         | ✓               | ✓              | ✓      | ✓              | ✗              |
 | Windows (planned)<sup>w</sup>                                | ✗                         | ✗               | ✗              | ✗      | ✗              | ✗              |
 
@@ -74,7 +74,7 @@ Note that `gmic-py`'s package installer links to your machine's existing `libpng
 
 <sup>2</sup> enabled if related library is found at compile time, using found `pkg-config` executable.
 
-<sup>3</sup> useful for samples retrieval and getting the latest filters collection updated; instead of linking against libcURL, any runtime-findable `curl` executable will be used, see [this issue](https://github.com/myselfhimself/gmic-py/issues/9); at anytime, use the `network 0` G'MIC command to disable internet access
+<sup>3</sup> useful for samples retrieval and getting the latest filters collection updated; libcurl is embedded in the wheel package. If failing, any runtime-findable `curl` executable will be used, see [this issue](https://github.com/myselfhimself/gmic-py/issues/9); at anytime, use the `network 0` G'MIC command to disable internet access
 
 <sup>m</sup> those are actually manylinux2010 and manylinux2014 targets. Manylinux1 has been dropped
 
