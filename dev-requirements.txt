@@ -4,4 +4,3 @@ Pillow
 pytest
 setuptools
 pytest-xdist #allow parallelization
-black
