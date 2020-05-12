@@ -38,4 +38,4 @@ jobs:
           CMD: ${{ matrix.cmd }}
         run: |
           for apt_file in `grep -lr microsoft /etc/apt/sources.list.d/`; do sudo rm $apt_file; done
-        bash build_tools.bash 33_build_manylinux # && bash build_tools.bash 11_send_to_pypi
+          bash build_tools.bash 33_build_manylinux # && bash build_tools.bash 11_send_to_pypi
