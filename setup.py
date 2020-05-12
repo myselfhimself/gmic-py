@@ -51,10 +51,7 @@ if pkgconfig.exists("opencv"):
     define_macros += [("cimg_use_opencv", None)]
     pkgconfig_list += ["opencv"]
 
-# Disable libcurl only on manylinuxes, because of a buggy audithweel repair constraint
-# See https://github.com/pypa/manylinux/issues/411
-# On any other platform, use libcurl if installed, else G'MIC falls back nicely to installed curl executable
-if "manylinux" not in environ.get("PLAT", "") and pkgconfig.exists("libcurl"):
+if pkgconfig.exists("libcurl"):
     define_macros += [("cimg_use_curl", None)]
     pkgconfig_list += ["libcurl"]
 
