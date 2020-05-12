@@ -296,10 +296,14 @@ def test_run_gmic_instance_run_simple_3pixels_bmp_output(gmic_instance_run):
 def test_gmic_image_parameters_fuzzying():
     import struct
 
-    # Fail test if anything else as a TypeError is raised
-    with pytest.raises(TypeError):
-        # This used to segfault / fail with core dump
-        i = gmic.GmicImage(None, 1, 3)
+    # This should not fail - empty data initializations of a GmicImage
+    gmic.GmicImage()
+    gmic.GmicImage(None)
+    gmic.GmicImage(None, 1, 3)
+    gmic.GmicImage(None, 1, 3, 5)
+    gmic.GmicImage(None, 1, 3, 5, 22)
+    gmic.GmicImage(width=1, depth=3)
+
 
     with pytest.raises(TypeError):
         # This used to segfault / fail with core dump
