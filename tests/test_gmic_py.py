@@ -304,7 +304,6 @@ def test_gmic_image_parameters_fuzzying():
     gmic.GmicImage(None, 1, 3, 5, 22)
     gmic.GmicImage(width=1, depth=3)
 
-
     with pytest.raises(TypeError):
         # This used to segfault / fail with core dump
         a = gmic.GmicImage(struct.pack("8f", 1, 3, 5, 7, 2, 6, 10, 14), 4, 2, 1, 1)
