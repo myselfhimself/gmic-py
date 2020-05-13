@@ -71,7 +71,9 @@ def test_gmic_image_to_numpy_ndarray_exception_on_unimportable_numpy_module(
 
     images = []
     gmic.run(images=images, command="sp lena")
-    with pytest.raises(gmic.GmicException, match=r".*'numpy' module cannot be imported.*"):
+    with pytest.raises(
+        gmic.GmicException, match=r".*'numpy' module cannot be imported.*"
+    ):
         images[0].to_numpy_array()
 
     # Repair our breaking of the numpy import
