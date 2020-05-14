@@ -412,6 +412,180 @@ run_impl(PyObject *self, PyObject *args, PyObject *kwargs)
     Py_RETURN_NONE;
 }
 
+#ifdef gmic_py_numpy
+/**
+ * Predictable Python 3.x 'numpy' module importer.
+ */
+PyObject *
+import_numpy_module()
+{
+    PyObject *numpy_module = PyImport_ImportModule("numpy");
+
+    // exit raising numpy_module import exception
+    if (!numpy_module) {
+        PyErr_Clear();
+        return PyErr_Format(GmicException,
+                            "The 'numpy' module cannot be imported. Is it "
+                            "installed or in your Python path?");
+    }
+
+    return numpy_module;
+}
+
+
+
+/*
+ * GmicImage class method from_numpy_array().
+ * This is a factory class method generating a G'MIC Image from a
+ * numpy.ndarray.
+ *
+ *  GmicImage.from_numpy_array(obj: numpy.ndarray, deinterleave=True: bool) ->
+ * GmicImage()
+ */
+static PyObject *
+PyGmicImage_from_numpy_array(PyObject *cls, PyObject *args, PyObject *kwargs)
+{
+    PyObject *py_arg_deinterleave =
+        Py_True;  // Will deinterleave the incoming numpy.ndarray by default
+    PyObject *arg_ndarray = NULL;
+    PyObject *ndarray_type = NULL;
+    PyObject *ndarray_dtype = NULL;
+    PyObject *ndarray_dtype_kind = NULL;
+    PyObject *float32_ndarray = NULL;
+    PyObject *ndarray_as_3d_unsqueezed_view = NULL;
+    PyObject *ndarray_as_3d_unsqueezed_view_expanded_dims = NULL;
+    PyObject *ndarray_shape_tuple = NULL;
+    unsigned int _width = 1, _height = 1, _depth = 1, _spectrum = 1;
+    PyObject *numpy_module = NULL;
+    PyObject *new_gmic_image = NULL;
+    PyObject *ndarray_data_bytesObj = NULL;
+    T *ndarray_data_bytesObj_ptr = NULL;
+    char const *keywords[] = {"numpy_array", "deinterleave", "_gmicimagetofill", NULL};
+    PyObject* py_gmicimage_to_fill = NULL;
+
+    numpy_module = import_numpy_module();
+    if (!numpy_module)
+        return NULL;
+
+    ndarray_type = PyObject_GetAttrString(numpy_module, "ndarray");
+
+    if (!PyArg_ParseTupleAndKeywords(
+            args, kwargs, (const char *)"O!|O!O!", (char **)keywords,
+            (PyTypeObject *)ndarray_type, &arg_ndarray, 
+	    &PyBool_Type, &py_arg_deinterleave,
+	    &PyGmicImageType, &py_gmicimage_to_fill))
+        return NULL;
+
+    // Get input ndarray.dtype and prevent non-integer/float/bool data types to
+    // be processed
+    ndarray_dtype = PyObject_GetAttrString(arg_ndarray, "dtype");
+    // Ensure dtype kind is a number we can convert (from dtype values here:
+    // https://numpy.org/doc/1.18/reference/generated/numpy.dtype.kind.html#numpy.dtype.kind)
+    ndarray_dtype_kind = PyObject_GetAttrString(ndarray_dtype, "kind");
+    if (strchr("biuf", (PyUnicode_ReadChar(ndarray_dtype_kind,
+                                           (Py_ssize_t)0))) == NULL) {
+        PyErr_Format(PyExc_TypeError,
+                     "Parameter 'data' of type 'numpy.ndarray' does not "
+                     "contain numbers ie. its 'dtype.kind'(=%U) is not one of "
+                     "'b', 'i', 'u', 'f'.",
+                     ndarray_dtype_kind);
+        // TODO pytest this
+        return NULL;
+    }
+
+    // Using an 'ndarray.astype' array casting operation first into G'MIC's
+    // core point type T <=> float32 With a memory-efficient-'ndarray.view'
+    // instead of copy-obligatory 'ndarray.astype' conversion, we might get the
+    // following error: ValueError: When changing to a larger dtype, its size
+    // must be a divisor of the total size in bytes of the last axis of the
+    // array. So, using 'astype' is the most stable, less memory-efficient way
+    // :-) :-/
+    float32_ndarray =
+        PyObject_CallMethod(arg_ndarray, "astype", "O",
+                            PyObject_GetAttrString(numpy_module, "float32"));
+
+    // Get unsqueezed shape of numpy array -> GmicImage width, height, depth,
+    // spectrum Getting a shape with the most axes from array:
+    // https://docs.scipy.org/doc/numpy-1.17.0/reference/generated/numpy.atleast_3d.html#numpy.atleast_3d
+    // Adding a depth axis using numpy.expand_dims:
+    // https://docs.scipy.org/doc/numpy-1.17.0/reference/generated/numpy.expand_dims.html
+    // (numpy tends to squeeze dimensions when calling the standard
+    // array().shape, we circumvent this)
+    ndarray_as_3d_unsqueezed_view =
+        PyObject_CallMethod(numpy_module, "atleast_3d", "O", float32_ndarray);
+    ndarray_as_3d_unsqueezed_view_expanded_dims = PyObject_CallMethod(
+        numpy_module, "expand_dims", "OI", ndarray_as_3d_unsqueezed_view,
+        2);  // Adding z axis if absent
+    // After this the shape should be (w, h, 1, 3)
+    ndarray_shape_tuple = PyObject_GetAttrString(
+        ndarray_as_3d_unsqueezed_view_expanded_dims, "shape");
+    _width =
+        (unsigned int)PyLong_AsSize_t(PyTuple_GetItem(ndarray_shape_tuple, 0));
+    _height =
+        (unsigned int)PyLong_AsSize_t(PyTuple_GetItem(ndarray_shape_tuple, 1));
+    _depth =
+        (unsigned int)PyLong_AsSize_t(PyTuple_GetItem(ndarray_shape_tuple, 2));
+    _spectrum =
+        (unsigned int)PyLong_AsSize_t(PyTuple_GetItem(ndarray_shape_tuple, 3));
+
+    if (!py_gmicimage_to_fill) {
+        py_gmicimage_to_fill = PyObject_CallFunction(
+            (PyObject *)&PyGmicImageType, (const char *)"OIIII",
+            Py_None,  // This empty _data buffer will be regenerated by the
+                      // GmicImage constructor as a zero-filled bytes object
+            _width, _height, _depth, _spectrum);
+    }
+
+    ndarray_data_bytesObj =
+        PyObject_CallMethod(ndarray_as_3d_unsqueezed_view, "tobytes", NULL);
+    ndarray_data_bytesObj_ptr = (T *)PyBytes_AsString(ndarray_data_bytesObj);
+
+    // no deinterleaving
+    if (!PyObject_IsTrue(py_arg_deinterleave)) {
+        for (unsigned int c = 0; c < _spectrum; c++) {
+            for (unsigned int z = 0; z < _depth; z++) {
+                for (unsigned int y = 0; y < _height; y++) {
+                    for (unsigned int x = 0; x < _width; x++) {
+                        ((PyGmicImage *)py_gmicimage_to_fill)
+                            ->_gmic_image(x, y, z, c) =
+                            *(ndarray_data_bytesObj_ptr++);
+                    }
+                }
+            }
+        }
+    }
+    else {  // deinterleaving
+        for (unsigned int z = 0; z < _depth; z++) {
+            for (unsigned int y = 0; y < _height; y++) {
+                for (unsigned int x = 0; x < _width; x++) {
+                    for (unsigned int c = 0; c < _spectrum; c++) {
+                        ((PyGmicImage *)py_gmicimage_to_fill)
+                            ->_gmic_image(x, y, z, c) =
+                            *(ndarray_data_bytesObj_ptr++);
+                    }
+                }
+            }
+        }
+    }
+
+    Py_XDECREF(py_arg_deinterleave);
+    Py_DECREF(arg_ndarray);
+    Py_DECREF(ndarray_dtype);
+    Py_DECREF(ndarray_dtype_kind);
+    Py_DECREF(float32_ndarray);
+    Py_DECREF(ndarray_as_3d_unsqueezed_view);
+    Py_DECREF(ndarray_as_3d_unsqueezed_view_expanded_dims);
+    Py_DECREF(ndarray_shape_tuple);
+    Py_DECREF(ndarray_data_bytesObj);
+    Py_DECREF(ndarray_type);
+    Py_DECREF(numpy_module);
+
+    return new_gmic_image;
+}
+
+#endif
+
+
 /** Instancing of any c++ gmic::gmic G'MIC language interpreter object (Python:
  * gmic.Gmic) **/
 static int
@@ -547,14 +721,12 @@ PyGmicImage_init(PyGmicImage *self, PyObject *args, PyObject *kwargs)
         }
     }
 
-    // Importing numpy.ndarray shape and import buffer after deinterleaving it
-    // We are skipping any need for a C API include of numpy, to use either
-    // python-language level API or common-python structure access
+    // Importing numpy.ndarray shape and import buffer without any deinterleaving
+    // Library users should use the GmicImage.from_numpy_array class method to tell about any (de)interleaving
     if (bytesObj_is_ndarray) {
-        PyErr_Format(PyExc_TypeError, "from_numpy_array must be used here");
-        // TODO use from_numpy_array without recursive loop
-        // TODO pytest this
+	if(!PyGmicImage_from_numpy_array(PyObject_GetAttrString((PyObject*)self, (const char*)"__class__"), Py_BuildValue((const char*)"(O)", bytesObj), NULL)) {
         return -1;
+	}
     }
     else  // if bytesObj_is_bytes
     {
@@ -570,9 +742,7 @@ PyGmicImage_init(PyGmicImage *self, PyObject *args, PyObject *kwargs)
                          dimensions_product * sizeof(T), _data_bytes_size);
             return -1;
         }
-    }
 
-    if (bytesObj_is_bytes) {
         // Importing input data to an internal buffer
         try {
             self->_gmic_image.assign(_width, _height, _depth, _spectrum);
@@ -594,15 +764,6 @@ PyGmicImage_init(PyGmicImage *self, PyObject *args, PyObject *kwargs)
         memcpy(self->_gmic_image._data, PyBytes_AsString(bytesObj),
                PyBytes_Size(bytesObj));
     }
-#ifdef gmic_py_numpy
-    else {  // if bytesObj is numpy
-        PyErr_Format(GmicException,
-                     "Piping a GmicImage constructor with a numpy.ndarray is "
-                     "not implemented yet");
-        return -1;  // TODO create buffer and dimensions separately from numpy
-                    // array and tie them an empty GmicImage
-    }
-#endif
 
     self->_gmic_image._is_shared = _is_shared;
 
@@ -755,169 +916,6 @@ PyGetSetDef PyGmicImage_getsets[] = {{(char *)"_data", /* name */
                                      {NULL}};
 
 #ifdef gmic_py_numpy
-/**
- * Predictable Python 3.x 'numpy' module importer.
- */
-PyObject *
-import_numpy_module()
-{
-    PyObject *numpy_module = PyImport_ImportModule("numpy");
-
-    // exit raising numpy_module import exception
-    if (!numpy_module) {
-        PyErr_Clear();
-        return PyErr_Format(GmicException,
-                            "The 'numpy' module cannot be imported. Is it "
-                            "installed or in your Python path?");
-    }
-
-    return numpy_module;
-}
-
-/*
- * GmicImage class method from_numpy_array().
- * This is a factory class method generating a G'MIC Image from a
- * numpy.ndarray.
- *
- *  GmicImage.from_numpy_array(obj: numpy.ndarray, deinterleave=True: bool) ->
- * GmicImage()
- */
-static PyObject *
-PyGmicImage_from_numpy_array(PyObject *cls, PyObject *args, PyObject *kwargs)
-{
-    PyObject *py_arg_deinterleave =
-        Py_True;  // Will deinterleave the incoming numpy.ndarray by default
-    PyObject *arg_ndarray = NULL;
-    PyObject *ndarray_type = NULL;
-    PyObject *ndarray_dtype = NULL;
-    PyObject *ndarray_dtype_kind = NULL;
-    PyObject *float32_ndarray = NULL;
-    PyObject *ndarray_as_3d_unsqueezed_view = NULL;
-    PyObject *ndarray_as_3d_unsqueezed_view_expanded_dims = NULL;
-    PyObject *ndarray_shape_tuple = NULL;
-    unsigned int _width = 1, _height = 1, _depth = 1, _spectrum = 1;
-    PyObject *numpy_module = NULL;
-    PyObject *new_gmic_image = NULL;
-    PyObject *ndarray_data_bytesObj = NULL;
-    T *ndarray_data_bytesObj_ptr = NULL;
-    char const *keywords[] = {"numpy_array", "deinterleave", NULL};
-
-    numpy_module = import_numpy_module();
-    if (!numpy_module)
-        return NULL;
-
-    ndarray_type = PyObject_GetAttrString(numpy_module, "ndarray");
-
-    if (!PyArg_ParseTupleAndKeywords(
-            args, kwargs, (const char *)"O!|O!", (char **)keywords,
-            (PyTypeObject *)ndarray_type, &arg_ndarray, &PyBool_Type,
-            &py_arg_deinterleave))
-        return NULL;
-
-    // Get input ndarray.dtype and prevent non-integer/float/bool data types to
-    // be processed
-    ndarray_dtype = PyObject_GetAttrString(arg_ndarray, "dtype");
-    // Ensure dtype kind is a number we can convert (from dtype values here:
-    // https://numpy.org/doc/1.18/reference/generated/numpy.dtype.kind.html#numpy.dtype.kind)
-    ndarray_dtype_kind = PyObject_GetAttrString(ndarray_dtype, "kind");
-    if (strchr("biuf", (PyUnicode_ReadChar(ndarray_dtype_kind,
-                                           (Py_ssize_t)0))) == NULL) {
-        PyErr_Format(PyExc_TypeError,
-                     "Parameter 'data' of type 'numpy.ndarray' does not "
-                     "contain numbers ie. its 'dtype.kind'(=%U) is not one of "
-                     "'b', 'i', 'u', 'f'.",
-                     ndarray_dtype_kind);
-        // TODO pytest this
-        return NULL;
-    }
-
-    // Using an 'ndarray.astype' array casting operation first into G'MIC's
-    // core point type T <=> float32 With a memory-efficient-'ndarray.view'
-    // instead of copy-obligatory 'ndarray.astype' conversion, we might get the
-    // following error: ValueError: When changing to a larger dtype, its size
-    // must be a divisor of the total size in bytes of the last axis of the
-    // array. So, using 'astype' is the most stable, less memory-efficient way
-    // :-) :-/
-    float32_ndarray =
-        PyObject_CallMethod(arg_ndarray, "astype", "O",
-                            PyObject_GetAttrString(numpy_module, "float32"));
-
-    // Get unsqueezed shape of numpy array -> GmicImage width, height, depth,
-    // spectrum Getting a shape with the most axes from array:
-    // https://docs.scipy.org/doc/numpy-1.17.0/reference/generated/numpy.atleast_3d.html#numpy.atleast_3d
-    // Adding a depth axis using numpy.expand_dims:
-    // https://docs.scipy.org/doc/numpy-1.17.0/reference/generated/numpy.expand_dims.html
-    // (numpy tends to squeeze dimensions when calling the standard
-    // array().shape, we circumvent this)
-    ndarray_as_3d_unsqueezed_view =
-        PyObject_CallMethod(numpy_module, "atleast_3d", "O", float32_ndarray);
-    ndarray_as_3d_unsqueezed_view_expanded_dims = PyObject_CallMethod(
-        numpy_module, "expand_dims", "OI", ndarray_as_3d_unsqueezed_view,
-        2);  // Adding z axis if absent
-    // After this the shape should be (w, h, 1, 3)
-    ndarray_shape_tuple = PyObject_GetAttrString(
-        ndarray_as_3d_unsqueezed_view_expanded_dims, "shape");
-    _width =
-        (unsigned int)PyLong_AsSize_t(PyTuple_GetItem(ndarray_shape_tuple, 0));
-    _height =
-        (unsigned int)PyLong_AsSize_t(PyTuple_GetItem(ndarray_shape_tuple, 1));
-    _depth =
-        (unsigned int)PyLong_AsSize_t(PyTuple_GetItem(ndarray_shape_tuple, 2));
-    _spectrum =
-        (unsigned int)PyLong_AsSize_t(PyTuple_GetItem(ndarray_shape_tuple, 3));
-
-    new_gmic_image = PyObject_CallFunction(
-        (PyObject *)&PyGmicImageType, (const char *)"OIIII",
-        Py_None,  // This empty _data buffer will be regenerated by the
-                  // GmicImage constructor as a zero-filled bytes object
-        _width, _height, _depth, _spectrum);
-
-    ndarray_data_bytesObj =
-        PyObject_CallMethod(ndarray_as_3d_unsqueezed_view, "tobytes", NULL);
-    ndarray_data_bytesObj_ptr = (T *)PyBytes_AsString(ndarray_data_bytesObj);
-
-    // no deinterleaving
-    if (!PyObject_IsTrue(py_arg_deinterleave)) {
-        for (unsigned int c = 0; c < _spectrum; c++) {
-            for (unsigned int z = 0; z < _depth; z++) {
-                for (unsigned int y = 0; y < _height; y++) {
-                    for (unsigned int x = 0; x < _width; x++) {
-                        ((PyGmicImage *)new_gmic_image)
-                            ->_gmic_image(x, y, z, c) =
-                            *(ndarray_data_bytesObj_ptr++);
-                    }
-                }
-            }
-        }
-    }
-    else {  // deinterleaving
-        for (unsigned int z = 0; z < _depth; z++) {
-            for (unsigned int y = 0; y < _height; y++) {
-                for (unsigned int x = 0; x < _width; x++) {
-                    for (unsigned int c = 0; c < _spectrum; c++) {
-                        ((PyGmicImage *)new_gmic_image)
-                            ->_gmic_image(x, y, z, c) =
-                            *(ndarray_data_bytesObj_ptr++);
-                    }
-                }
-            }
-        }
-    }
-
-    Py_XDECREF(py_arg_deinterleave);
-    Py_DECREF(arg_ndarray);
-    Py_DECREF(ndarray_dtype);
-    Py_DECREF(ndarray_dtype_kind);
-    Py_DECREF(float32_ndarray);
-    Py_DECREF(ndarray_as_3d_unsqueezed_view);
-    Py_DECREF(ndarray_as_3d_unsqueezed_view_expanded_dims);
-    Py_DECREF(ndarray_shape_tuple);
-    Py_DECREF(ndarray_data_bytesObj);
-    Py_DECREF(ndarray_type);
-    Py_DECREF(numpy_module);
-
-    return new_gmic_image;
-}
 
 /*
  * GmicImage object method to_numpy_array().
