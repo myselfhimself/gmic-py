@@ -447,7 +447,7 @@ PyGmicImage_from_numpy_array(PyObject *cls, PyObject *args, PyObject *kwargs)
 {
     PyObject *py_arg_deinterleave =
         Py_True;  // Will deinterleave the incoming numpy.ndarray by default
-    PyObject *arg_ndarray = NULL;
+    PyObject *py_arg_ndarray = NULL;
     PyObject *ndarray_type = NULL;
     PyObject *ndarray_dtype = NULL;
     PyObject *ndarray_dtype_kind = NULL;
@@ -470,14 +470,18 @@ PyGmicImage_from_numpy_array(PyObject *cls, PyObject *args, PyObject *kwargs)
 
     if (!PyArg_ParseTupleAndKeywords(
             args, kwargs, (const char *)"O!|O!O!", (char **)keywords,
-            (PyTypeObject *)ndarray_type, &arg_ndarray, 
+            (PyTypeObject *)ndarray_type, &py_arg_ndarray, 
 	    &PyBool_Type, &py_arg_deinterleave,
 	    &PyGmicImageType, &py_gmicimage_to_fill))
         return NULL;
 
+    Py_XINCREF(py_arg_ndarray);
+    Py_XINCREF(py_arg_deinterleave);
+    Py_XINCREF(py_gmicimage_to_fill);
+
     // Get input ndarray.dtype and prevent non-integer/float/bool data types to
     // be processed
-    ndarray_dtype = PyObject_GetAttrString(arg_ndarray, "dtype");
+    ndarray_dtype = PyObject_GetAttrString(py_arg_ndarray, "dtype");
     // Ensure dtype kind is a number we can convert (from dtype values here:
     // https://numpy.org/doc/1.18/reference/generated/numpy.dtype.kind.html#numpy.dtype.kind)
     ndarray_dtype_kind = PyObject_GetAttrString(ndarray_dtype, "kind");
@@ -500,7 +504,7 @@ PyGmicImage_from_numpy_array(PyObject *cls, PyObject *args, PyObject *kwargs)
     // array. So, using 'astype' is the most stable, less memory-efficient way
     // :-) :-/
     float32_ndarray =
-        PyObject_CallMethod(arg_ndarray, "astype", "O",
+        PyObject_CallMethod(py_arg_ndarray, "astype", "O",
                             PyObject_GetAttrString(numpy_module, "float32"));
 
     // Get unsqueezed shape of numpy array -> GmicImage width, height, depth,
@@ -570,8 +574,9 @@ PyGmicImage_from_numpy_array(PyObject *cls, PyObject *args, PyObject *kwargs)
         }
     }
 
+    Py_XDECREF(py_arg_ndarray);
     Py_XDECREF(py_arg_deinterleave);
-    Py_DECREF(arg_ndarray);
+    Py_XDECREF(py_gmicimage_to_fill);
     Py_DECREF(ndarray_dtype);
     Py_DECREF(ndarray_dtype_kind);
     Py_DECREF(float32_ndarray);
