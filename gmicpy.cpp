@@ -522,9 +522,9 @@ PyGmicImage_from_numpy_array(PyObject *cls, PyObject *args, PyObject *kwargs)
     // After this the shape should be (w, h, 1, 3)
     ndarray_shape_tuple = PyObject_GetAttrString(
         ndarray_as_3d_unsqueezed_view_expanded_dims, "shape");
-    _width =
-        (unsigned int)PyLong_AsSize_t(PyTuple_GetItem(ndarray_shape_tuple, 0));
     _height =
+        (unsigned int)PyLong_AsSize_t(PyTuple_GetItem(ndarray_shape_tuple, 0));
+    _width =
         (unsigned int)PyLong_AsSize_t(PyTuple_GetItem(ndarray_shape_tuple, 1));
     _depth =
         (unsigned int)PyLong_AsSize_t(PyTuple_GetItem(ndarray_shape_tuple, 2));
@@ -966,9 +966,9 @@ PyGmicImage_to_numpy_array(PyGmicImage *self, PyObject *args, PyObject *kwargs)
 
     ndarray_shape_tuple = PyList_New(0);
     PyList_Append(ndarray_shape_tuple,
-                  PyLong_FromSize_t((size_t)self->_gmic_image._width));
-    PyList_Append(ndarray_shape_tuple,
                   PyLong_FromSize_t((size_t)self->_gmic_image._height));
+    PyList_Append(ndarray_shape_tuple,
+                  PyLong_FromSize_t((size_t)self->_gmic_image._width));
 
     PyList_Append(ndarray_shape_tuple,
                   PyLong_FromSize_t((size_t)self->_gmic_image._depth));
