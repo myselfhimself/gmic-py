@@ -1,5 +1,6 @@
 # TEST 1: numpy(interleaved)->pyplot_display(interleaved)->gmic_from_nparray(deinterleaved)->gmic_display(deinterleaved)
 import gmic
+print(gmic.__spec__)
 import PIL
 import PIL.Image
 import numpy
