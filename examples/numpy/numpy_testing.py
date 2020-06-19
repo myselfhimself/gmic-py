@@ -7,7 +7,7 @@ from numpy import asarray, array_equal
 from matplotlib import pyplot
 
 gmic.run("sp duck output image.png")
-i = PIL.Image.open('image.png') # Lena sample
+i = PIL.Image.open('image.png') # Duck sample
 ii = asarray(i)
 print(ii.shape) #(512, 512, 3)
 print(ii.dtype) #uint8
@@ -20,13 +20,13 @@ print(ll.shape) #(512, 512, 3)
 print(ll.dtype) #uint8
 
 pyplot.imshow(ll)
-pyplot.show() # Lena in good colors, dimensions and orientation
+pyplot.show() # Good colors, dimensions and orientation
 
 pyplot.imshow(ii)
-pyplot.show() # Lena in good colors, dimensions and orientation
+pyplot.show() # Good colors, dimensions and orientation
 
 j = gmic.GmicImage.from_numpy_array(ll, deinterleave=True)
-gmic.run("display", j) # Lena in good colors, dimensions and orientation
+gmic.run("display", j) # Good colors, dimensions and orientation
 """
 [gmic]-1./ Display image [0] = '[unnamed]', from point (256,256,0).
 [0] = '[unnamed]':
@@ -36,7 +36,7 @@ gmic.run("display", j) # Lena in good colors, dimensions and orientation
 """
 
 jj = gmic.GmicImage.from_numpy_array(ii, deinterleave=True)
-gmic.run("display", jj) # Lena in good colors, dimensions and orientation
+gmic.run("display", jj) # Good colors, dimensions and orientation
 """
 [gmic]-1./ Display image [0] = '[unnamed]', from point (256,256,0).
 [0] = '[unnamed]':
