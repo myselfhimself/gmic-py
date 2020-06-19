@@ -1,8 +1,11 @@
-name: CPython GMIC Manylinux 2010 & 2014 i686 & x86_64
-# Use this for development purposes, not for release
+name: CPython Pypi Manylinux release of GMIC Python 2010 & 2014 i686 & x86_64
 # Ugly mix of https://github.com/htm-community/htm.core/blob/master/.github/workflows/build.yml and https://github.com/pypa/python-manylinux-demo
 
-on: [push]
+on:
+  push:
+    # Sequence of patterns matched against refs/tags
+    tags:
+    - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
 
 jobs:
   build:

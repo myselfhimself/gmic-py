@@ -76,6 +76,8 @@ if sys.platform == "darwin":
     extra_compile_args += ["-fopenmp", "-stdlib=libc++"]
     extra_link_args += [
         "-lomp",
+        "-O0",
+        "-g",
         "-nodefaultlibs",
         "-lc++",
     ]  # options inspired by https://github.com/explosion/spaCy/blob/master/setup.py

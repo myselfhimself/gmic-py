@@ -1,4 +1,5 @@
 name: CPython GMIC Python package (Source and Debian/Ubuntu OS compilation)
+# For development purpose only
 
 on: [push]
 
