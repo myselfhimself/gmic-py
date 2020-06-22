@@ -66,20 +66,28 @@ if sys.platform == "darwin":
 include_dirs = packages["include_dirs"] + [here, gmic_src_path]
 if sys.platform == "darwin":
     include_dirs += ["/usr/local/opt/llvm@6/include"]
-debugging_args = [
-    "-O0",
-    "-g",
-]  # Uncomment this for faster compilation with debug symbols and no optimization
+# Debugging is now set through --global-option --debug and more.
+# debugging_args = [
+#     "-O0",
+#     "-g",
+# ]  # Uncomment this for faster compilation with debug symbols and no optimization
 
-extra_compile_args = ["-std=c++11"] + debugging_args
+debug_enabled = "--debug" in sys.argv
+
+extra_compile_args = ["-std=c++11"]
+if debug_enabled:
+    extra_compile_args += ["-O0"]
+    extra_compile_args += ["-g"]
+else:
+    extra_compile_args += ["-Ofast", "-flto"]
+    extra_link_args += ["-flto"]
+
 if sys.platform == "darwin":
     extra_compile_args += ["-fopenmp", "-stdlib=libc++"]
     extra_link_args += [
         "-lomp",
-        "-O0",
-        "-g",
         "-nodefaultlibs",
-        "-lc++",
+        "-lc++"
     ]  # options inspired by https://github.com/explosion/spaCy/blob/master/setup.py
 elif sys.platform == "linux":  # Enable openmp for 32bit & 64bit linuxes
     extra_compile_args += ["-fopenmp"]

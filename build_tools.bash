@@ -92,6 +92,14 @@ function 2_compile () {
     set +x
 }
 
+function 2b_compile_debug () {
+    set -x
+
+    $PIP3 install -r dev-requirements.txt || { echo "Fatal pip install of dev-requirements.txt error" ; exit 1; }
+    $PYTHON3 setup.py --verbose build --debug 2>&1 || { echo "Fatal setup.py build error" ; exit 1; }
+    set +x
+}
+
 function 20_reformat_all () {
     # for daily developer use
     22_reformat_c_style
@@ -124,6 +132,9 @@ function 24_reformat_python_style () {
 }
 
 function 33_build_manylinux () {
+    # No manylinux debug by default
+    MANYLINUX_DEBUG=${MANYLINUX_DEBUG:-}
+
     # Feel free to preset the following variables before running this script
     # Default values allow for local running on a developer machine :)
     if [ -z "$DOCKER_IMAGE" ]
@@ -141,8 +152,12 @@ function 33_build_manylinux () {
     
     docker pull $DOCKER_IMAGE
     docker run --rm -e PLAT=$PLAT -v `pwd`:/io $DOCKER_IMAGE find /io
-    docker run --rm -e PLAT=$PLAT -v `pwd`:/io $DOCKER_IMAGE $PRE_CMD /bin/bash /io/manylinux/build-wheels.sh || { echo "Many linux build wheels script failed. Exiting" ; exit 1; }
+    docker run --rm -e PLAT=$PLAT -v `pwd`:/io $DOCKER_IMAGE $PRE_CMD /bin/bash /io/manylinux/build-wheels.sh "$MANYLINUX_DEBUG" || { echo "Many linux build wheels script failed. Exiting" ; exit 1; }
     ls wheelhouse/
+}
+
+function 33_build_manylinux_debug () {
+  MANYLINUX_DEBUG="--debug" 33_build_manylinux "$@"
 }
 
 function 3_test_compiled_so () {
