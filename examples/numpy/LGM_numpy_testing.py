@@ -11,7 +11,7 @@ gmic.run("display", l)
 
 ll = l[0].to_numpy_array(interleave=True, astype=numpy.uint8, squeeze_shape=True)
 print(ll.shape)
-print(ll.dtype) 
+print(ll.dtype)
 
 pyplot.imshow(ll)
 pyplot.show()
