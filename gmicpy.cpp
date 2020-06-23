@@ -434,7 +434,7 @@ import_numpy_module()
 
 /*
  * GmicImage class method from_numpy_array().
- * This is a factory class method generating a G'MIC Image from a
+ * This factory class method generates a G'MIC Image from a
  * numpy.ndarray.
  *
  *  GmicImage.from_numpy_array(obj: numpy.ndarray, deinterleave=True: bool) ->
