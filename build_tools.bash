@@ -164,7 +164,7 @@ function 33_build_manylinux () {
     ls wheelhouse/
 }
 
-function 33_build_manylinux_debug () {
+function 33b_build_manylinux_debug () {
   MANYLINUX_DEBUG="--debug" 33_build_manylinux "$@"
 }
 
