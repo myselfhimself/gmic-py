@@ -1,5 +1,6 @@
 # TEST 1: numpy(interleaved)->pyplot_display(interleaved)->gmic_from_nparray(deinterleaved)->gmic_display(deinterleaved)
 import gmic
+
 print(gmic.__spec__)
 import PIL
 import PIL.Image
@@ -8,26 +9,26 @@ from numpy import asarray, array_equal
 from matplotlib import pyplot
 
 gmic.run("sp duck output image.png")
-i = PIL.Image.open('image.png') # Duck sample
+i = PIL.Image.open("image.png")  # Duck sample
 ii = asarray(i)
-print(ii.shape) #(512, 512, 3)
-print(ii.dtype) #uint8
+print(ii.shape)  # (512, 512, 3)
+print(ii.dtype)  # uint8
 
 l = []
 gmic.run("sp duck", l)
 ll = l[0].to_numpy_array(interleave=True, astype=numpy.uint8, squeeze_shape=True)
-array_equal(ll,ii) # True
-print(ll.shape) #(512, 512, 3)
-print(ll.dtype) #uint8
+array_equal(ll, ii)  # True
+print(ll.shape)  # (512, 512, 3)
+print(ll.dtype)  # uint8
 
 pyplot.imshow(ll)
-pyplot.show() # Good colors, dimensions and orientation
+pyplot.show()  # Good colors, dimensions and orientation
 
 pyplot.imshow(ii)
-pyplot.show() # Good colors, dimensions and orientation
+pyplot.show()  # Good colors, dimensions and orientation
 
 j = gmic.GmicImage.from_numpy_array(ll, deinterleave=True)
-gmic.run("display", j) # Good colors, dimensions and orientation
+gmic.run("display", j)  # Good colors, dimensions and orientation
 """
 [gmic]-1./ Display image [0] = '[unnamed]', from point (256,256,0).
 [0] = '[unnamed]':
@@ -37,7 +38,7 @@ gmic.run("display", j) # Good colors, dimensions and orientation
 """
 
 jj = gmic.GmicImage.from_numpy_array(ii, deinterleave=True)
-gmic.run("display", jj) # Good colors, dimensions and orientation
+gmic.run("display", jj)  # Good colors, dimensions and orientation
 """
 [gmic]-1./ Display image [0] = '[unnamed]', from point (256,256,0).
 [0] = '[unnamed]':

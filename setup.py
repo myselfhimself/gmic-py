@@ -87,7 +87,7 @@ if sys.platform == "darwin":
     extra_link_args += [
         "-lomp",
         "-nodefaultlibs",
-        "-lc++"
+        "-lc++",
     ]  # options inspired by https://github.com/explosion/spaCy/blob/master/setup.py
 elif sys.platform == "linux":  # Enable openmp for 32bit & 64bit linuxes
     extra_compile_args += ["-fopenmp"]
