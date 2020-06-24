@@ -44,5 +44,5 @@ jobs:
       - name: upload wheelhouse as artifact
         uses: actions/upload-artifact@v2
         with:
-          name: macos-gmicpy-wheels
+          name: manylinux-gmicpy-optimized-wheels
           path: wheelhouse/

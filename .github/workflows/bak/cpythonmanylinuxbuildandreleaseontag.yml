@@ -1,4 +1,4 @@
-name: CPython Pypi Manylinux release of GMIC Python 2010 & 2014 i686 & x86_64
+name: CPython Pypi Manylinux Optimized release of GMIC Python 2010 & 2014 i686 & x86_64
 # Ugly mix of https://github.com/htm-community/htm.core/blob/master/.github/workflows/build.yml and https://github.com/pypa/python-manylinux-demo
 
 on:
@@ -43,4 +43,9 @@ jobs:
           GMIC_VERSION: 2.9.0
         run: |
           for apt_file in `grep -lr microsoft /etc/apt/sources.list.d/`; do sudo rm $apt_file; done
-          bash build_tools.bash 33_build_manylinux # && bash build_tools.bash 11_send_to_pypi
+          bash build_tools.bash 33_build_manylinux && bash build_tools.bash 11_send_to_pypi
+      - name: upload wheelhouse as artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: manylinux-gmicpy-optimized-released-wheels
+          path: wheelhouse/

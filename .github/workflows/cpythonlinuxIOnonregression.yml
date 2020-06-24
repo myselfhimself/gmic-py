@@ -1,4 +1,4 @@
-name: CPython gmic-py vs gmic-cli Linux I/O non-regression
+name: CPython gmic-py optimized vs gmic-cli Linux I/O non-regression
 
 on:
   push:
