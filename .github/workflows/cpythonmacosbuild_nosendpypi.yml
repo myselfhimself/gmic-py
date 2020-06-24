@@ -36,5 +36,12 @@ jobs:
           bash build_tools.bash 1_clean_and_regrab_gmic_src
           MACOSX_DEPLOYMENT_TARGET=10.10 pip install git+https://github.com/mayeut/cibuildwheel.git
           MACOSX_DEPLOYMENT_TARGET=10.10 python -m cibuildwheel --output-dir wheelhouse
-          # echo "Mac OS wheelhouse after cibuildwheel looks like:"
-          # bash build_tools.bash 11_send_to_pypi
+          echo "Mac OS wheelhouse after cibuildwheel looks like:"
+          echo `readlink -f wheelhouse`
+          ls -l wheelhouse
+      - name: upload wheelhouse as artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: macos-gmicpy-wheels
+          path: wheelhouse/
+      # bash build_tools.bash 11_send_to_pypi
