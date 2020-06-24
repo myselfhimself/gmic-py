@@ -18,6 +18,10 @@ if [ "1.2.51" \> "$(yum info libpng-devel | grep Version | cut -d':' -f2)" ]; th
     mv libpng12 /usr/include/
 fi
 
+# Allow building Pillow from source if needed (on old Centos builds)
+# Requirements inspired from Pillow's official Docker recipes at https://github.com/python-pillow/docker-images/blob/master/centos-6-amd64/Dockerfile
+yum install ghostscript libtiff-devel libjpeg-devel zlib-devel freetype-devel lcms2-devel libwebp-devel openjpeg2-devel tkinter tcl-devel tk-devel libffi-devel -y
+
 cd /io/
 
 
