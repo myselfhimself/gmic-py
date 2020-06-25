@@ -3,7 +3,6 @@ import inspect
 import os
 import pathlib
 import re
-from math import floor
 
 import gmic
 import pytest
@@ -401,7 +400,7 @@ def assert_get_proper_print_regex(w, h, search_str):
     assert (
         re.compile(
             r"size = \({},{},1,1\) \[{} b of floats\](.*)\n(.*)\n(.*)min = 0".format(
-                floor(w), floor(h), int(floor(w) * floor(h) * FLOAT_SIZE_IN_BYTES)
+                round(w), round(h), int(round(w) * round(h) * FLOAT_SIZE_IN_BYTES)
             ),
             flags=re.MULTILINE,
         ).search(search_str)
@@ -442,8 +441,8 @@ def assert_gmic_image_is_filled_with(gmic_image, w, h, d, s, pixel_value):
 def test_gmic_image_generation_and_gmic_multiple_resize_run(capfd, gmic_instance_run):
     import struct
 
-    w = 60
-    h = 60
+    w = 240
+    h = 240
     d = 1
     s = 1
     command_to_apply = "resize 50%,50%"
