@@ -397,8 +397,13 @@ def isclose(a, b, rel_tol=1e-09, abs_tol=0.0):
 
 def assert_get_proper_print_regex(w, h, search_str):
     import re
+
     bytes_size = int(round(w) * round(h) * FLOAT_SIZE_IN_BYTES)
-    bytes_size_str = "{} Kio".format(floor(bytes_size/1024)) if bytes_size > 1024 else "{} b".format(bytes_size)
+    bytes_size_str = (
+        "{} Kio".format(floor(bytes_size / 1024))
+        if bytes_size > 1024
+        else "{} b".format(bytes_size)
+    )
     assert (
         re.compile(
             r"size = \({},{},1,1\) \[{} of floats\](.*)\n(.*)\n(.*)min = 0".format(
