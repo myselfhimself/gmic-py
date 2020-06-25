@@ -3,6 +3,7 @@ import inspect
 import os
 import pathlib
 import re
+from math import floor
 
 import gmic
 import pytest
@@ -400,7 +401,7 @@ def assert_get_proper_print_regex(w, h, search_str):
     assert (
         re.compile(
             r"size = \({},{},1,1\) \[{} b of floats\](.*)\n(.*)\n(.*)min = 0".format(
-                round(w), round(h), int(round(w) * round(h) * FLOAT_SIZE_IN_BYTES)
+                floor(w), floor(h), int(floor(w) * floor(h) * FLOAT_SIZE_IN_BYTES)
             ),
             flags=re.MULTILINE,
         ).search(search_str)
