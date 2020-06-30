@@ -1,12 +1,7 @@
 name: CPython GMIC Debug Python package (Source and Debian/Ubuntu OS compilation)
 # For development purpose only, our fastest build chain with testing and without pypi sending
 
-# Prevent running job on tag-based release
-on:
-  push:
-    # Sequence of patterns matched against refs/tags
-    tags-ignore:
-      - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
+on: [push]
 
 jobs:
   build:
@@ -19,7 +14,17 @@ jobs:
 
     steps:
     - uses: actions/checkout@v1
-    - name: Set up Python ${{ matrix.python-version }}
+
+    # Prevent running this job on tag-based releases
+    - name: Check if Git tag exists
+      run: echo "::set-env name=HEAD_TAG::$(git tag --points-at HEAD)"
+    - name: Runs only if Git tag does not exist
+      run: |
+        echo "This runs because Git tag points at HEAD ..."
+        exit 1
+      if: env.HEAD_TAG != ''
+
+      - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v1
       with:
         python-version: ${{ matrix.python-version }}
