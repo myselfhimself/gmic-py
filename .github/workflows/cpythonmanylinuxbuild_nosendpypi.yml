@@ -6,8 +6,8 @@ name: CPython GMIC Manylinux 2010 & 2014 i686 & x86_64
 on:
   push:
     # Sequence of patterns matched against refs/tags
-    tags:
-      - '!v*' # Push events to matching v*, i.e. v1.0, v20.15.10
+    tags-ignore:
+      - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
 
 jobs:
   build:
