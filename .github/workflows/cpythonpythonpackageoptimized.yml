@@ -1,7 +1,12 @@
 name: CPython GMIC Optimized Python package (Source and Debian/Ubuntu OS compilation)
 # For development purpose only, our fastest build chain with testing and without pypi sending
 
-on: [push]
+# Prevent running job on tag-based release
+on:
+  push:
+    # Sequence of patterns matched against refs/tags
+    tags:
+      - '!v*' # Push events to matching v*, i.e. v1.0, v20.15.10
 
 jobs:
   build:

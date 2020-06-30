@@ -1,6 +1,7 @@
 name: CPython GMIC MacOS Optimized Build & Release on Tag
 # Imitating https://github.com/vinecopulib/pyvinecopulib/blob/master/.github/workflows/pypi.yml
 
+# Allow running this job only for v* tag pushes
 on:
   push:
     # Sequence of patterns matched against refs/tags
