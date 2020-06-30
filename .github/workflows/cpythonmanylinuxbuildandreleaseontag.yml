@@ -1,6 +1,7 @@
 name: CPython Pypi Manylinux Optimized release of GMIC Python 2010 & 2014 i686 & x86_64
 # Ugly mix of https://github.com/htm-community/htm.core/blob/master/.github/workflows/build.yml and https://github.com/pypa/python-manylinux-demo
 
+# Allow running this job only for v* tag pushes
 on:
   push:
     # Sequence of patterns matched against refs/tags
