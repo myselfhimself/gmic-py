@@ -1,12 +1,7 @@
 name: CPython GMIC MacOS Optimized Build
 # Imitating https://github.com/vinecopulib/pyvinecopulib/blob/master/.github/workflows/pypi.yml
 
-# Prevent running job on tag-based release
-on:
-  push:
-    # Sequence of patterns matched against refs/tags
-    tags-ignore:
-      - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
+on: [push]
 
 jobs:
   build:
@@ -16,6 +11,14 @@ jobs:
         python-version: [3.6]
     steps:
       - uses: actions/checkout@v1
+      # Prevent running this job on tag-based releases
+      - name: Check if Git tag exists
+        run: echo "::set-env name=HEAD_TAG::$(git tag --points-at HEAD)"
+      - name: Runs only if Git tag does not exist
+        run: |
+          echo "This runs because Git tag points at HEAD ..."
+          exit 1
+        if: env.HEAD_TAG != ''
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v1
         with:
