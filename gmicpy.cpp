@@ -33,35 +33,6 @@ typedef struct {
         gmic *_gmic;  // G'MIC library's interpreter instance
 } PyGmic;
 
-//--- NUMPY ARRAYS PROCESSING MACROS ----//
-// Macro returning (int) true if type if PyObject* op is a numpy.ndarray
-#define PyNumpyArray_Check(op)                                  \
-    ((int)(strcmp(((PyTypeObject *)PyObject_Type(op))->tp_name, \
-                  "numpy.ndarray") == 0))
-// Macro returning GmicImage version of PyObject* op with type numpy.ndarray
-#define PyNumpyArray_AS_PYGMICIMAGE(op)                                     \
-    (PyObject_CallFunction((PyObject *)&PyGmicImageType, (const char *)"O", \
-                           op))
-#define PyGmicImage_AS_NUMPYARRAY(shape, dtype, buffer, any_numpy_object) \
-    (PyObject_CallFunction(PyObject_Type(any_numpy_object),               \
-                           (const char *)"OOS", shape, dtype, buffer))
-
-/* TODO REMOVE THOSE NOTES WHEN READY
-PyGmicImage_AS_NUMPYARRAY(Py_BuildValue("(00)", 2, 1), &PyFloat_Type,
-PyBytes_FromStringAndSize(current_image->_gmic_image.data,
-sizeof(T)*current_image->_gmic_imag.size()), any_numpy_object)
-*/
-// NDArray constructor:
-// https://docs.scipy.org/doc/numpy/reference/generated/numpy.ndarray.html#numpy.ndarray
-// class numpy.ndarray(shape, dtype=float, buffer=None, offset=0, strides=None,
-// order=None)
-//>>> type(a)
-//<class 'numpy.ndarray'>
-//>>> type(a)((2,1), dtype=np.dtype(int), buffer=struct.pack('=4i', 3, 0, 2,
-// 0)) array([[3],
-//       [2]])
-//
-
 //------- G'MIC INTERPRETER INSTANCE BINDING ----------//
 
 static PyObject *
@@ -126,11 +97,6 @@ run_impl(PyObject *self, PyObject *args, PyObject *kwargs)
     PyObject *current_image = NULL;
     PyObject *current_image_name = NULL;
     PyObject *iter = NULL;
-
-    // TODO isolate numpy related code into foreign functions or not, with
-    // #ifdefs
-    bool must_return_all_items_as_numpy_array = false;
-    PyObject *any_numpy_object = NULL;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "s|OO", (char **)keywords,
                                      &commands_line, &input_gmic_images,
@@ -229,33 +195,20 @@ run_impl(PyObject *self, PyObject *args, PyObject *kwargs)
                     // If gmic_list item type is not a GmicImage
                     if (Py_TYPE(current_image) !=
                         (PyTypeObject *)&PyGmicImageType) {
-                        // If current image type is a numpy.ndarray
-                        if (PyNumpyArray_Check(current_image)) {
-                            // convert it to a GmicImage transparently
-                            current_image =
-                                PyNumpyArray_AS_PYGMICIMAGE(current_image);
-                            any_numpy_object = current_image;
-                            must_return_all_items_as_numpy_array = true;
-                            // Else if type is completely unknown, raise
-                            // exception
-                        }
-                        else {
-                            PyErr_Format(
-                                PyExc_TypeError,
-                                "'%.50s' input object found at position %d in "
-                                "'images' list is not a '%.400s'",
-                                Py_TYPE(current_image)->tp_name,
-                                image_position, PyGmicImageType.tp_name);
+                        PyErr_Format(
+                            PyExc_TypeError,
+                            "'%.50s' input object found at position %d in "
+                            "'images' list is not a '%.400s'",
+                            Py_TYPE(current_image)->tp_name,
+                            image_position, PyGmicImageType.tp_name);
 
-                            Py_XDECREF(input_gmic_images);
-                            Py_XDECREF(input_gmic_image_names);
+                        Py_XDECREF(input_gmic_images);
+                        Py_XDECREF(input_gmic_image_names);
 
-                            return NULL;
-                        }
+                        return NULL;
                     }
                     // Fill our just created gmic_list at same index with
-                    // gmic_image coming from Python or just converted from
-                    // numpy type
+                    // gmic_image coming from Python
                     swap_gmic_image_into_gmic_list(
                         (PyGmicImage *)current_image, images, image_position);
 
@@ -278,41 +231,34 @@ run_impl(PyObject *self, PyObject *args, PyObject *kwargs)
 
                 cimglist_for(images, l)
                 {
-                    // On the fly python GmicImage build (or numpy.ndarray
-                    // build if there was an ndarray in the input list) per
+                    // On the fly python GmicImage build per
                     // https://stackoverflow.com/questions/4163018/create-an-object-using-pythons-c-api/4163055#comment85217110_4163055
                     PyObject *_data = PyBytes_FromStringAndSize(
                         (const char *)images[l]._data,
                         (Py_ssize_t)sizeof(T) * images[l].size());
                     PyObject *new_gmic_image = NULL;
-                    if (must_return_all_items_as_numpy_array) {
-                        // TODO build shape tuple according to real dimensions
-                        new_gmic_image = PyGmicImage_AS_NUMPYARRAY(
-                            Py_BuildValue("(00)", 2, 1), &PyFloat_Type, _data,
-                            any_numpy_object);
+
+                    new_gmic_image = PyObject_CallFunction(
+                        (PyObject *)&PyGmicImageType,
+                        // The last argument is a p(redicate), ie.
+                        // boolean..
+                        // but Py_BuildValue() used by
+                        // PyObject_CallFunction has a slightly different
+                        // parameters format specification
+                        (const char *)"SIIIIi", _data,
+                        (unsigned int)images[l]._width,
+                        (unsigned int)images[l]._height,
+                        (unsigned int)images[l]._depth,
+                        (unsigned int)images[l]._spectrum,
+                        (int)images[l]._is_shared);
+                    if (new_gmic_image == NULL) {
+                        PyErr_Format(
+                            PyExc_RuntimeError,
+                            "Could not initialize GmicImage for appending "
+                            "it to provided 'images' parameter list.");
+                        return NULL;
                     }
-                    else {
-                        new_gmic_image = PyObject_CallFunction(
-                            (PyObject *)&PyGmicImageType,
-                            // The last argument is a p(redicate), ie.
-                            // boolean..
-                            // but Py_BuildValue() used by
-                            // PyObject_CallFunction has a slightly different
-                            // parameters format specification
-                            (const char *)"SIIIIi", _data,
-                            (unsigned int)images[l]._width,
-                            (unsigned int)images[l]._height,
-                            (unsigned int)images[l]._depth,
-                            (unsigned int)images[l]._spectrum,
-                            (int)images[l]._is_shared);
-                        if (new_gmic_image == NULL) {
-                            PyErr_Format(
-                                PyExc_RuntimeError,
-                                "Could not initialize GmicImage for appending "
-                                "it to provided 'images' parameter list.");
-                            return NULL;
-                        }
-                    }
+
                     PyList_Append(input_gmic_images, new_gmic_image);
                 }
 
@@ -351,14 +297,12 @@ run_impl(PyObject *self, PyObject *args, PyObject *kwargs)
                     return NULL;
                 }
             }
-            // Else if provided 'images' type is unknown (or is a single
-            // numpy.ndarray, which unfortunately cannot be updated in place),
-            // raise Error
+            // Else if provided 'images' type is unknown, raise Error
             else {
                 PyErr_Format(
                     PyExc_TypeError,
                     "'%.50s' 'images' parameter must be a '%.400s', or list "
-                    "of either '%.400s'(s) or 'numpy.ndarray'(s)",
+                    "of either '%.400s'(s)",
                     Py_TYPE(input_gmic_images)->tp_name,
                     PyGmicImageType.tp_name, PyGmicImageType.tp_name);
                 Py_XDECREF(input_gmic_images);
@@ -587,7 +531,9 @@ PyGmicImage_from_numpy_array(PyObject *cls, PyObject *args, PyObject *kwargs)
     return py_gmicimage_to_fill;
 }
 
+// End of ifdef gmic_py_numpy
 #endif
+
 
 /** Instancing of any c++ gmic::gmic G'MIC language interpreter object (Python:
  * gmic.Gmic) **/
@@ -666,11 +612,7 @@ PyGmicImage_init(PyGmicImage *self, PyObject *args, PyObject *kwargs)
         0;  // Whether image should be shared across gmic operations (if true,
             // operations like resize will fail)
     PyObject *bytesObj = NULL;  // Incoming bytes buffer object pointer
-    // TODO use this temporary buffer for numpy.ndarray inputs
-    // PyObject *tmp_numpy_gmic_image =
-    //     NULL;  // Used to setup an image that we will memcpy from input
-    //            // numpy.ndarray into self->gmic_image
-    bool bytesObj_is_ndarray = false;
+
     bool bytesObj_is_bytes = false;
     char const *keywords[] = {"data",     "width",  "height", "depth",
                               "spectrum", "shared", NULL};
@@ -691,10 +633,9 @@ PyGmicImage_init(PyGmicImage *self, PyObject *args, PyObject *kwargs)
 
     if (bytesObj != Py_None) {
         bytesObj_is_bytes = (bool)PyBytes_Check(bytesObj);
-        bytesObj_is_ndarray = PyNumpyArray_Check(bytesObj);
-        if (!bytesObj_is_ndarray && !bytesObj_is_bytes) {
+        if (!bytesObj_is_bytes) {
             PyErr_Format(PyExc_TypeError,
-                         "Parameter 'data' must be a 'numpy.ndarray' or a "
+                         "Parameter 'data' must be a "
                          "pure-python 'bytes' buffer object.");
             // TODO pytest this
             return -1;
@@ -724,58 +665,39 @@ PyGmicImage_init(PyGmicImage *self, PyObject *args, PyObject *kwargs)
         }
     }
 
-    // Importing numpy.ndarray shape and import buffer without any prior
-    // deinterleaving pass Library users should use the
-    // GmicImage.from_numpy_array class method instead to be able to tune
-    // (de)interleaving
-    if (bytesObj_is_ndarray) {
-        if (!PyGmicImage_from_numpy_array(
-                PyObject_GetAttrString((PyObject *)self,
-                                       (const char *)"__class__"),
-                Py_BuildValue((const char *)"(NNN)", bytesObj, Py_False, self),
-                NULL)) {
-            PyErr_Format(GmicException,
-                         "delegated from_numpy_array used as co-constructor "
-                         "returned NULL");
-            return -1;
-        }
+    // Bytes object spatial dimensions vs. bytes-length checking
+    dimensions_product = _width * _height * _depth * _spectrum;
+    _data_bytes_size = PyBytes_Size(bytesObj);
+    if ((Py_ssize_t)(dimensions_product * sizeof(T)) != _data_bytes_size) {
+        PyErr_Format(PyExc_ValueError,
+                     "GmicImage dimensions-induced buffer bytes size "
+                     "(%d*%dB=%d) cannot be strictly negative or "
+                     "different than the _data buffer size in bytes (%d)",
+                     dimensions_product, sizeof(T),
+                     dimensions_product * sizeof(T), _data_bytes_size);
+        return -1;
     }
-    else  // if bytesObj_is_bytes
-    {
-        // Bytes object spatial dimensions vs. bytes-length checking
+
+    // Importing input data to an internal buffer
+    try {
+        self->_gmic_image.assign(_width, _height, _depth, _spectrum);
+    }
+    // Ugly exception catching, probably to catch a
+    // cimg::GmicInstanceException()
+    catch (...) {
         dimensions_product = _width * _height * _depth * _spectrum;
-        _data_bytes_size = PyBytes_Size(bytesObj);
-        if ((Py_ssize_t)(dimensions_product * sizeof(T)) != _data_bytes_size) {
-            PyErr_Format(PyExc_ValueError,
-                         "GmicImage dimensions-induced buffer bytes size "
-                         "(%d*%dB=%d) cannot be strictly negative or "
-                         "different than the _data buffer size in bytes (%d)",
-                         dimensions_product, sizeof(T),
-                         dimensions_product * sizeof(T), _data_bytes_size);
-            return -1;
-        }
-
-        // Importing input data to an internal buffer
-        try {
-            self->_gmic_image.assign(_width, _height, _depth, _spectrum);
-        }
-        // Ugly exception catching, probably to catch a
-        // cimg::GmicInstanceException()
-        catch (...) {
-            dimensions_product = _width * _height * _depth * _spectrum;
-            PyErr_Format(PyExc_MemoryError,
-                         "Allocation error in "
-                         "GmicImage::assign(_width=%d,_height=%d,_depth=%d,_"
-                         "spectrum=%d), "
-                         "are you requesting too much memory (%d bytes)?",
-                         _width, _height, _depth, _spectrum,
-                         dimensions_product * sizeof(T));
-            return -1;
-        }
-
-        memcpy(self->_gmic_image._data, PyBytes_AsString(bytesObj),
-               PyBytes_Size(bytesObj));
+        PyErr_Format(PyExc_MemoryError,
+                     "Allocation error in "
+                     "GmicImage::assign(_width=%d,_height=%d,_depth=%d,_"
+                     "spectrum=%d), "
+                     "are you requesting too much memory (%d bytes)?",
+                     _width, _height, _depth, _spectrum,
+                     dimensions_product * sizeof(T));
+        return -1;
     }
+
+    memcpy(self->_gmic_image._data, PyBytes_AsString(bytesObj),
+           PyBytes_Size(bytesObj));
 
     self->_gmic_image._is_shared = _is_shared;
 
