@@ -199,8 +199,8 @@ run_impl(PyObject *self, PyObject *args, PyObject *kwargs)
                             PyExc_TypeError,
                             "'%.50s' input object found at position %d in "
                             "'images' list is not a '%.400s'",
-                            Py_TYPE(current_image)->tp_name,
-                            image_position, PyGmicImageType.tp_name);
+                            Py_TYPE(current_image)->tp_name, image_position,
+                            PyGmicImageType.tp_name);
 
                         Py_XDECREF(input_gmic_images);
                         Py_XDECREF(input_gmic_image_names);
@@ -533,7 +533,6 @@ PyGmicImage_from_numpy_array(PyObject *cls, PyObject *args, PyObject *kwargs)
 
 // End of ifdef gmic_py_numpy
 #endif
-
 
 /** Instancing of any c++ gmic::gmic G'MIC language interpreter object (Python:
  * gmic.Gmic) **/
