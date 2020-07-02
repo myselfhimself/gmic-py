@@ -50,7 +50,7 @@ jobs:
           DOCKER_IMAGE: ${{ matrix.docker_image }}
           PLAT: ${{ matrix.plat }}
           CMD: ${{ matrix.cmd }}
-          GMIC_VERSION: 2.9.0
+          GMIC_VERSION: 2.9.1
         run: |
           for apt_file in `grep -lr microsoft /etc/apt/sources.list.d/`; do sudo rm $apt_file; done
           bash build_tools.bash 33_build_manylinux # && bash build_tools.bash 11_send_to_pypi
