@@ -475,7 +475,6 @@ PyGmicImage_from_numpy_array(PyObject *cls, PyObject *args, PyObject *kwargs)
 
     Py_XINCREF(py_arg_ndarray);
     Py_XINCREF(py_arg_deinterleave);
-    Py_XINCREF(py_gmicimage_to_fill);
 
     // Get input ndarray.dtype and prevent non-integer/float/bool data types to
     // be processed
@@ -544,7 +543,6 @@ PyGmicImage_from_numpy_array(PyObject *cls, PyObject *args, PyObject *kwargs)
     ndarray_data_bytesObj =
         PyObject_CallMethod(ndarray_as_3d_unsqueezed_view, "tobytes", NULL);
     ndarray_data_bytesObj_ptr = (T *)PyBytes_AsString(ndarray_data_bytesObj);
-    PyObject_Print(py_gmicimage_to_fill, stderr, 0);
 
     // no deinterleaving
     if (!PyObject_IsTrue(py_arg_deinterleave)) {
@@ -576,7 +574,6 @@ PyGmicImage_from_numpy_array(PyObject *cls, PyObject *args, PyObject *kwargs)
 
     Py_XDECREF(py_arg_ndarray);
     Py_XDECREF(py_arg_deinterleave);
-    Py_XDECREF(py_gmicimage_to_fill);
     Py_DECREF(ndarray_dtype);
     Py_DECREF(ndarray_dtype_kind);
     Py_DECREF(float32_ndarray);
