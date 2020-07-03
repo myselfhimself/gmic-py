@@ -43,9 +43,6 @@ def test_catch_exceptions(gmic_instance_run):
 
 
 @pytest.mark.parametrize(**gmic_instance_types)
-@pytest.mark.skip(
-    reason="skipping for gmic-py 2.9.1 only (Linux only) see https://github.com/myselfhimself/gmic-py/issues/47"
-)
 def test_run_gmic_ensure_openmp_linked_and_working(capfd, gmic_instance_run):
     import traceback
     import sys
