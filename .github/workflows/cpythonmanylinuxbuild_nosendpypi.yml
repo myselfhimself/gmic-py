@@ -1,4 +1,4 @@
-name: CPython GMIC Manylinux 2010 & 2014 i686 & x86_64
+name: CPython GMIC Manylinux 2010 & 2014 i686 & x86_64 Optimized No-release
 # Use this for development purposes, not for release
 # Ugly mix of https://github.com/htm-community/htm.core/blob/master/.github/workflows/build.yml and https://github.com/pypa/python-manylinux-demo
 
