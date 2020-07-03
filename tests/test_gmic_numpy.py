@@ -70,7 +70,7 @@ def test_gmic_image_to_numpy_ndarray_exception_on_unimportable_numpy_module(
     import gmic
 
     images = []
-    gmic.run(images=images, command="sp lena")
+    gmic.run(images=images, command="sp duck")
     with pytest.raises(
         gmic.GmicException, match=r".*'numpy' module cannot be imported.*"
     ):
@@ -123,15 +123,15 @@ def test_gmic_image_to_numpy_array_fuzzying(
     assert numpy_image1.shape == numpy_image2.shape
     if gmic_image._depth > 1:  # 3d image shape checking
         assert numpy_image1.shape == (
-            gmic_image._width,
             gmic_image._height,
+            gmic_image._width,
             gmic_image._depth,
             gmic_image._spectrum,
         )
     else:  # 2d image shape checking
         assert numpy_image1.shape == (
-            gmic_image._width,
             gmic_image._height,
+            gmic_image._width,
             gmic_image._spectrum,
         )
     if dtype1 is None:
@@ -157,8 +157,8 @@ def test_gmic_image_to_numpy_ndarray_basic_attributes(gmic_instance_run):
     numpy_image = gmic_image.to_numpy_array(interleave=False)
     assert numpy_image.dtype == numpy.float32
     assert numpy_image.shape == (
-        gmic_image._width,
         gmic_image._height,
+        gmic_image._width,
         gmic_image._spectrum,
     )
     bb = numpy_image.tobytes()
@@ -169,8 +169,8 @@ def test_gmic_image_to_numpy_ndarray_basic_attributes(gmic_instance_run):
 @pytest.mark.parametrize(**gmic_instance_types)
 def test_in_memory_gmic_image_to_numpy_nd_array_to_gmic_image(gmic_instance_run):
     single_image_list = []
-    gmic_instance_run(images=single_image_list, command="sp lena")
-    # TODO convert back and compare with original sp lena GmicImage
+    gmic_instance_run(images=single_image_list, command="sp duck")
+    # TODO convert back and compare with original sp duck GmicImage
 
 
 @pytest.mark.parametrize(**gmic_instance_types)
@@ -183,7 +183,7 @@ def test_numpy_ndarray_RGB_2D_image_gmic_run_without_gmicimage_wrapping(
 
     im1_name = "image.png"
     im2_name = "image.png"
-    gmic_instance_run("sp lena output " + im1_name)
+    gmic_instance_run("sp duck output " + im1_name)
     np_PIL_image = numpy.array(PIL.Image.open(im1_name))
     # TODO line below must fail because single numpy arrays rewrite is impossible for us
     with pytest.raises(
@@ -194,12 +194,9 @@ def test_numpy_ndarray_RGB_2D_image_gmic_run_without_gmicimage_wrapping(
     gmic_instance_run(images=imgs, command="{} {}".format(im1_name, im2_name))
     assert_gmic_images_are_identical(imgs[0], imgs[1])
 
-    # TODO input with list of numpy.ndarray's []
-    # TODO input with list of mixed numpy and GmicImage objects[]
-
 
 @pytest.mark.parametrize(**gmic_instance_types)
-def test_numpy_ndarray_RGB_2D_image_integrity_through_numpyPIL_or_gmic_with_gmicimage_wrapping(
+def test_numpy_ndarray_RGB_2D_image_integrity_through_numpyPIL_or_gmicimage_from_numpy_factory_method(
     gmic_instance_run,
 ):
     import PIL.Image
@@ -208,25 +205,25 @@ def test_numpy_ndarray_RGB_2D_image_integrity_through_numpyPIL_or_gmic_with_gmic
     im1_name = "image.bmp"
     im2_name = "image2.bmp"
 
-    # 1. Generate lena bitmap, save it to disk
-    gmic_instance_run("sp lena -output " + im1_name)
+    # 1. Generate duck bitmap, save it to disk
+    gmic_instance_run("sp duck -output " + im1_name)
 
-    # 2. Load disk lena through PIL/numpy, make it a GmicImage
+    # 2. Load disk duck through PIL/numpy, make it a GmicImage
     image_from_numpy = numpy.array(PIL.Image.open(im1_name))
     assert type(image_from_numpy) == numpy.ndarray
-    assert image_from_numpy.shape == (512, 512, 3)
+    assert image_from_numpy.shape == (480, 640, 3)
     assert image_from_numpy.dtype == "uint8"
     assert image_from_numpy.dtype.kind == "u"
-    gmicimage_from_numpy = gmic.GmicImage(image_from_numpy)
+    gmicimage_from_numpy = gmic.GmicImage.from_numpy_array(image_from_numpy)
 
     gmic_instance_run(images=gmicimage_from_numpy, command=("output[0] " + im2_name))
 
-    # 3. Load lena into a regular GmicImage through G'MIC without PIL/numpy
+    # 3. Load duck into a regular GmicImage through G'MIC without PIL/numpy
     imgs = []
-    gmic_instance_run(images=imgs, command="sp lena")
+    gmic_instance_run(images=imgs, command="sp duck")
     gmicimage_from_gmic = imgs[0]
 
-    # 4. Use G'MIC to compare both lena GmicImages from numpy and gmic sources
+    # 4. Use G'MIC to compare both duck GmicImages from numpy and gmic sources
     assert_gmic_images_are_identical(gmicimage_from_numpy, gmicimage_from_gmic)
     assert_non_empty_file_exists(im1_name).unlink()
     assert_non_empty_file_exists(im2_name).unlink()
@@ -239,7 +236,7 @@ def test_numpy_PIL_modes_to_gmic(gmic_instance_run):
 
     origin_image_name = "a.bmp"
     gmicimages = []
-    gmic_instance_run("sp lena output " + origin_image_name)
+    gmic_instance_run("sp duck output " + origin_image_name)
     PILimage = PIL.Image.open("a.bmp")
 
     modes = [
@@ -259,29 +256,61 @@ def test_numpy_PIL_modes_to_gmic(gmic_instance_run):
         PILConvertedImage = PILimage.convert(mode=mode)
         NPArrayImages = [numpy.array(PILConvertedImage)]
         print(PILConvertedImage, NPArrayImages[0].shape, NPArrayImages[0].dtype)
-        # gmic_instance_run(images=NPArrayImages, command="print") # TODO this segfaults.. more checking here
+        gmicimages = [gmic.GmicImage.from_numpy_array(nd) for nd in NPArrayImages]
+        gmic_instance_run(images=gmicimages, command="print")
+
+    # TODO this test seems uncomplete..
 
     # Outputs
     """
-    <PIL.Image.Image image mode=1 size=512x512 at 0x7FAD99B18908> (512, 512) bool
-    <PIL.Image.Image image mode=L size=512x512 at 0x7FAD324FD4E0> (512, 512) uint8
-    <PIL.Image.Image image mode=P size=512x512 at 0x7FAD324FD8D0> (512, 512) uint8
-    <PIL.Image.Image image mode=RGB size=512x512 at 0x7FAD324FD908> (512, 512, 3) uint8
-    <PIL.Image.Image image mode=RGBA size=512x512 at 0x7FAD324FD8D0> (512, 512, 4) uint8
-    <PIL.Image.Image image mode=CMYK size=512x512 at 0x7FAD324FD908> (512, 512, 4) uint8
-    <PIL.Image.Image image mode=YCbCr size=512x512 at 0x7FAD324FD8D0> (512, 512, 3) uint8
-    <PIL.Image.Image image mode=HSV size=512x512 at 0x7FAD324FD908> (512, 512, 3) uint8
-    <PIL.Image.Image image mode=I size=512x512 at 0x7FAD324FD8D0> (512, 512) int32
-    <PIL.Image.Image image mode=F size=512x512 at 0x7FAD324FD908> (512, 512) float32
+    <PIL.Image.Image image mode=1 size=640x480 at 0x7FAD99B18908> (640, 480) bool
+    <PIL.Image.Image image mode=L size=640x480 at 0x7FAD324FD4E0> (640, 480) uint8
+    <PIL.Image.Image image mode=P size=640x480 at 0x7FAD324FD8D0> (640, 480) uint8
+    <PIL.Image.Image image mode=RGB size=640x480 at 0x7FAD324FD908> (640, 480, 3) uint8
+    <PIL.Image.Image image mode=RGBA size=640x480 at 0x7FAD324FD8D0> (640, 480, 4) uint8
+    <PIL.Image.Image image mode=CMYK size=640x480 at 0x7FAD324FD908> (640, 480, 4) uint8
+    <PIL.Image.Image image mode=YCbCr size=640x480 at 0x7FAD324FD8D0> (640, 480, 3) uint8
+    <PIL.Image.Image image mode=HSV size=640x480 at 0x7FAD324FD908> (640, 480, 3) uint8
+    <PIL.Image.Image image mode=I size=640x480 at 0x7FAD324FD8D0> (640, 480) int32
+    <PIL.Image.Image image mode=F size=640x480 at 0x7FAD324FD908> (640, 480) float32
     """
 
     assert_non_empty_file_exists(origin_image_name).unlink()
 
 
-@pytest.mark.xfail(reason="method to implement soon")
+def test_basic_from_numpy_array_to_numpy_array():
+    duck = []
+    gmic.run("sp duck", duck)
+    original_duck_gmic_image = duck[0]
+    duck_numpy_image = original_duck_gmic_image.to_numpy_array()
+    duck_io_gmic_image = gmic.GmicImage.from_numpy_array(duck_numpy_image)
+
+    assert_gmic_images_are_identical(original_duck_gmic_image, duck_io_gmic_image)
+
+
+def test_basic_to_numpy_array_from_numpy_array():
+    gmic.run("sp duck output duck.png")
+    import PIL.Image
+
+    pil_image = numpy.array(PIL.Image.open("duck.png"))
+
+    pil_gmic_image = gmic.GmicImage.from_numpy_array(pil_image)
+    duck_io_numpy_image = pil_gmic_image.to_numpy_array()
+
+    assert numpy.array_equal(duck_io_numpy_image, pil_image)
+
+    assert_non_empty_file_exists("duck.png").unlink()
+
+
 def test_from_numpy_array_class_method_existence():
     # should not raise any AttributeError
-    getattr(gmic.Gmic, "from_numpy_array")
+    getattr(gmic.GmicImage, "from_numpy_array")
+
+
+def test_to_numpy_array_instance_method_existence():
+    a = gmic.GmicImage()
+    # should not raise any AttributeError
+    getattr(a, "to_numpy_array")
 
 
 # Useful for some IDEs with debugging support
