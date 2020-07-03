@@ -1,6 +1,7 @@
 name: CPython GMIC MacOS Optimized Build
 # Imitating https://github.com/vinecopulib/pyvinecopulib/blob/master/.github/workflows/pypi.yml
 
+# This shall not be run on tag-based releases
 on: [push]
 
 jobs:

@@ -2,12 +2,8 @@ name: CPython GMIC Manylinux 2010 & 2014 i686 & x86_64
 # Use this for development purposes, not for release
 # Ugly mix of https://github.com/htm-community/htm.core/blob/master/.github/workflows/build.yml and https://github.com/pypa/python-manylinux-demo
 
-# Prevent running job on tag-based release
-on:
-  push:
-    # Sequence of patterns matched against refs/tags
-    tags-ignore:
-      - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
+# See further, this job shall not be run on tag-based releases
+on: [push]
 
 jobs:
   build:
