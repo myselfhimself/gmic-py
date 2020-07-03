@@ -35,7 +35,7 @@ jobs:
           CIBW_ENVIRONMENT: "CC='/usr/local/opt/llvm@6/bin/clang' CXX='/usr/local/opt/llvm@6/bin/clang++' COMPILER_INDEX_STORE_ENABLE='NO'"
           CIBW_BEFORE_BUILD: pip install -r dev-requirements.txt
           CIBW_TEST_REQUIRES: pytest numpy Pillow
-          CIBW_TEST_COMMAND: python -W default -m pytest {project}/tests/test_gmic_py.py -vvv -rxXs
+          CIBW_TEST_COMMAND: python -W default -m pytest {project}/tests/test_gmic_py.py {project}/tests/test_gmic_numpy.py -vvv -rxXs
           CIBW_BUILD_VERBOSITY: 3
           MACOSX_DEPLOYMENT_TARGET: 10.10
         run: |
