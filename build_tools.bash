@@ -1,9 +1,17 @@
-# TL;DR ? Just run bash build_tools.bash --help
+# TL;DR ? Just run bash build_tools.bash [--help]
 
 PYTHON3=${PYTHON3:-python3}
 PIP3=${PIP3:-pip3}
 PYTHON_VERSION=$($PYTHON3 --version | cut -d' ' -f2 | cut -d'.' -f1,2)
-GMIC_VERSION=${GMIC_VERSION:-2.9.1}
+# Guess target G'MIC version from VERSION file's contents
+if [ -f "VERSION" ]; then
+    FILE_BASED_GMIC_VERSION=$(cat VERSION)
+fi
+GMIC_VERSION=${GMIC_VERSION:-$FILE_BASED_GMIC_VERSION}
+if [ -z "$GMIC_VERSION" ]; then
+    echo "You must set some target G'MIC version in the VERSION file or by setting the GMIC_VERSION environment variable."
+    exit 1
+fi
 
 function 00_all_steps () {
     21_check_c_style && 23_check_python_style && 1_clean_and_regrab_gmic_src && 2_compile && 3_test_compiled_so && 4_build_wheel && 5_test_wheel && 6_build_sdist && 7_test_sdist
