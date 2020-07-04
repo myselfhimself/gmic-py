@@ -42,28 +42,29 @@ def test_catch_exceptions(gmic_instance_run):
         gmic_instance_run("badly formatted command")
 
 
-# @pytest.mark.parametrize(**gmic_instance_types)
-# def test_run_gmic_ensure_openmp_linked_and_working(capfd, gmic_instance_run):
-#     import traceback
-#     import sys
-#
-#     gmic_instance_run("v - sp lena eval. \"end(run('echo_stdout[] ',merge(t,max)))\"")
-#     outerr = capfd.readouterr()
-#     try:
-#         assert (
-#             int(outerr.out.strip()) > 0
-#         )  # should be "0\n" or "nan\n" if openmp not working
-#     except AssertionError:
-#         # Traceback display code from https://stackoverflow.com/a/11587247/420684
-#         _, _, tb = sys.exc_info()
-#         traceback.print_tb(tb)  # Fixed format
-#         tb_info = traceback.extract_tb(tb)
-#         filename, line, func, text = tb_info[-1]
-#         pytest.fail(
-#             "parallel test case fails, OpenMP probably could not link or compile well on this platform, gmic parallelization will not work: stdout: {}; assert check: {}".format(
-#                 outerr.out, text
-#             )
-#         )
+@pytest.mark.xfail(reason="Linux x libgmic 2.9.1 fails on this", strict=False)
+@pytest.mark.parametrize(**gmic_instance_types)
+def test_run_gmic_ensure_openmp_linked_and_working(capfd, gmic_instance_run):
+    import traceback
+    import sys
+
+    gmic_instance_run("v - sp lena eval. \"end(run('echo_stdout[] ',merge(t,max)))\"")
+    outerr = capfd.readouterr()
+    try:
+        assert (
+            int(outerr.out.strip()) > 0
+        )  # should be "0\n" or "nan\n" if openmp not working
+    except AssertionError:
+        # Traceback display code from https://stackoverflow.com/a/11587247/420684
+        _, _, tb = sys.exc_info()
+        traceback.print_tb(tb)  # Fixed format
+        tb_info = traceback.extract_tb(tb)
+        filename, line, func, text = tb_info[-1]
+        pytest.fail(
+            "parallel test case fails, OpenMP probably could not link or compile well on this platform, gmic parallelization will not work: stdout: {}; assert check: {}".format(
+                outerr.out, text
+            )
+        )
 
 
 @pytest.mark.parametrize(**gmic_instance_types)
