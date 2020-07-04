@@ -70,7 +70,7 @@ def test_gmic_image_to_numpy_ndarray_exception_on_unimportable_numpy_module(
     import gmic
 
     images = []
-    gmic.run(images=images, command="sp duck")
+    gmic_instance_run(images=images, command="sp duck")
     with pytest.raises(
         gmic.GmicException, match=r".*'numpy' module cannot be imported.*"
     ):
