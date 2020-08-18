@@ -66,9 +66,9 @@ Note that `gmic-py`'s package installer links to your machine's existing `libpng
 | Build target                                                 | Basic gmic-py<sup>0</sup> |  ppm/bmp I/O    |  libpng I/O    | OpenMP | libcURL        | OpenCV         |
 | -----------                                                  | ------------------------- | -----------     | ----------     |------- | -------        |--------        |
 | Build from source<sup>1</sup>                                | ✓                         | ✓               | ✓ <sup>2</sup> | ✓      | ✓ <sup>2</sup> | ✓ <sup>2</sup> |
-| Github CI Ubuntu Linux 32&64bit <sup>1</sup>                              | ✓                         | ✓               | ✓ <sup>2</sup> | ✓      | ✓ <sup>2</sup> | ✓ <sup>2</sup> |
-| Pre-compiled Linux i686 & x86\_64 py3.5-3.8 (gcc)<sup>m</sup>| ✓                         | ✓               | ✓              | ✓      | ✓ <sup>3</sup> | ✗              |
-| Pre-compiled MacOS 64 py3.5-3.8 (clang)                      | ✓                         | ✓               | ✓              | ✓      | ✓              | ✗              |
+| Github CI Ubuntu Linux 64bit <sup>1</sup>                    | ✓                         | ✓               | ✓ <sup>2</sup> | ✓      | ✓ <sup>2</sup> | ✓ <sup>2</sup> |
+| Pre-compiled Linux x86\_64 py3.6-3.9 (gcc)<sup>m</sup>| ✓                         | ✓               | ✓              | ✓      | ✓ <sup>3</sup> | ✗              |
+| Pre-compiled MacOS 64 py3.6-3.9 (clang)                      | ✓                         | ✓               | ✓              | ✓      | ✓              | ✗              |
 | Windows (planned)<sup>w</sup>                                | ✗                         | ✗               | ✗              | ✗      | ✗              | ✗              |
 
 <sup>0</sup> ie. `gmic.GmicImage(bytes, w, h, d, s)`,  `gmic.run(..., "commands")`
@@ -102,10 +102,10 @@ If your machine has `libopencv` installed and your gmic-py was compiled from sou
 
 ### Q1-Q3 2020
 1. Move the package to official Python package repositories. DONE
-1. Add numpy nparray I/O support with automatic values (de-)interlacing
+1. Add numpy nparray I/O support with automatic values (de-)interlacing WIP
 1. Add Windows support
 
 ### Q2-Q3 2020
-1. In a separate repository, create a Blender Plugin, leveraging the Python library and exposing:
-  1. a single Blender GMIC 2D node with a text field or linkable script to add a GMIC expression
+1. In a separate repository, create a Blender Plugin, leveraging the Python library and exposing: DONE
+  1. a single Blender GMIC 2D node with a text field or linkable script to add a GMIC expression WIP
   1. as many 2D nodes as there are types of GMIC filters and commands (500+)
