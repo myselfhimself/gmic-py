@@ -27,6 +27,11 @@ cd /io/
 
 # Compile wheels #Choosing only Python 3 executables
 for PYBIN in /opt/python/cp3*/bin; do
+    # Skip Python35 executables, slated for end of support in september 2020 https://devguide.python.org/#status-of-python-branches
+    if [[ $PYBIN == *"cp35"* ]]; then
+        continue
+    fi
+
     # home made patching for our scripts
     export PIP3="${PYBIN}/pip"
     export PYTHON3="${PYBIN}/python"
@@ -52,6 +57,11 @@ done
 
 # Install packages and test
 for PYBIN in /opt/python/cp3*/bin; do
+    # Skip Python35 executables, slated for end of support in september 2020 https://devguide.python.org/#status-of-python-branches
+    if [[ $PYBIN == *"cp35"* ]]; then
+        continue
+    fi
+
     "${PYBIN}/pip" install gmic --no-index -f /io/wheelhouse || { echo "Fatal wheel install error" ; exit 1; }
     "${PYBIN}/python" -m pytest tests/test_gmic_py.py tests/test_gmic_numpy.py -vvv -rxXs || { echo "Fatal pytests suite error" ; exit 1; }
 done
