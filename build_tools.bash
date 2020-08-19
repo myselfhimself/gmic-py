@@ -54,7 +54,12 @@ function 1_clean_and_regrab_gmic_src () {
     set -x
     GMIC_ARCHIVE_GLOB=gmic_${GMIC_VERSION}.tar.gz
     # GMIC_ARCHIVE_GLOB=gmic_${GMIC_VERSION}*.tar.gz
-    GMIC_URL=https://gmic.eu/files/source/gmic_${GMIC_VERSION}.tar.gz
+    if [[ $GMIC_VERSION == *"pre"* ]]; then
+        GMIC_URL=https://gmic.eu/files/prerelease/gmic_${GMIC_VERSION}.tar.gz
+    else
+        GMIC_URL=https://gmic.eu/files/source/gmic_${GMIC_VERSION}.tar.gz
+    fi
+
     #GMIC_URL=https://gmic.eu/files/prerelease/gmic_prerelease.tar.gz
     rm -rf dist/
     rm -rf src/
