@@ -42,7 +42,7 @@ def test_catch_exceptions(gmic_instance_run):
         gmic_instance_run("badly formatted command")
 
 
-@pytest.mark.xfail(reason="Linux x libgmic 2.9.1 fails on this", strict=False)
+#@pytest.mark.xfail(reason="Linux x libgmic 2.9.1 fails on this", strict=False)
 @pytest.mark.parametrize(**gmic_instance_types)
 def test_run_gmic_ensure_openmp_linked_and_working(capfd, gmic_instance_run):
     import traceback
