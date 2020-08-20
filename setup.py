@@ -26,6 +26,7 @@ define_macros = [
     ("cimg_time", '""'),
     ("gmic_is_parallel", None),
     ("cimg_use_zlib", None),
+    ("cimg_use_openmp", None),
     ("gmic_py_numpy", None),  # Numpy support
 ]
 
