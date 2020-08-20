@@ -41,6 +41,8 @@ def test_catch_exceptions(gmic_instance_run):
     with pytest.raises(gmic.GmicException, match=r".*Unknown command or filename.*"):
         gmic_instance_run("badly formatted command")
 
+def test_openmp_cflag_enabled():
+    assert "openmp_enabled:1" in gmic.__build__
 
 # @pytest.mark.xfail(reason="Linux x libgmic 2.9.1 fails on this", strict=False)
 @pytest.mark.parametrize(**gmic_instance_types)
