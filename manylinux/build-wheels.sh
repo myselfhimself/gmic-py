@@ -3,6 +3,8 @@
 # Add --debug after the executable name to prevent optimization
 set -e -x
 
+export OMP_NUM_THREADS=16  # Fix for https://github.com/myselfhimself/gmic-py/issues/47
+
 # Install a system package required by our library
 yum check-update || { echo "yum check-update failed but manylinux build-wheels script will continue" ; }
 yum install fftw-devel curl-devel libpng-devel zlib-devel libgomp wget -y || { echo "Fatal yum dependencies install error" ; exit 1; }
