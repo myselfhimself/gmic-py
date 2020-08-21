@@ -12,6 +12,7 @@ if [ -z "$GMIC_VERSION" ]; then
     echo "You must set some target G'MIC version in the VERSION file or by setting the GMIC_VERSION environment variable."
     exit 1
 fi
+export OMP_NUM_THREADS=16  # Fix for https://github.com/myselfhimself/gmic-py/issues/47
 
 function 00_all_steps () {
     21_check_c_style && 23_check_python_style && 1_clean_and_regrab_gmic_src && 2_compile && 3_test_compiled_so && 4_build_wheel && 5_test_wheel && 6_build_sdist && 7_test_sdist
