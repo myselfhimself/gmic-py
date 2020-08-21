@@ -47,8 +47,9 @@ def test_openmp_cflag_enabled():
 
 
 # @pytest.mark.xfail(reason="Linux x libgmic 2.9.1 fails on this", strict=False)
+@pytest.mark.parametrize('execution_number', range(10))
 @pytest.mark.parametrize(**gmic_instance_types)
-def test_run_gmic_ensure_openmp_linked_and_working(capfd, gmic_instance_run):
+def test_run_gmic_ensure_openmp_linked_and_working(capfd, gmic_instance_run, execution_number):
     import traceback
     import sys
 
