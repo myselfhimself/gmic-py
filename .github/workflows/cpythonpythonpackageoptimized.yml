@@ -30,6 +30,7 @@ jobs:
       uses: actions/setup-python@v1
       with:
         python-version: ${{ matrix.python-version }}
+
     - name: Compile and run tests for gmic-py ${{ env.GMIC_VERSION }} on .so, .whl and source distribution
       working-directory: ./
       env:

@@ -46,12 +46,8 @@ def test_openmp_cflag_enabled():
     assert "openmp_enabled:1" in gmic.__build__
 
 
-# @pytest.mark.xfail(reason="Linux x libgmic 2.9.1 fails on this", strict=False)
-@pytest.mark.parametrize("execution_number", range(10))
 @pytest.mark.parametrize(**gmic_instance_types)
-def test_run_gmic_ensure_openmp_linked_and_working(
-    capfd, gmic_instance_run, execution_number
-):
+def test_run_gmic_ensure_openmp_linked_and_working(capfd, gmic_instance_run):
     import traceback
     import sys
 
@@ -68,7 +64,7 @@ def test_run_gmic_ensure_openmp_linked_and_working(
         tb_info = traceback.extract_tb(tb)
         filename, line, func, text = tb_info[-1]
         pytest.fail(
-            "parallel test case fails, OpenMP probably could not link or compile well on this platform, gmic parallelization will not work: stdout: {}; assert check: {}".format(
+            "parallel test case fails, OpenMP probably could not link or compile well on this platform, gmic parallelization will not work: stdout: {}; assert check: {}. You might fix this by setting the environment variable OMP_NUM_THREADS to a value >= 1".format(
                 outerr.out, text
             )
         )
