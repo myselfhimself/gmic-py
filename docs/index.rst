@@ -1,8 +1,20 @@
-G'MIC Python binding (gmic-py)
-=======
+.. gmic-py documentation - a Python 3.x binding to G'MIC's C++ API for image processing
 
-gmic-py is an official Python 3 binding to the `G'MIC image processing framework`_. It is opinionated and wraps most important things in G'MIC for pythonists. It is written for performance using the C/Python API with a view to support data scientists, technical artists and graphics software Python plug-ins development.
+Welcome to gmic-py's documentation!
+===================================
 
-Reference and examples to come here :)
+.. toctree::
+   :maxdepth: 2
+   :caption: Contents:
+   
+   installing
+   gettingstarted
 
-.. _`G'MIC image processing framework`: https://gmic.eu/
+
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
