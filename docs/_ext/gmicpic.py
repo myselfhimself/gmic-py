@@ -14,7 +14,8 @@ class GmicPic(Directive):
 
     def run(self):
         gmic_command = self.arguments[0]
-        image_node = nodes.image(uri=self.generate_gmic_output("sp earth"))
+        input_image = os.path.join(self.DIR_NAME, "earth.png")
+        image_node = nodes.image(uri=self.generate_gmic_output(input_image + " blur 4"))
         #paragraph_node = nodes.paragraph(text='Hello World!')
         return [image_node]
 
