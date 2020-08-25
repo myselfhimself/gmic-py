@@ -10,6 +10,8 @@ Using gmic-py always boils down to importing the gmic python module, running G'M
 ```
 import gmic
 print(dir(gmic))
+gmic.run("sp earth blur 4")
 ```
 
-TODO more
+.. gmicpic:: sp earth blur 4 output earthy.png
+.. gmicpic:: sp leno blur 4

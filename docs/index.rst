@@ -9,7 +9,7 @@ Welcome to gmic-py's documentation!
    installing
    gettingstarted
 
-.. gmicpic:: bonsoir
+
 
 
 Indices and tables
