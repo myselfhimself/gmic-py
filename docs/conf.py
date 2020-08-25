@@ -23,6 +23,7 @@ author = 'Jonathan-David Schröder'
 
 # The full version, including alpha/beta/rc tags
 release = '2.9.1'
+master_doc = 'index' # Per https://stackoverflow.com/a/56448499/420684
 
 
 # -- General configuration ---------------------------------------------------
