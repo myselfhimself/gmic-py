@@ -15,7 +15,7 @@ Here is some help for working on the project :)
 - In day-to-day development, building wheels and building manylinux wheels through docker is not usual, despite the existence of `build_tools.bash` commands for this, only through automated online Github Actions.
 - For more usage on how to use those commands, look at their respective code or read the `.github/workflows/` files.
 
-# Working day-by-day without releasing for now
+# Working day-by-day without releasing
 - releases are not triggered automatically unless you git-push a tag starting with v
 - if you want test build jobs locally for own OS and Linux, you may want to use [nektos/act](https://github.com/nektos/act) leveraging the `.actrc` file in the repository's root directory. This is not necessary but may save you some troubleshooting headache when Github Actions' bots have strange configuration issues.
 - Otherwise, just push your code online and watch the builds turn green :)
@@ -25,3 +25,7 @@ Here is some help for working on the project :)
 - create a Git tab named "v[your version]"
 - git push your tag
 - the builds that are sensible to `v*` tags will trigger in addition to the regular ones, make sure all turns green :)
+
+# Writing documentation
+- Offline Pythonic documentation: function/class parameters: for now no Python C Argument Clinic documentation has been written to help document parameters, especially as it needs a third-party build tool obviously. Basic pythonic `help()` support for most module-level types has been written though, with examples. If the binding were written in eg. Pybind11, fine-grain documentation would be easier.
+- An online user-friendly documentation is hosted and updated automatically for every Git push at [gmic-py.readthedocs.io](https://gmic-py.readthedocs.io). It is in sync with the master branch and the `docs/` directory. The readthedocs.io documentation is managed through myselfhimself's account (ie. the current Github repository manager's account), on [readthedocs.io](https://readthedocs.io). Build statuses for each Git push can be monitored and this may help in troubleshooting formatting or docs configuration files errors.
