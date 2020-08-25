@@ -18,6 +18,9 @@ When this matures, running `pip install gmic-py` should be all you need to get r
 
 This project is a work in progress and lives under the CeCILL license (similar to GNU Public License).
 
+## Documentation
+Full documentation is being written at [https://gmic-py.readthedocs.io/](https://gmic-py.readthedocs.io/).
+
 ## Quickstart
 You need Python 3.x and `pip` installed.
 Things work best with the last development version for now :)
