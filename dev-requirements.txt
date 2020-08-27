@@ -4,4 +4,4 @@ Pillow
 pytest
 setuptools
 pytest-xdist #allow parallelization
-black==19.10b0 # This version is available for Linux and MacOS
+black
