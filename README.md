@@ -1,5 +1,5 @@
-<a href="https://gmic.eu">![G'MIC Logo](https://gmic.eu/img/logo4.jpg)</a>
-<a href="https://www.python.org">![Python Logo](https://www.python.org/static/community_logos/python-logo-master-v3-TM-flattened.png)</a>
+[![G'MIC Logo](https://gmic.eu/img/logo4.jpg)](https://gmic.eu)
+[![Python Logo](https://www.python.org/static/community_logos/python-logo-master-v3-TM-flattened.png)](https://www.python.org)
 
 #### 
 #### Python binding for G'MIC - A Full-Featured Open-Source Framework for Image Processing
@@ -8,7 +8,7 @@
 ---------------------------
 
 # gmic-py
-[![PyPI download total](https://img.shields.io/pypi/dt/gmic.svg)](https://pypi.python.org/pypi/gmic/)
+[![PyPI download monthly](https://img.shields.io/pypi/dm/gmic.svg)](https://pypi.python.org/pypi/gmic/)
 [![PyPI version shields.io](https://img.shields.io/pypi/v/gmic.svg)](https://pypi.python.org/pypi/gmic/)
 [![PyPI license](https://img.shields.io/pypi/l/gmic.svg)](https://pypi.python.org/pypi/gmic/)
 [![PyPI format](https://img.shields.io/pypi/format/gmic.svg)](https://pypi.python.org/pypi/gmic/)
