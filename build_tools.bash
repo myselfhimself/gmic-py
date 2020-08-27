@@ -143,13 +143,12 @@ function 22_reformat_c_style () {
 }
 
 function 23_check_python_style () {
-    pip install black
+    pip install -r dev-requirements.txt
     black --version
     black --check setup.py tests/ examples/
 }
 
 function 24_reformat_python_style () {
-    pip install black
     black setup.py tests/ examples/ && echo 'Python formatting using black ✔️'
 }
 

@@ -19,8 +19,7 @@ FLOAT_SIZE_IN_BYTES = 4
 
 
 def assert_non_empty_file_exists(filename):
-    """ Assert filename corresponds to non-empty file and return is pathlib.Path object
-    """
+    """Assert filename corresponds to non-empty file and return is pathlib.Path object"""
     if type(filename) != pathlib.Path:
         a_file = pathlib.Path(filename)
     else:
@@ -277,7 +276,7 @@ def test_gmic_filters_data_json_validation_and_gmicimage__data_str_attribute(
 
 @pytest.mark.parametrize(**gmic_instance_types)
 def test_run_gmic_instance_run_simple_demo_png_output_and_input(gmic_instance_run):
-    """ Ensure that zlib is properly linked and ensures that either
+    """Ensure that zlib is properly linked and ensures that either
     the png library used or the 'convert' tool of the imagemagick suite, for saving png"""
 
     png_filename = "demo.png"
