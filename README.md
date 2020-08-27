@@ -8,8 +8,8 @@
 ---------------------------
 
 # gmic-py
-[![PyPI download monthly](https://img.shields.io/pypi/dm/gmic.svg)](https://pypi.python.org/pypi/gmic/)
 [![PyPI version shields.io](https://img.shields.io/pypi/v/gmic.svg)](https://pypi.python.org/pypi/gmic/)
+[![PyPI download monthly](https://img.shields.io/pypi/dm/gmic.svg)](https://pypi.python.org/pypi/gmic/)
 [![PyPI license](https://img.shields.io/pypi/l/gmic.svg)](https://pypi.python.org/pypi/gmic/)
 [![PyPI format](https://img.shields.io/pypi/format/gmic.svg)](https://pypi.python.org/pypi/gmic/)
 [![PyPI pyversions](https://img.shields.io/pypi/pyversions/gmic.svg)](https://pypi.python.org/pypi/gmic/)
