@@ -185,10 +185,12 @@ setup(
         #   3 - Alpha
         #   4 - Beta
         #   5 - Production/Stable
-        "Development Status :: 2 - Pre-Alpha",
+        "Development Status :: 5 - Production/Stable",
         # Indicate who your project is intended for
         "Intended Audience :: Developers",
         "Topic :: Artistic Software",
+        "Topic :: Scientific/Engineering :: Image Processing",
+        "Topic :: Software Development",
         # Pick your license as you wish
         "License :: OSI Approved :: CEA CNRS Inria Logiciel Libre License, version 2.1 (CeCILL-2.1)",
         # Specify the Python versions you support here. In particular, ensure
