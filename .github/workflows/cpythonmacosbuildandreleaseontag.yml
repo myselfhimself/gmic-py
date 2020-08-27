@@ -13,21 +13,25 @@ jobs:
     runs-on: macos-latest
     strategy:
       matrix:
-        python-version: [3.6]
+        python-version: [3.7]
     steps:
       - uses: actions/checkout@v1
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v1
         with:
           python-version: ${{ matrix.python-version }}
-      - name: build and test on macos
+
+      - name: Detect G'MIC target version
+        run: echo "::set-env name=GMIC_VERSION::$(cat VERSION)"
+
+      - name: Build and test gmic-py ${{ env.GMIC_VERSION }} on MacOS
         working-directory: ./
         env:
-          GMIC_VERSION: 2.9.1
           TWINE_PASSWORD_GITHUB_SECRET: ${{ secrets.TWINE_PASSWORD_GITHUB_SECRET }} # For build_tools.bash 11_send_to_pypi
           PYTHON3: python3
           PIP3: pip3
           CIBW_BUILD: cp3*-*macosx*
+          CIBW_SKIP: cp35* # Do not support Python 3.5 anymore
           CIBW_ENVIRONMENT: "CC='/usr/local/opt/llvm@6/bin/clang' CXX='/usr/local/opt/llvm@6/bin/clang++' COMPILER_INDEX_STORE_ENABLE='NO'"
           CIBW_BEFORE_BUILD: pip install -r dev-requirements.txt
           CIBW_TEST_REQUIRES: pytest numpy Pillow

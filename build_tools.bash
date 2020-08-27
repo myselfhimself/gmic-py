@@ -1,5 +1,6 @@
 # TL;DR ? Just run bash build_tools.bash [--help]
 
+BLACK_FORMATTER_VERSION=20.8b1
 PYTHON3=${PYTHON3:-python3}
 PIP3=${PIP3:-pip3}
 PYTHON_VERSION=$($PYTHON3 --version | cut -d' ' -f2 | cut -d'.' -f1,2)
@@ -142,14 +143,18 @@ function 22_reformat_c_style () {
     clang-format -i gmicpy.cpp && clang-format -i gmicpy.h && echo 'C/C++ formatting with clang-format ✔️'
 }
 
+function 23i_install_black_python_formatter () {
+    python -c "import black" || pip install black==$BLACK_FORMATTER_VERSION
+}
+
 function 23_check_python_style () {
-    python -c "import black" || pip install -r dev-requirements.txt
+    23i_install_black_python_formatter
     black --version
     black --check setup.py tests/ examples/
 }
 
 function 24_reformat_python_style () {
-    python -c "import black" || pip install -r dev-requirements.txt
+    23i_install_black_python_formatter
     black setup.py tests/ examples/ && echo 'Python formatting using black ✔️'
 }
 
