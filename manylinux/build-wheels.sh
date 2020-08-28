@@ -37,12 +37,6 @@ for PYBIN in /opt/python/cp3*/bin; do
     # home made patching for our scripts
     export PIP3="${PYBIN}/pip"
     export PYTHON3="${PYBIN}/python"
-    # Prevent optimization if the debug flag is passed to this script
-    if [[ $* == *--debug* ]]; then
-      PIP_WHEEL_COMPILE_OPTIONS="--global-option --debug"
-    else
-      PIP_WHEEL_COMPILE_OPTIONS=
-    fi
 
     bash /io/build_tools.bash 1_clean_and_regrab_gmic_src
 
