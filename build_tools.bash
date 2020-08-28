@@ -4,6 +4,7 @@ BLACK_FORMATTER_VERSION=20.8b1
 PYTHON3=${PYTHON3:-python3}
 PIP3=${PIP3:-pip3}
 PYTHON_VERSION=$($PYTHON3 --version | cut -d' ' -f2 | cut -d'.' -f1,2)
+
 # Guess target G'MIC version from VERSION file's contents
 if [ -f "VERSION" ]; then
     FILE_BASED_GMIC_VERSION=$(cat VERSION)
@@ -13,6 +14,8 @@ if [ -z "$GMIC_VERSION" ]; then
     echo "You must set some target G'MIC version in the VERSION file or by setting the GMIC_VERSION environment variable."
     exit 1
 fi
+echo "🐯 Targeting G'MIC $GMIC_VERSION.🐯"
+
 export OMP_NUM_THREADS=16  # Fix for https://github.com/myselfhimself/gmic-py/issues/47
 
 function 00_all_steps () {
