@@ -40,33 +40,7 @@ Before running `build_tools.bash`, you should install the developer requirements
 
     pip install -r dev-requirements.txt
 
-Then, a running the former script without parameters or with ``--help`` shows the targeted G'MIC version and the available commands:
-
-.. code-block::
-
-    $ bash build_tools.bash
-    Targeting G'MIC 2.9.1.
-    G'MIC Python Binding Development & Build Tools
-    Usage: build_tools.bash function_name
-    Functions:
-    00_all_steps
-    11_send_to_pypi
-    1_clean_and_regrab_gmic_src
-    2_compile
-    2b_compile_debug
-    20_reformat_all
-    21_check_c_style
-    22_reformat_c_style
-    23i_install_black_python_formatter
-    23_check_python_style
-    24_reformat_python_style
-    33_build_manylinux
-    3_test_compiled_so
-    3b_test_compiled_so_no_numpy
-    31_test_compiled_so_filters_io
-    4_build_wheel
-    5_test_wheel
-    --help
+Then, a running the former script without parameters or with ``--help`` shows the targeted G'MIC version and the available commands.
 
 Centralized version for development and continuous-integration-based releasing
 ******************************************************************************
