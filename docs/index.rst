@@ -5,9 +5,10 @@ Welcome to gmic-py's documentation!
 
 .. toctree::
    :maxdepth: 2
-   
+
    installing
    gettingstarted
+   compiling
 
 
 
