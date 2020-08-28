@@ -19,6 +19,7 @@ echo "🐯 Targeting G'MIC $GMIC_VERSION.🐯"
 export OMP_NUM_THREADS=16  # Fix for https://github.com/myselfhimself/gmic-py/issues/47
 
 function 00_all_steps () {
+    # See related but defunct Dockerfile at https://github.com/myselfhimself/gmic-py/blob/fc12cb74f4b02fbfd83e9e9fba44ba7a4cee0d93/Dockerfile
     21_check_c_style && 23_check_python_style && 1_clean_and_regrab_gmic_src && 2_compile && 3_test_compiled_so && 4_build_wheel && 5_test_wheel && 6_build_sdist && 7_test_sdist
     echo "This is the final file tree:"
     find .
@@ -142,9 +143,6 @@ function 24_reformat_python_style () {
 }
 
 function 33_build_manylinux () {
-    # No manylinux debug by default
-    MANYLINUX_DEBUG=${MANYLINUX_DEBUG:-}
-
     # Feel free to preset the following variables before running this script
     # Default values allow for local running on a developer machine :)
     if [ -z "$DOCKER_IMAGE" ]
@@ -162,12 +160,8 @@ function 33_build_manylinux () {
     
     docker pull $DOCKER_IMAGE
     docker run --rm -e PLAT=$PLAT -v `pwd`:/io $DOCKER_IMAGE find /io
-    docker run --rm -e PLAT=$PLAT -v `pwd`:/io $DOCKER_IMAGE $PRE_CMD /bin/bash /io/manylinux/build-wheels.sh "$MANYLINUX_DEBUG" || { echo "Many linux build wheels script failed. Exiting" ; exit 1; }
+    docker run --rm -e PLAT=$PLAT -v `pwd`:/io $DOCKER_IMAGE $PRE_CMD /bin/bash /io/manylinux/build-wheels.sh || { echo "Many linux build wheels script failed. Exiting" ; exit 1; }
     ls wheelhouse/
-}
-
-function 33b_build_manylinux_debug () {
-  MANYLINUX_DEBUG="--debug" 33_build_manylinux "$@"
 }
 
 function 3_test_compiled_so () {
