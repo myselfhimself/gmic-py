@@ -90,13 +90,6 @@ function 1_clean_and_regrab_gmic_src () {
     set +x
 }
 
-function 1b_clean_and_regrab_gmic_src_and_make_cli () {
-    1_clean_and_regrab_gmic_src
-    cd src/gmic/src
-    OPT_LIBS=" -O0 " make OPENCV_CFLAGS='' OPENCV_LIBS="" cli && mv gmic ../../.. && echo "Compiled gmic cli executable now at: $(readlink -f gmic)"
-    cd ../../..
-}
-
 function 22_docker_run_all_steps () {
     docker build --rm -t testpython3 .
     docker run testpython3
