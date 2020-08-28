@@ -5,3 +5,5 @@ build/
 dist/
 gmic
 docs/_build/
+wheelhouse/*
+*.egg-info*
