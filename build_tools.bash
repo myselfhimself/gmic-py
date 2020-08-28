@@ -90,11 +90,6 @@ function 1_clean_and_regrab_gmic_src () {
     set +x
 }
 
-function 22_docker_run_all_steps () {
-    docker build --rm -t testpython3 .
-    docker run testpython3
-}
-
 function 2_compile () {
     set -x
 
