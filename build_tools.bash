@@ -102,14 +102,6 @@ function 22_docker_run_all_steps () {
     docker run testpython3
 }
 
-function 2_compile_with_debug_and_sanitizer () {
-    GMICPY_SANITIZER=1 GMICPY_DEBUG=1 2_compile
-}
-
-function 2_compile_with_debug () {
-    GMICPY_DEBUG=1 2_compile
-}
-
 function 2_compile () {
     set -x
 
