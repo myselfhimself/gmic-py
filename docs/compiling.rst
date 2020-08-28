@@ -45,28 +45,28 @@ Then, a running the former script without parameters or with ``--help`` shows th
 .. code-block::
 
     $ bash build_tools.bash
-    🐯  Targeting G'MIC 2.9.1. 🐯
-    ☀️  G'MIC Python Binding Development & Build Tools ☀️
+    Targeting G'MIC 2.9.1.
+    G'MIC Python Binding Development & Build Tools
     Usage: build_tools.bash function_name
     Functions:
-    🍍 00_all_steps
-    🍊 11_send_to_pypi
-    🍆 1_clean_and_regrab_gmic_src
-    🍅 2_compile
-    🍍 2b_compile_debug
-    🍐 20_reformat_all
-    🥑 21_check_c_style
-    🍅 22_reformat_c_style
-    🥝 23i_install_black_python_formatter
-    🍐 23_check_python_style
-    🌽 24_reformat_python_style
-    🍉 33_build_manylinux
-    🍋 3_test_compiled_so
-    🥝 3b_test_compiled_so_no_numpy
-    🥬 31_test_compiled_so_filters_io
-    🍆 4_build_wheel
-    🍊 5_test_wheel
-    🍌 --help
+    00_all_steps
+    11_send_to_pypi
+    1_clean_and_regrab_gmic_src
+    2_compile
+    2b_compile_debug
+    20_reformat_all
+    21_check_c_style
+    22_reformat_c_style
+    23i_install_black_python_formatter
+    23_check_python_style
+    24_reformat_python_style
+    33_build_manylinux
+    3_test_compiled_so
+    3b_test_compiled_so_no_numpy
+    31_test_compiled_so_filters_io
+    4_build_wheel
+    5_test_wheel
+    --help
 
 Centralized version for development and continuous-integration-based releasing
 ******************************************************************************
@@ -161,44 +161,51 @@ Though you will libgmic's source first. See the next section instead for doing f
 
 ``gmic-py`` development to release lifecycle (detailed)
 #######################################################
-* once for all, install developer's requirements in a project own virtual environment:
+1. once for all, install developer's requirements in a project own virtual environment:
+
 .. code-block:: sh
 
     pip install -r dev-requirements.txt
 
-* change the targetted G'MIC version number (we follow libgmic's versioning) in VERSION. ``build_tools.bash``, ``setup.py`` and the Github Actions workflow files will all rely on this central piece of data!
+2. change the targetted G'MIC version number (we follow libgmic's versioning) in VERSION. ``build_tools.bash``, ``setup.py`` and the Github Actions workflow files will all rely on this central piece of data!
+
 .. code-block:: sh
 
     echo "2.9.1" > VERSION
 
 **Note:** this version can be overriden on a per-command basis for ``build_tools.bash`` by setting the ``GMIC_VERSION`` environment variable. Read ``build_tools.bash`` code for details.
 
-* grab the related libgmic C++ source
+3. grab the related libgmic C++ source
+
 .. code-block:: sh
 
     bash build_tools.bash 1_clean_and_regrab_gmic_src
 
-* edit ``gmicpy.cpp`` ``gmicpy.h`` ``setup.py`` the pytest ``tests/``
-* edit the documentation in ``docs/`` (it gets deployed to readthedocs.io on each Git push)
-* rebuild documentation for previewing:
+4. edit ``gmicpy.cpp`` ``gmicpy.h`` ``setup.py`` the pytest ``tests/``
+5. edit the documentation in ``docs/`` (it gets deployed to readthedocs.io on each Git push)
+6. rebuild documentation for previewing:
+
 .. code-block:: sh
 
     pip install sphinx # one time only
     cd docs/; make html
 
-* compile in debug mode
+7. compile in debug mode
+
 .. code-block:: sh
 
     bash build_tools.bash 2b_compile_debug
 
-* run few or all unit tests locally
+8. run few or all unit tests locally
+
 .. code-block:: sh
 
     bash build_tools.bash 3_test_compiled_so # for all tests
     bash build_tools.bash 3b_test_compiled_so_no_numpy # for all tests, except numpy ones
     bash build_tools.bash 3b_test_compiled_so_no_numpy openmp # all tests the name of which matches the *openmp* wildcard
 
-* hand test interactively (outside any Python virtual environment, or using an environment with `gmic` uninstalled)
+9. hand test interactively (outside any Python virtual environment, or using an environment with `gmic` uninstalled)
+
 .. code-block:: sh
 
     cd build/lib.linux-x86_64-3.6/
@@ -207,25 +214,29 @@ Though you will libgmic's source first. See the next section instead for doing f
     # import gmic
     # gmic.run("sp earth") # etc
 
-* check linked shared libraries
+10. check linked shared libraries
+
 .. code-block:: sh
 
     cd build/lib.linux-x86_64-3.6/
     ldd gmic.cpython-36m-x86_64-linux-gnu.so
 
-* Git push without any tag to trigger Github Actions for Mac OS and Linux debug and optimized builds, as well as readthedocs.io documentation building
+11. Git push without any tag to trigger Github Actions for Mac OS and Linux debug and optimized builds, as well as readthedocs.io documentation building
+
 .. code-block:: sh
 
     git push # (origin master) or any other Github branch
 
-* set a Git tag and Git push to trigger the former Github Actions + identical ones optimized with pypi.org release wheels upload
+12. set a Git tag and Git push to trigger the former Github Actions + identical ones optimized with pypi.org release wheels upload
+
 .. code-block:: sh
 
     git tag -a v2.9.1 # In this project, the tag must start with v for releasing
     git push # origin master or any other Github branch
 
-* look at `pypi.org's gmic module released contents <https://pypi.org/project/gmic/>`_
-* test online releases by hand (in a Python environment without gmic installed)
+13. look at `pypi.org's gmic module released contents <https://pypi.org/project/gmic/>`_
+14. test online releases by hand (in a Python environment without gmic installed)
+
 .. code-block:: sh
 
     pip install gmic # or gmic==2.9.1 in our case

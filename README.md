@@ -15,6 +15,7 @@
 [![PyPI pyversions](https://img.shields.io/pypi/pyversions/gmic.svg)](https://pypi.python.org/pypi/gmic/)
 [![PyPI implementation](https://img.shields.io/pypi/implementation/gmic.svg)](https://pypi.python.org/pypi/gmic/)
 [![PyPI status](https://img.shields.io/pypi/status/gmic.svg)](https://pypi.python.org/pypi/gmic/)
+![Read the Docs](https://img.shields.io/readthedocs/gmic-py)
 
 ![CPython GMIC Optimized Python package (Source and Debian/Ubuntu OS compilation)](https://github.com/myselfhimself/gmic-py/workflows/CPython%20GMIC%20Optimized%20Python%20package%20(Source%20and%20Debian/Ubuntu%20OS%20compilation)/badge.svg)
 ![CPython GMIC Manylinux 2010 & 2014 x86_64 Optimized No-release](https://github.com/myselfhimself/gmic-py/workflows/CPython%20GMIC%20Manylinux%202010%20&%202014%20x86_64%20Optimized%20No-release/badge.svg)
