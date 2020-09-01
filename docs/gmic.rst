@@ -1,5 +1,5 @@
-gmic module
-===========
+API Reference
+=============
 
 .. automodule:: gmic
    :members:
