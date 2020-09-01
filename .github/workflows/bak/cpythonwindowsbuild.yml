@@ -5,7 +5,7 @@ name: CPython GMIC Windows build
 on: [push]
 
 jobs:
-  build:
+  build-windows:
     runs-on: windows-latest
     strategy:
       matrix:

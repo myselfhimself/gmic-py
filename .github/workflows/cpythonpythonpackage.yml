@@ -4,7 +4,7 @@ name: CPython GMIC Debug Python package (Source and Debian/Ubuntu OS compilation
 on: [push]
 
 jobs:
-  build:
+  build-linux-debug-test-norelease:
 
     runs-on: ubuntu-20.04
     strategy:

@@ -4,8 +4,7 @@ name: CPython GMIC Optimized Python package (Source and Debian/Ubuntu OS compila
 on: [push]
 
 jobs:
-  build:
-
+  build-linux-optimized-test-norelease:
     runs-on: ubuntu-latest
     strategy:
       max-parallel: 4

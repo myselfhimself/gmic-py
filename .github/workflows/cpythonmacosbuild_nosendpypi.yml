@@ -5,7 +5,7 @@ name: CPython GMIC MacOS Optimized Build
 on: [push]
 
 jobs:
-  build:
+  build-macos-optimized-test-norelease:
     runs-on: macos-latest
     strategy:
       matrix:

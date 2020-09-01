@@ -9,7 +9,7 @@ on:
       - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
 
 jobs:
-  build:
+  build-macos-optimized-test-ontag-release:
     runs-on: macos-latest
     strategy:
       matrix:

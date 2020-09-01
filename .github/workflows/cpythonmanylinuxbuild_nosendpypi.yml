@@ -6,7 +6,7 @@ name: CPython GMIC Manylinux 2010 & 2014 x86_64 Optimized No-release
 on: [push]
 
 jobs:
-  build:
+  build-manylinux-optimized-test-norelease:
     runs-on: ubuntu-latest
     strategy:
       matrix:

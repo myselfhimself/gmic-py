@@ -8,7 +8,7 @@ on:
     - cron: '0 0 * * *' # Every night, midnight
 
 jobs:
-  build:
+  build-linux-optimized-IO-non-regression:
 
     runs-on: ubuntu-latest
     env:
