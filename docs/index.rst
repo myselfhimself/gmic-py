@@ -9,6 +9,7 @@ Welcome to gmic-py's documentation!
    installing
    gettingstarted
    compiling
+   numpy
 
 
 
