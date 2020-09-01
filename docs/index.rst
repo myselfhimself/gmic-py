@@ -10,6 +10,7 @@ Welcome to gmic-py's documentation!
    gettingstarted
    compiling
    numpy
+   modules
 
 
 
