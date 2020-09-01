@@ -1,6 +1,6 @@
 Numpy support
 =============
-Since gmic-py 2.9.1, you can convert ``GmicImage``s from and to ``numpy.ndarray``s.
+Since gmic-py 2.9.1, you can convert a ``GmicImage`` from and to a ``numpy.ndarray``.
 
 1. G'MIC from/to Numpy & PIL must-knows
 ########################################
@@ -18,9 +18,11 @@ Since gmic-py 2.9.1, you can convert ``GmicImage``s from and to ``numpy.ndarray`
 * The usual way to load an image to numpy with PIL is the following:
 
 .. code-block:: sh
+
     pip install Pillow
 
 .. code-block:: python
+
     import numpy
     import PIL.Image
     image_from_numpy = numpy.array(PIL.Image.open("myfile.png"))
@@ -30,6 +32,7 @@ Since gmic-py 2.9.1, you can convert ``GmicImage``s from and to ``numpy.ndarray`
 * Though, ``numpy`` needs to be installed within your Python environment (but will be imported by G'MIC if you do not import it yourself) for the ``GmicImage.from_numpy_array()`` and ``GmicImage.to_numpy_array()`` to work.
 
 .. code-block:: sh
+
     pip install numpy
 
 * ``numpy`` is very tolerant and does not have side-effects on your arrays in the ``G'MIC <=> numpy`` conversions, instead blame our G'MIC Python binding or PIL/other image-loading frameworks if used.
