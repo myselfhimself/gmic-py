@@ -557,9 +557,8 @@ PyGmic_init(PyGmic *self, PyObject *args, PyObject *kwargs)
     return result;
 }
 
-PyDoc_STRVAR(
-    run_impl_doc,
-    "Gmic.run(command, images=None, image_names=None)\n\
+PyDoc_STRVAR(run_impl_doc,
+             "Gmic.run(command, images=None, image_names=None)\n\
 Run G'MIC interpreter following a G'MIC language command(s) string, on 0 or more namable ``GmicImage`` items.\n\n\
 Note (single-image short-hand calling): if ``images`` is a ``GmicImage``, then ``image_names`` must be either a ``str`` or be omitted.\n\n\
 Example:\n\
@@ -754,9 +753,8 @@ module_level_run_impl(PyObject *, PyObject *args, PyObject *kwargs)
     return run_impl(temp_gmic_instance, args, kwargs);
 }
 
-PyDoc_STRVAR(
-    module_level_run_impl_doc,
-    "run(command, images=None, image_names=None)\n\n\
+PyDoc_STRVAR(module_level_run_impl_doc,
+             "run(command, images=None, image_names=None)\n\n\
 Run the G'MIC interpreter with a G'MIC language command(s) string, on 0 or more nameable GmicImage(s). This is a short-hand for calling ``gmic.Gmic().run`` with the exact same parameters signature.\n\n\
 Note (single-image short-hand calling): if ``images`` is a ``GmicImage``, then ``image_names`` must be either a ``str`` or be omitted.\n\n\
 Note (interpreter warm-up): calling ``gmic.run`` multiple times is inefficient as it spawns then drops a new G'MIC interpreter instance for every call. For better performance, you can tie a ``gmic.Gmic`` G'MIC interpreter instance to a variable instead and call its ``run`` method multiple times. Look at ``gmic.Gmic.run`` for more information.\n\n\
@@ -795,7 +793,11 @@ static PyMethodDef gmic_methods[] = {
 
 PyDoc_STRVAR(gmic_module_doc,
              "G'MIC image processing library Python binary module.\n\n\
-Use ``gmic.run`` or ``gmic.Gmic`` to run G'MIC commands inside the G'MIC C++ interpreter, manipulate ``gmic.GmicImage`` especially with ``numpy``.");
+Use ``gmic.run`` or ``gmic.Gmic`` to run G'MIC commands inside the G'MIC C++ interpreter, manipulate ``gmic.GmicImage`` especially with ``numpy``.\n\n\
+Attributes:\n\n\
+    NUMPY_FORMAT_GMIC: assuming input matrix is formatted as (width, depth, height, channels) and pixel values are deinterleaved. No pixel-channels deinterleaving will be done, no dimensions permutation will be done. Equates to deinterleave=False, permute='' defaults.\n\
+    NUMPY_FORMAT_PIL: assuming input matrix is formatted as ([depth,] height, width, channels) and pixel values are interleaved.Equates to deinterleave=True, permute='zyxc'.\n\
+    NUMPY_FORMAT_SCIKIT_IMAGE: assuming input matrix is formatted as (depth, width, height, channels) and pixel values are interleaved. Equates to deinterleave=True, permute='zxyc'. Defaults to ``gmic.NUMPY_FORMAT_GMIC``.\n\n");
 
 PyModuleDef gmic_module = {PyModuleDef_HEAD_INIT, "gmic", gmic_module_doc, 0,
                            gmic_methods};
@@ -993,13 +995,67 @@ PyGmicImage_to_numpy_array(PyGmicImage *self, PyObject *args, PyObject *kwargs)
 #ifdef gmic_py_numpy
 PyDoc_STRVAR(
     PyGmicImage_from_numpy_array_doc,
-    "GmicImage.from_numpy_array(numpy_array: numpy.ndarray, deinterleave=True: bool) -> GmicImage\n\n\
-Make a GmicImage from a numpy.ndarray");
+    "GmicImage.from_numpy_array(numpy_array, input_format=gmic.NUMPY_FORMAT_GMIC, deinterleave=False, permute='')\n\n\
+Make a GmicImage from a 1-4 dimensions numpy.ndarray.\n\n\
+G'MIC works with (width, height, depth, spectrum/channels) matrix layout, with 32bit-float pixel values deinterleaved (ie. RRR,GGG,BBB).\n\
+If your input matrix does not have that G'MIC data layout, you may select a reformatter using the ``input_format`` parameter;\n\
+or fine-grain-create your own using the ``deinterleave`` and ``permute`` parameters.\n\n\
+If your matrix is less than 4D, G'MIC will tentatively add append void dimensions to it (eg. for a shape of (3,1) -> (3,1,1,1)). You can avoid this by using ``numpy.expand_dims`` or ``numpy.atleast_*d`` functions yourself first.\n\
+If your pixel values (ie. ``numpy.ndarray.dtype``) are not in a ``float32`` format, G'MIC will tentatively call ``numpy.astype(numpy_array, numpy.float32)`` to cast its contents first.\n\
+\n\
+Example:\n\n\
+    Several ways to use a GmicImage simply::\n\n\
+        import gmic\n\
+        empty_1x1x1_black_image = gmic.GmicImage() # or gmic.GmicImage(None,1,1,1,1) for example\n\
+        import struct\n\
+        i = gmic.GmicImage(struct.pack('2f', 0.0, 1.5), 1, 1) # 2D 1x1 image\n\
+        gmic.run('add 1', i) # GmicImage injection into G'MIC's interpreter\n\
+        i # Using GmicImage's repr() string representation\n\
+        # Output: <gmic.GmicImage object at 0x7f09bfb504f8 with _data address at 0x22dd5b0, w=1 h=1 d=1 s=1 shared=0>\n\
+        i(0,0) == 1.0 # Using GmicImage(x,y,z) pixel reading operator after initialization\n\
+        gmic.run('resize 200%,200%', i) # Some G'MIC operations may reallocate the image buffer in place without risk\n\
+        i._width == i._height == 2 # Use the _width, _height, _depth, _spectrum, _data, _data_str, _is_shared read-only attributes\n\n\
+Args:\n\
+    numpy_array (numpy.ndarray): A non-empty 1D-4D Numpy array.\n\
+    input_format (Optional[int]): one of the following preset values:\n\
+        - ``gmic.NUMPY_FORMAT_GMIC``: assuming input matrix is formatted as (width, depth, height, channels) and pixel values are deinterleaved. No pixel-channels deinterleaving will be done, no dimensions permutation will be done. Equates to deinterleave=False, permute='' defaults.\n\
+        - ``gmic.NUMPY_FORMAT_PIL``: assuming input matrix is formatted as ([depth,] height, width, channels) and pixel values are interleaved.Equates to deinterleave=True, permute='zyxc'.\n\
+        - ``gmic.NUMPY_FORMAT_SCIKIT_IMAGE``: assuming input matrix is formatted as (depth, width, height, channels) and pixel values are interleaved. Equates to deinterleave=True, permute='zxyc'. Defaults to ``gmic.NUMPY_FORMAT_GMIC``.\n\
+    deinterleave (Optional[bool]): If ``True``, pixel channel values will be deinterleaved inside the GmicImage data. If ``False``, pixel channels vector values will be untouched.\n\
+        Defaults to ``False``. This parameter will be omitted if ``input_format`` is set to a different value than ``gmic.NUMPY_FORMAT_GMIC``.\n\
+    permute (Optional[str]): If non-empty, a G'MIC ``permute`` operation will be run with this parameter (eg. yxzc) on the input matrix before saving into the GmicImage.\n\
+        See https://gmic.eu/reference.shtml#permute\n\
+        This parameter will be omitted if ``input_format`` is set to a different value than ``gmic.NUMPY_FORMAT_GMIC``\n\
+        Defaults to \"\" (no permutation).\n\
+\n\
+Returns:\n\
+    GmicImage: A new ``GmicImage`` based the input ``numpy.ndarray`` data.\n\
+\n\
+Raises:\n\
+    GmicException, TypeError: Look at the exception message for details. Matrices with dimensions <1D or >4D will be rejected.");
 
 PyDoc_STRVAR(
     PyGmicImage_to_numpy_array_doc,
-    "GmicImage.to_numpy_array(astype=numpy.float32: numpy.dtype, interleave=True: bool, squeeze_shape=False: bool) -> numpy.ndarray\n\n\
-Make a numpy.ndarray from a GmicImage");
+    "GmicImage.to_numpy_array(astype=numpy.float32, output_format=gmic.NUMPY_FORMAT_GMIC, interleave=False, permute='', squeeze_shape=False)\n\n\
+Make a numpy.ndarray from a GmicImage.\n\
+G'MIC does not squeeze dimensions internally, so unless you use the ``squeeze_shape`` flag calling ``numpy.squeeze`` for you, the output matrix will be 4D.\n\n\
+Args:\n\
+    astype (numpy.dtype): The type to which G'MIC's float32 pixel values will cast to for the output matrix.\n\
+    output_format (Optional[int]): one of the following preset values:\n\
+        - ``gmic.NUMPY_FORMAT_GMIC``: output matrix will be formatted as (width, depth, height, channels), with pixel values deinterleaved (ie. ``RRR,GGG,BBB``). Equates to interleave=False, permute='' defaults.\n\
+        - ``gmic.NUMPY_FORMAT_PIL``: output matrix matrix will be formatted as (depth, height, width, channels), with pixel values interleaved. Equates to interleave=True, permute='zyxc'.\n\
+        - ``gmic.NUMPY_FORMAT_SCIKIT_IMAGE``: output matrix will be formatted as (depth, width, height, channels), with pixel values interleaved. Equates to interleave=True, permute='zxyc'.\n\
+        Defaults to ``gmic.NUMPY_FORMAT_GMIC``.\n\
+    interleave (Optional[bool]): If ``True``, pixel channel values will be interleaved (ie. RGB, RGB, RGB) within the numpy array. If ``False``, pixel channels vector values will be untouched/deinterleaved (ie. RRR,GGG,BBB).\n\
+        Defaults to ``False``.\n\
+        This parameter will be omitted if ``output_format`` is set to a different value than ``gmic.NUMPY_FORMAT_GMIC``.\n\
+    permute (Optional[str]): If non-empty, a G'MIC ``permute`` operation will be run with this parameter (eg. yxzc) on the output matrix before saving into the GmicImage.\n\
+        See https://gmic.eu/reference.shtml#permute\n\
+        This parameter will be omitted if ``output_format`` is set to a different value than ``gmic.NUMPY_FORMAT_GMIC``\n\
+        Defaults to \"\" (no permutation).\n\
+\n\
+Returns:\n\
+    numpy.ndarray: A new ``numpy.ndarray`` based the input ``GmicImage`` data.");
 #endif
 
 static PyMethodDef PyGmicImage_methods[] = {
@@ -1058,9 +1114,11 @@ PyInit_gmic()
     // The GmicException inherits Python's builtin Exception.
     // Used for non-precise errors raised from this module.
     GmicException = PyErr_NewExceptionWithDoc(
-        "gmic.GmicException",                       /* char *name */
-        "Only exception class of the Gmic module.\n\nThis wraps G'MIC's C++ gmic_exception. Refer to the exception message itself.", /* char *doc */
-        NULL,                                       /* PyObject *base */
+        "gmic.GmicException", /* char *name */
+        "Only exception class of the Gmic module.\n\nThis wraps G'MIC's C++ "
+        "gmic_exception. Refer to the exception message itself.", /* char *doc
+                                                                   */
+        NULL, /* PyObject *base */
         NULL /* PyObject *dict */);
 
     PyGmicImageType.tp_new = PyType_GenericNew;
@@ -1085,7 +1143,6 @@ PyInit_gmic()
     PyGmicType.tp_repr = (reprfunc)PyGmic_repr;
     PyGmicType.tp_init = (initproc)PyGmic_init;
     PyGmicType.tp_getattro = PyObject_GenericGetAttr;
-    // PyGmicType.tp_doc=PyGmicImage_doc;
 
     if (PyType_Ready(&PyGmicType) < 0)
         return NULL;
@@ -1112,6 +1169,16 @@ PyInit_gmic()
     PyModule_AddObject(m, "__build__", gmicpy_build_info);
     // For more debugging, the user can look at __spec__ automatically set by
     // setup.py
+
+    // Numpy input-output matrix conversion formats
+    // see from_numpy_array() and  to_numpy_array().
+
+    // does not alter dimensions orders or channels orders
+    PyModule_AddIntConstant(m, "NUMPY_FORMAT_GMIC", 0L);
+    // depth-plane, width-rows, height-cols, channels interleaved
+    PyModule_AddIntConstant(m, "NUMPY_FORMAT_SCIKIT_IMAGE", 2L);
+    // depth, height, width, channels interleaved
+    PyModule_AddIntConstant(m, "NUMPY_FORMAT_PIL", 3L);
 
     return m;
 }
