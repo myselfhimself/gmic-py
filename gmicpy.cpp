@@ -567,9 +567,9 @@ Example:\n\
         import gmic\n\
         import struct\n\
         import random\n\
-        instance1 = gmic.Gmic('echo_stdout \'instantiation and run all in one\')\n\
+        instance1 = gmic.Gmic('echo_stdout \\'instantiation and run all in one\\')\n\
         instance2 = gmic.Gmic()\n\
-        instance2.run('echo_stdout \'hello world\'') # G'MIC command without images parameter\n\
+        instance2.run('echo_stdout \\'hello world\\'') # G'MIC command without images parameter\n\
         a = gmic.GmicImage(struct.pack(*('256f',) + tuple([random.random() for a in range(256)])), 16, 16) # Build 16x16 greyscale image\n\
         instance2.run('blur 12,0,1 resize 50%,50%', a) # Blur then resize the image\n\
         a._width == a._height == 8 # The image is half smaller\n\
@@ -765,7 +765,7 @@ Example:\n\
         import gmic\n\
         import struct\n\
         import random\n\
-        gmic.run('echo_stdout \'hello world\'') # G'MIC command without images parameter\n\
+        gmic.run('echo_stdout \\'hello world\\'') # G'MIC command without images parameter\n\
         a = gmic.GmicImage(struct.pack(*('256f',) + tuple([random.random() for a in range(256)])), 16, 16) # Build 16x16 greyscale image\n\
         gmic.run('blur 12,0,1 resize 50%,50%', a) # Blur then resize the image\n\
         a._width == a._height == 8 # The image is half smaller\n\
@@ -993,7 +993,7 @@ PyGmicImage_to_numpy_array(PyGmicImage *self, PyObject *args, PyObject *kwargs)
 #ifdef gmic_py_numpy
 PyDoc_STRVAR(
     PyGmicImage_from_numpy_array_doc,
-    "GmicImage.from_numpy_array(obj: numpy.ndarray, deinterleave=True: bool) -> GmicImage\n\n\
+    "GmicImage.from_numpy_array(numpy_array: numpy.ndarray, deinterleave=True: bool) -> GmicImage\n\n\
 Make a GmicImage from a numpy.ndarray");
 
 PyDoc_STRVAR(
