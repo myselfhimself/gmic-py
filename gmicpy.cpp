@@ -559,24 +559,38 @@ PyGmic_init(PyGmic *self, PyObject *args, PyObject *kwargs)
 
 PyDoc_STRVAR(
     run_impl_doc,
-    "Gmic.run(command: str[, images: GmicImage|List[GmicImage], image_names: str|List[str]]) -> None\n\n\
-Run G'MIC interpreter following a G'MIC language command(s) string, on 0 or more namable GmicImage(s).\n\n\
-Note (single-image short-hand calling): if 'images' is a GmicImage, then 'image_names' must be either a 'str' or not provided.\n\n\
+    "Gmic.run(command: str[, images: GmicImage|List[GmicImage], image_names: str|List[str]]) -> None\n\
+Run G'MIC interpreter following a G'MIC language command(s) string, on 0 or more namable ``GmicImage``(s).\n\n\
+Note (single-image short-hand calling): if ``images`` is a ``GmicImage``, then ``image_names`` must be either a ``str`` or be omitted.\n\n\
 Example:\n\
-import gmic\n\
-import struct\n\
-import random\n\
-instance1 = gmic.Gmic('echo_stdout \'instantiation and run all in one\')\n\
-instance2 = gmic.Gmic()\n\
-instance2.run('echo_stdout \'hello world\'') # G'MIC command without images parameter\n\
-a = gmic.GmicImage(struct.pack(*('256f',) + tuple([random.random() for a in range(256)])), 16, 16) # Build 16x16 greyscale image\n\
-instance2.run('blur 12,0,1 resize 50%,50%', a) # Blur then resize the image\n\
-a._width == a._height == 8 # The image is half smaller\n\
-instance2.run('display', a) # If you have X11 enabled (linux only), show the image in a window\n\
-image_names = ['img_' + str(i) for i in range(10)] # You can also name your images if you have several (optional)\n\
-images = [gmic.GmicImage(struct.pack(*((str(w*h)+'f',) + (i*2.0,)*w*h)), w, h) for i in range(10)] # Prepare a list of image\n\
-instance1.run('add 1 print', images, image_names) # And pipe those into the interpreter\n\
-instance1.run('blur 10,0,1 print', images[0], 'my_pic_name') # Short-hand 1-image calling style");
+    Here is a long example describing several use cases::\n\n\
+        import gmic\n\
+        import struct\n\
+        import random\n\
+        instance1 = gmic.Gmic('echo_stdout \'instantiation and run all in one\')\n\
+        instance2 = gmic.Gmic()\n\
+        instance2.run('echo_stdout \'hello world\'') # G'MIC command without images parameter\n\
+        a = gmic.GmicImage(struct.pack(*('256f',) + tuple([random.random() for a in range(256)])), 16, 16) # Build 16x16 greyscale image\n\
+        instance2.run('blur 12,0,1 resize 50%,50%', a) # Blur then resize the image\n\
+        a._width == a._height == 8 # The image is half smaller\n\
+        instance2.run('display', a) # If you have X11 enabled (linux only), show the image in a window\n\
+        image_names = ['img_' + str(i) for i in range(10)] # You can also name your images if you have several (optional)\n\
+        images = [gmic.GmicImage(struct.pack(*((str(w*h)+'f',) + (i*2.0,)*w*h)), w, h) for i in range(10)] # Prepare a list of image\n\
+        instance1.run('add 1 print', images, image_names) # And pipe those into the interpreter\n\
+        instance1.run('blur 10,0,1 print', images[0], 'my_pic_name') # Short-hand 1-image calling style\n\n\
+Args:\n\
+    commands_line (str): An image-processing command in the G'MIC language\n\
+    images (Optional[Union[List[gmic.GmicImage], gmic.GmicImage]]): A list of ``GmicImage`` items that G'MIC will edit in place, or a single ``gmic.GmicImage`` which will used for input only. Defaults to None.\n\
+        Put a list variable here, not a plain ``[]``.\n\
+        If you pass a list, it can be empty if you intend to fill or complement it using your G'MIC command.\n\
+    image_names (Optional[List<str>]): A list of names for the images, defaults to None.\n\
+        In-place editing by G'MIC can happen, you might want to pass your list as a variable instead.\n\
+\n\
+Returns:\n\
+    None: Returns ``None`` or raises a ``GmicException``.\n\
+\n\
+Raises:\n\
+    GmicException: This translates' G'MIC C++ same-named exception. Look at the exception message for details.");
 
 static PyMethodDef PyGmic_methods[] = {
     {"run", (PyCFunction)run_impl, METH_VARARGS | METH_KEYWORDS, run_impl_doc},
@@ -1025,7 +1039,7 @@ PyInit_gmic()
     // Used for non-precise errors raised from this module.
     GmicException = PyErr_NewExceptionWithDoc(
         "gmic.GmicException",                       /* char *name */
-        "Base exception class of the Gmic module.", /* char *doc */
+        "Only exception class of the Gmic module.\n\nThis wraps G'MIC's C++ gmic_exception. Refer to the exception message itself.", /* char *doc */
         NULL,                                       /* PyObject *base */
         NULL /* PyObject *dict */);
 
