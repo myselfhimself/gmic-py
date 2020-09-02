@@ -559,8 +559,8 @@ PyGmic_init(PyGmic *self, PyObject *args, PyObject *kwargs)
 
 PyDoc_STRVAR(
     run_impl_doc,
-    "Gmic.run(command: str[, images: GmicImage|List[GmicImage], image_names: str|List[str]]) -> None\n\
-Run G'MIC interpreter following a G'MIC language command(s) string, on 0 or more namable ``GmicImage``(s).\n\n\
+    "Gmic.run(command, images=None, image_names=None)\n\
+Run G'MIC interpreter following a G'MIC language command(s) string, on 0 or more namable ``GmicImage`` items.\n\n\
 Note (single-image short-hand calling): if ``images`` is a ``GmicImage``, then ``image_names`` must be either a ``str`` or be omitted.\n\n\
 Example:\n\
     Here is a long example describing several use cases::\n\n\
@@ -579,7 +579,7 @@ Example:\n\
         instance1.run('add 1 print', images, image_names) # And pipe those into the interpreter\n\
         instance1.run('blur 10,0,1 print', images[0], 'my_pic_name') # Short-hand 1-image calling style\n\n\
 Args:\n\
-    commands_line (str): An image-processing command in the G'MIC language\n\
+    command (str): An image-processing command in the G'MIC language\n\
     images (Optional[Union[List[gmic.GmicImage], gmic.GmicImage]]): A list of ``GmicImage`` items that G'MIC will edit in place, or a single ``gmic.GmicImage`` which will used for input only. Defaults to None.\n\
         Put a list variable here, not a plain ``[]``.\n\
         If you pass a list, it can be empty if you intend to fill or complement it using your G'MIC command.\n\
@@ -756,23 +756,37 @@ module_level_run_impl(PyObject *, PyObject *args, PyObject *kwargs)
 
 PyDoc_STRVAR(
     module_level_run_impl_doc,
-    "run(command: str[, images: GmicImage|List[GmicImage], image_names: str|List[str]]) -> None\n\n\
-Run G'MIC interpreter following a G'MIC language command(s) string, on 0 or more nameable GmicImage(s).\n\n\
-This creates a single-use interpret for you and destroys it. For faster run()s, reuse instead ia G'MIC interpret instance, see gmic.Gmic() and its run() method.\n\n\
-Note (single-image short-hand calling): if 'images' is a GmicImage, then 'image_names' must be either a 'str' or not provided.\n\n\
+    "run(command, images=None, image_names=None)\n\n\
+Run the G'MIC interpreter with a G'MIC language command(s) string, on 0 or more nameable GmicImage(s). This is a short-hand for calling ``gmic.Gmic().run`` with the exact same parameters signature.\n\n\
+Note (single-image short-hand calling): if ``images`` is a ``GmicImage``, then ``image_names`` must be either a ``str`` or be omitted.\n\n\
+Note (interpreter warm-up): calling ``gmic.run`` multiple times is inefficient as it spawns then drops a new G'MIC interpreter instance for every call. For better performance, you can tie a ``gmic.Gmic`` G'MIC interpreter instance to a variable instead and call its ``run`` method multiple times. Look at ``gmic.Gmic.run`` for more information.\n\n\
 Example:\n\
-import gmic\n\
-import struct\n\
-import random\n\
-gmic.run('echo_stdout \'hello world\'') # G'MIC command without images parameter\n\
-a = gmic.GmicImage(struct.pack(*('256f',) + tuple([random.random() for a in range(256)])), 16, 16) # Build 16x16 greyscale image\n\
-gmic.run('blur 12,0,1 resize 50%,50%', a) # Blur then resize the image\n\
-a._width == a._height == 8 # The image is half smaller\n\
-gmic.run('display', a) # If you have X11 enabled (linux only), show the image in a window\n\
-image_names = ['img_' + str(i) for i in range(10)] # You can also name your images if you have several (optional)\n\
-images = [gmic.GmicImage(struct.pack(*((str(w*h)+'f',) + (i*2.0,)*w*h)), w, h) for i in range(10)] # Prepare a list of image\n\
-gmic.run('add 1 print', images, image_names) # And pipe those into the interpreter\n\
-gmic.run('blur 10,0,1 print', images[0], 'my_pic_name') # Short-hand 1-image calling style");
+    Several ways to use the module-level ``gmic.run()`` function::\n\n\
+        import gmic\n\
+        import struct\n\
+        import random\n\
+        gmic.run('echo_stdout \'hello world\'') # G'MIC command without images parameter\n\
+        a = gmic.GmicImage(struct.pack(*('256f',) + tuple([random.random() for a in range(256)])), 16, 16) # Build 16x16 greyscale image\n\
+        gmic.run('blur 12,0,1 resize 50%,50%', a) # Blur then resize the image\n\
+        a._width == a._height == 8 # The image is half smaller\n\
+        gmic.run('display', a) # If you have X11 enabled (linux only), show the image in a window\n\
+        image_names = ['img_' + str(i) for i in range(10)] # You can also name your images if you have several (optional)\n\
+        images = [gmic.GmicImage(struct.pack(*((str(w*h)+'f',) + (i*2.0,)*w*h)), w, h) for i in range(10)] # Prepare a list of image\n\
+        gmic.run('add 1 print', images, image_names) # And pipe those into the interpreter\n\
+        gmic.run('blur 10,0,1 print', images[0], 'my_pic_name') # Short-hand 1-image calling style\n\n\
+Args:\n\
+    command (str): An image-processing command in the G'MIC language\n\
+    images (Optional[Union[List[gmic.GmicImage], gmic.GmicImage]]): A list of ``GmicImage`` items that G'MIC will edit in place, or a single ``gmic.GmicImage`` which will used for input only. Defaults to None.\n\
+        Put a list variable here, not a plain ``[]``.\n\
+        If you pass a list, it can be empty if you intend to fill or complement it using your G'MIC command.\n\
+    image_names (Optional[List<str>]): A list of names for the images, defaults to None.\n\
+        In-place editing by G'MIC can happen, you might want to pass your list as a variable instead.\n\
+\n\
+Returns:\n\
+    None: Returns ``None`` or raises a ``GmicException``.\n\
+\n\
+Raises:\n\
+    GmicException: This translates' G'MIC C++ same-named exception. Look at the exception message for details.");
 
 static PyMethodDef gmic_methods[] = {
     {"run", (PyCFunction)module_level_run_impl, METH_VARARGS | METH_KEYWORDS,
@@ -780,29 +794,35 @@ static PyMethodDef gmic_methods[] = {
     {nullptr, nullptr, 0, nullptr}};
 
 PyDoc_STRVAR(gmic_module_doc,
-             "G'MIC Image Processing library Python binding\n\n\
-Use gmic.run(...), gmic.GmicImage(...), gmic.Gmic(...).\n\
-Make sure to visit https://github.com/myselfhimself/gmic-py for examples and documentation.");
+             "G'MIC image processing library Python binary module.\n\n\
+Use ``gmic.run`` or ``gmic.Gmic`` to run G'MIC commands inside the G'MIC C++ interpreter, manipulate ``gmic.GmicImage`` especially with ``numpy``.");
 
 PyModuleDef gmic_module = {PyModuleDef_HEAD_INIT, "gmic", gmic_module_doc, 0,
                            gmic_methods};
 
 PyDoc_STRVAR(
     PyGmicImage_doc,
-    "GmicImage([data: bytes = None, width: int = 1, height: int = 1, depth: int = 1, spectrum: int = 1, shared: bool = False]) -> bool\n\n\
+    "GmicImage(data=None, width=1, height=1, depth=1, spectrum=1, shared=False)\n\n\
 Simplified mapping of the c++ gmic_image type. Stores non-publicly a binary buffer of data, a height, width, depth, spectrum.\n\n\
-Example:\n\
-import gmic\n\
-empty_1x1x1_black_image = gmic.GmicImage() # or gmic.GmicImage(None,1,1,1,1) for example\n\
-import struct\n\
-i = gmic.GmicImage(struct.pack('2f', 0.0, 1.5), 1, 1) # 2D 1x1 image\n\
-gmic.run('add 1', i) # GmicImage injection into G'MIC's interpreter\n\
-i # Using GmicImage's repr() string representation\n\
-# Output: <gmic.GmicImage object at 0x7f09bfb504f8 with _data address at 0x22dd5b0, w=1 h=1 d=1 s=1 shared=0>\n\
-i(0,0) == 1.0 # Using GmicImage(x,y,z) pixel reading operator after initialization\n\
-gmic.run('resize 200%,200%', i) # Some G'MIC operations may reallocate the image buffer in place without risk\n\
-i._width == i._height == 2 # Use the _width, _height, _depth, _spectrum, _data, _data_str, _is_shared read-only attributes");
-// TODO add gmic.Gmic example
+Example:\n\n\
+    Several ways to use a GmicImage simply::\n\n\
+        import gmic\n\
+        empty_1x1x1_black_image = gmic.GmicImage() # or gmic.GmicImage(None,1,1,1,1) for example\n\
+        import struct\n\
+        i = gmic.GmicImage(struct.pack('2f', 0.0, 1.5), 1, 1) # 2D 1x1 image\n\
+        gmic.run('add 1', i) # GmicImage injection into G'MIC's interpreter\n\
+        i # Using GmicImage's repr() string representation\n\
+        # Output: <gmic.GmicImage object at 0x7f09bfb504f8 with _data address at 0x22dd5b0, w=1 h=1 d=1 s=1 shared=0>\n\
+        i(0,0) == 1.0 # Using GmicImage(x,y,z) pixel reading operator after initialization\n\
+        gmic.run('resize 200%,200%', i) # Some G'MIC operations may reallocate the image buffer in place without risk\n\
+        i._width == i._height == 2 # Use the _width, _height, _depth, _spectrum, _data, _data_str, _is_shared read-only attributes\n\n\
+Args:\n\
+    data (Optional[bytes]): Raw data for the image (must be a sequence of 4-bytes floats blocks, with as many blocks as all the dimensions multiplied together).\n\
+    width (Optional[int]): Image width in pixels. Defaults to 1.\n\
+    height (Optional[int]): Image height in pixels. Defaults to 1.\n\
+    depth (Optional[int]): Image height in pixels. Defaults to 1.\n\
+    spectrum (Optional[int]): Number of channels per pixel. Defaults to 1.\n\
+    shared (Optional[bool]): C++ option: whether the buffer should be shareable between several GmicImages and operations. Defaults to False.");
 
 static PyMemberDef PyGmicImage_members[] = {
     {(char *)"_width", T_UINT, offsetof(PyGmicImage, _gmic_image), READONLY,
@@ -978,7 +998,7 @@ Make a GmicImage from a numpy.ndarray");
 
 PyDoc_STRVAR(
     PyGmicImage_to_numpy_array_doc,
-    "GmicImage().to_numpy_array(astype=numpy.float32: numpy.dtype, interleave=True: bool, squeeze_shape=False: bool) -> numpy.ndarray\n\n\
+    "GmicImage.to_numpy_array(astype=numpy.float32: numpy.dtype, interleave=True: bool, squeeze_shape=False: bool) -> numpy.ndarray\n\n\
 Make a numpy.ndarray from a GmicImage");
 #endif
 
