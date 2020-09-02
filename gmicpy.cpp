@@ -794,10 +794,11 @@ static PyMethodDef gmic_methods[] = {
 PyDoc_STRVAR(gmic_module_doc,
              "G'MIC image processing library Python binary module.\n\n\
 Use ``gmic.run`` or ``gmic.Gmic`` to run G'MIC commands inside the G'MIC C++ interpreter, manipulate ``gmic.GmicImage`` especially with ``numpy``.\n\n\
+Below are constants to be used by ``GmicImage.from_numpy_array`` and ``GmicImage.to_numpy_array`` conversion methods.\n\n\
 Attributes:\n\n\
     NUMPY_FORMAT_GMIC: assuming input matrix is formatted as (width, depth, height, channels) and pixel values are deinterleaved. No pixel-channels deinterleaving will be done, no dimensions permutation will be done. Equates to deinterleave=False, permute='' defaults.\n\
     NUMPY_FORMAT_PIL: assuming input matrix is formatted as ([depth,] height, width, channels) and pixel values are interleaved.Equates to deinterleave=True, permute='zyxc'.\n\
-    NUMPY_FORMAT_SCIKIT_IMAGE: assuming input matrix is formatted as (depth, width, height, channels) and pixel values are interleaved. Equates to deinterleave=True, permute='zxyc'. Defaults to ``gmic.NUMPY_FORMAT_GMIC``.\n\n");
+    NUMPY_FORMAT_SCIKIT_IMAGE: assuming input matrix is formatted as (depth, width, height, channels) and pixel values are interleaved. Equates to deinterleave=True, permute='zxyc'. Defaults to ``gmic.NUMPY_FORMAT_GMIC``.");
 
 PyModuleDef gmic_module = {PyModuleDef_HEAD_INIT, "gmic", gmic_module_doc, 0,
                            gmic_methods};
@@ -1017,7 +1018,7 @@ Example:\n\n\
         i._width == i._height == 2 # Use the _width, _height, _depth, _spectrum, _data, _data_str, _is_shared read-only attributes\n\n\
 Args:\n\
     numpy_array (numpy.ndarray): A non-empty 1D-4D Numpy array.\n\
-    input_format (Optional[int]): one of the following preset values:\n\
+    input_format (Optional[int]): one of the following preset values:\n\n\
         - ``gmic.NUMPY_FORMAT_GMIC``: assuming input matrix is formatted as (width, depth, height, channels) and pixel values are deinterleaved. No pixel-channels deinterleaving will be done, no dimensions permutation will be done. Equates to deinterleave=False, permute='' defaults.\n\
         - ``gmic.NUMPY_FORMAT_PIL``: assuming input matrix is formatted as ([depth,] height, width, channels) and pixel values are interleaved.Equates to deinterleave=True, permute='zyxc'.\n\
         - ``gmic.NUMPY_FORMAT_SCIKIT_IMAGE``: assuming input matrix is formatted as (depth, width, height, channels) and pixel values are interleaved. Equates to deinterleave=True, permute='zxyc'. Defaults to ``gmic.NUMPY_FORMAT_GMIC``.\n\
@@ -1041,11 +1042,10 @@ Make a numpy.ndarray from a GmicImage.\n\
 G'MIC does not squeeze dimensions internally, so unless you use the ``squeeze_shape`` flag calling ``numpy.squeeze`` for you, the output matrix will be 4D.\n\n\
 Args:\n\
     astype (numpy.dtype): The type to which G'MIC's float32 pixel values will cast to for the output matrix.\n\
-    output_format (Optional[int]): one of the following preset values:\n\
+    output_format (Optional[int]): Preset for the output matrix layout and pixel vector format. Defaults to ``gmic.NUMPY_FORMAT_GMIC``. Choose among one of the following preset values:\n\n\
         - ``gmic.NUMPY_FORMAT_GMIC``: output matrix will be formatted as (width, depth, height, channels), with pixel values deinterleaved (ie. ``RRR,GGG,BBB``). Equates to interleave=False, permute='' defaults.\n\
         - ``gmic.NUMPY_FORMAT_PIL``: output matrix matrix will be formatted as (depth, height, width, channels), with pixel values interleaved. Equates to interleave=True, permute='zyxc'.\n\
         - ``gmic.NUMPY_FORMAT_SCIKIT_IMAGE``: output matrix will be formatted as (depth, width, height, channels), with pixel values interleaved. Equates to interleave=True, permute='zxyc'.\n\
-        Defaults to ``gmic.NUMPY_FORMAT_GMIC``.\n\
     interleave (Optional[bool]): If ``True``, pixel channel values will be interleaved (ie. RGB, RGB, RGB) within the numpy array. If ``False``, pixel channels vector values will be untouched/deinterleaved (ie. RRR,GGG,BBB).\n\
         Defaults to ``False``.\n\
         This parameter will be omitted if ``output_format`` is set to a different value than ``gmic.NUMPY_FORMAT_GMIC``.\n\
