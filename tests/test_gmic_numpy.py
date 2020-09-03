@@ -313,6 +313,12 @@ def test_to_numpy_array_instance_method_existence():
     getattr(a, "to_numpy_array")
 
 
+def test_numpy_format_attributes_existence():
+    getattr(gmic, "NUMPY_FORMAT_GMIC")
+    getattr(gmic, "NUMPY_FORMAT_SCIKIT_IMAGE")
+    getattr(gmic, "NUMPY_FORMAT_PIL")
+
+
 # Useful for some IDEs with debugging support
 if __name__ == "__main__":
     pytest.main([os.path.abspath(os.path.dirname(__file__))])
