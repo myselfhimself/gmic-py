@@ -796,9 +796,10 @@ PyDoc_STRVAR(gmic_module_doc,
 Use ``gmic.run`` or ``gmic.Gmic`` to run G'MIC commands inside the G'MIC C++ interpreter, manipulate ``gmic.GmicImage`` especially with ``numpy``.\n\n\
 Below are constants to be used by ``GmicImage.from_numpy_array`` and ``GmicImage.to_numpy_array`` conversion methods.\n\n\
 Attributes:\n\n\
-    NUMPY_FORMAT_GMIC: assuming input matrix is formatted as (width, depth, height, channels) and pixel values are deinterleaved. No pixel-channels deinterleaving will be done, no dimensions permutation will be done. Equates to deinterleave=False, permute='' defaults.\n\
-    NUMPY_FORMAT_PIL: assuming input matrix is formatted as ([depth,] height, width, channels) and pixel values are interleaved.Equates to deinterleave=True, permute='zyxc'.\n\
-    NUMPY_FORMAT_SCIKIT_IMAGE: assuming input matrix is formatted as (depth, width, height, channels) and pixel values are interleaved. Equates to deinterleave=True, permute='zxyc'. Defaults to ``gmic.NUMPY_FORMAT_GMIC``.");
+    NUMPY_FORMAT_DEFAULT: assuming input matrix is formatted as (width, depth, height, channels) and pixel values are interleaved. Pixel-channels deinterleaving will be done, no dimensions permutation will be done. Equates to (de)interleave=True, permute='' defaults.\n\
+    NUMPY_FORMAT_GMIC: assuming input matrix is formatted as (width, depth, height, channels) and pixel values are deinterleaved. No pixel-channels deinterleaving will be done, no dimensions permutation will be done. Equates to (de)interleave=False, permute='' defaults.\n\
+    NUMPY_FORMAT_PIL: assuming input matrix is formatted as ([depth,] height, width, channels) and pixel values are interleaved.Equates to (de)interleave=True, permute='zyxc'.\n\
+    NUMPY_FORMAT_SCIKIT_IMAGE: assuming input matrix is formatted as (depth, width, height, channels) and pixel values are interleaved. Equates to (de)interleave=True, permute='zxyc'.");
 
 PyModuleDef gmic_module = {PyModuleDef_HEAD_INIT, "gmic", gmic_module_doc, 0,
                            gmic_methods};
@@ -884,13 +885,14 @@ PyGetSetDef PyGmicImage_getsets[] = {{(char *)"_data", /* name */
  * GmicImage object method to_numpy_array().
  *
  * GmicImage().to_numpy_array(astype=numpy.float32: numpy.dtype,
- * interleave=True: bool, squeeze_shape=False: bool) -> numpy.ndarray
+ * interleave=False: bool, squeeze_shape=False: bool) -> numpy.ndarray
  *
  */
 static PyObject *
 PyGmicImage_to_numpy_array(PyGmicImage *self, PyObject *args, PyObject *kwargs)
 {
     char const *keywords[] = {"astype", "interleave", "squeeze_shape", NULL};
+    // TODO add "permute" and "output_format" keywords + implementation
     PyObject *numpy_module = NULL;
     PyObject *ndarray_type = NULL;
     PyObject *return_ndarray = NULL;
@@ -902,8 +904,7 @@ PyGmicImage_to_numpy_array(PyGmicImage *self, PyObject *args, PyObject *kwargs)
     float *ndarray_bytes_buffer_ptr = NULL;
     int buffer_size = 0;
     PyObject *arg_astype = NULL;
-    int arg_interleave = 1;     // Will interleave the final matrix by default,
-                                // for easier matplotlib/PIL handling
+    int arg_interleave = 1;     // Will interleave the final matrix by default
     int arg_squeeze_shape = 0;  // Will squeeze the final shape if asked, for
                                 // easier python-matplotlib display
 
@@ -921,9 +922,9 @@ PyGmicImage_to_numpy_array(PyGmicImage *self, PyObject *args, PyObject *kwargs)
 
     ndarray_shape_tuple = PyList_New(0);
     PyList_Append(ndarray_shape_tuple,
-                  PyLong_FromSize_t((size_t)self->_gmic_image._height));
-    PyList_Append(ndarray_shape_tuple,
                   PyLong_FromSize_t((size_t)self->_gmic_image._width));
+    PyList_Append(ndarray_shape_tuple,
+                  PyLong_FromSize_t((size_t)self->_gmic_image._height));
 
     PyList_Append(ndarray_shape_tuple,
                   PyLong_FromSize_t((size_t)self->_gmic_image._depth));
@@ -950,7 +951,7 @@ PyGmicImage_to_numpy_array(PyGmicImage *self, PyObject *args, PyObject *kwargs)
     }
     else {
         // If deinterleaving is not needed, since this is G'MIC's internal
-        // image shape, keep pixel data order as and copy it simply
+        // image shape, keep pixel data order as is and copy it simply
         memcpy(numpy_buffer, self->_gmic_image._data,
                self->_gmic_image.size() * sizeof(T));
     }
@@ -967,8 +968,7 @@ PyGmicImage_to_numpy_array(PyGmicImage *self, PyObject *args, PyObject *kwargs)
         return_ndarray =
             PyObject_CallMethod(numpy_module, "squeeze", "O", return_ndarray);
         if (!return_ndarray) {
-            PyErr_Format(GmicException,
-                         "'%.50s' failed to be numpy.squeeze'd.",
+            PyErr_Format(GmicException, "'%.50s' failed to run numpy.squeeze.",
                          ((PyTypeObject *)Py_TYPE(ndarray_type))->tp_name);
         }
     }
@@ -996,7 +996,7 @@ PyGmicImage_to_numpy_array(PyGmicImage *self, PyObject *args, PyObject *kwargs)
 #ifdef gmic_py_numpy
 PyDoc_STRVAR(
     PyGmicImage_from_numpy_array_doc,
-    "GmicImage.from_numpy_array(numpy_array, input_format=gmic.NUMPY_FORMAT_GMIC, deinterleave=False, permute='')\n\n\
+    "GmicImage.from_numpy_array(numpy_array, input_format=gmic.NUMPY_FORMAT_DEFAULT, deinterleave=False, permute='')\n\n\
 Make a GmicImage from a 1-4 dimensions numpy.ndarray.\n\n\
 G'MIC works with (width, height, depth, spectrum/channels) matrix layout, with 32bit-float pixel values deinterleaved (ie. RRR,GGG,BBB).\n\
 If your input matrix does not have that G'MIC data layout, you may select a reformatter using the ``input_format`` parameter;\n\
@@ -1018,15 +1018,16 @@ Example:\n\n\
         i._width == i._height == 2 # Use the _width, _height, _depth, _spectrum, _data, _data_str, _is_shared read-only attributes\n\n\
 Args:\n\
     numpy_array (numpy.ndarray): A non-empty 1D-4D Numpy array.\n\
-    input_format (Optional[int]): one of the following preset values:\n\n\
-        - ``gmic.NUMPY_FORMAT_GMIC``: assuming input matrix is formatted as (width, depth, height, channels) and pixel values are deinterleaved. No pixel-channels deinterleaving will be done, no dimensions permutation will be done. Equates to deinterleave=False, permute='' defaults.\n\
-        - ``gmic.NUMPY_FORMAT_PIL``: assuming input matrix is formatted as ([depth,] height, width, channels) and pixel values are interleaved.Equates to deinterleave=True, permute='zyxc'.\n\
+    input_format (Optional[int]): one of the following preset values (defaults to `gmic.NUMPY_FORMAT_DEFAULT`):\n\n\
+        - ``gmic.NUMPY_FORMAT_DEFAULT``: assuming input matrix is formatted as (width, depth, height, channels) and pixel values are interleaved. Pixel-channels deinterleaving will be done, no dimensions permutation will be done. Equates to deinterleave=True, permute='' defaults.\n\
+        - ``gmic.NUMPY_FORMAT_GMIC``: assuming input matrix is formatted as (width, depth, height, channels) and pixel values are deinterleaved. No pixel-channels deinterleaving will be done, no dimensions permutation will be done. Equates to deinterleave=False, permute=''.\n\
+        - ``gmic.NUMPY_FORMAT_PIL``: assuming input matrix is formatted as ([depth,] height, width, channels) and pixel values are interleaved. Equates to deinterleave=True, permute='zyxc'.\n\
         - ``gmic.NUMPY_FORMAT_SCIKIT_IMAGE``: assuming input matrix is formatted as (depth, width, height, channels) and pixel values are interleaved. Equates to deinterleave=True, permute='zxyc'. Defaults to ``gmic.NUMPY_FORMAT_GMIC``.\n\
     deinterleave (Optional[bool]): If ``True``, pixel channel values will be deinterleaved inside the GmicImage data. If ``False``, pixel channels vector values will be untouched.\n\
-        Defaults to ``False``. This parameter will be omitted if ``input_format`` is set to a different value than ``gmic.NUMPY_FORMAT_GMIC``.\n\
+        Defaults to ``False``. This parameter will be omitted if ``input_format`` is set to a different value than ``gmic.NUMPY_FORMAT_DEFAULT``.\n\
     permute (Optional[str]): If non-empty, a G'MIC ``permute`` operation will be run with this parameter (eg. yxzc) on the input matrix before saving into the GmicImage.\n\
         See https://gmic.eu/reference.shtml#permute\n\
-        This parameter will be omitted if ``input_format`` is set to a different value than ``gmic.NUMPY_FORMAT_GMIC``\n\
+        This parameter will be omitted if ``input_format`` is set to a different value than ``gmic.NUMPY_FORMAT_DEFAULT``\n\
         Defaults to \"\" (no permutation).\n\
 \n\
 Returns:\n\
@@ -1037,22 +1038,23 @@ Raises:\n\
 
 PyDoc_STRVAR(
     PyGmicImage_to_numpy_array_doc,
-    "GmicImage.to_numpy_array(astype=numpy.float32, output_format=gmic.NUMPY_FORMAT_GMIC, interleave=False, permute='', squeeze_shape=False)\n\n\
+    "GmicImage.to_numpy_array(astype=numpy.float32, output_format=gmic.NUMPY_FORMAT_DEFAULT, interleave=False, permute='', squeeze_shape=False)\n\n\
 Make a numpy.ndarray from a GmicImage.\n\
 G'MIC does not squeeze dimensions internally, so unless you use the ``squeeze_shape`` flag calling ``numpy.squeeze`` for you, the output matrix will be 4D.\n\n\
 Args:\n\
     astype (numpy.dtype): The type to which G'MIC's float32 pixel values will cast to for the output matrix.\n\
-    output_format (Optional[int]): Preset for the output matrix layout and pixel vector format. Defaults to ``gmic.NUMPY_FORMAT_GMIC``. Choose among one of the following preset values:\n\n\
+    output_format (Optional[int]): Preset for the output matrix layout and pixel vector format. Defaults to ``gmic.NUMPY_FORMAT_DEFAULT``. Choose among one of the following preset values:\n\n\
+        - ``gmic.NUMPY_FORMAT_DEFAULT``: output matrix will be formatted as (width, depth, height, channels), with pixel values interleaved (ie. ``RGB,RGB,RGB``). Equates to interleave=True, permute='' defaults.\n\
         - ``gmic.NUMPY_FORMAT_GMIC``: output matrix will be formatted as (width, depth, height, channels), with pixel values deinterleaved (ie. ``RRR,GGG,BBB``). Equates to interleave=False, permute='' defaults.\n\
         - ``gmic.NUMPY_FORMAT_PIL``: output matrix matrix will be formatted as (depth, height, width, channels), with pixel values interleaved. Equates to interleave=True, permute='zyxc'.\n\
         - ``gmic.NUMPY_FORMAT_SCIKIT_IMAGE``: output matrix will be formatted as (depth, width, height, channels), with pixel values interleaved. Equates to interleave=True, permute='zxyc'.\n\
     interleave (Optional[bool]): If ``True``, pixel channel values will be interleaved (ie. RGB, RGB, RGB) within the numpy array. If ``False``, pixel channels vector values will be untouched/deinterleaved (ie. RRR,GGG,BBB).\n\
         Defaults to ``False``.\n\
-        This parameter will be omitted if ``output_format`` is set to a different value than ``gmic.NUMPY_FORMAT_GMIC``.\n\
+        This parameter will be omitted if ``output_format`` is set to a different value than ``gmic.NUMPY_FORMAT_DEFAULT``.\n\
     permute (Optional[str]): If non-empty, a G'MIC ``permute`` operation will be run with this parameter (eg. yxzc) on the output matrix before saving into the GmicImage.\n\
         See https://gmic.eu/reference.shtml#permute\n\
-        This parameter will be omitted if ``output_format`` is set to a different value than ``gmic.NUMPY_FORMAT_GMIC``\n\
-        Defaults to \"\" (no permutation).\n\
+        This parameter will be omitted if ``output_format`` is set to a different value than ``gmic.NUMPY_FORMAT_DEFAULT``\n\
+        Defaults to \"\" (ie. no permutation).\n\
 \n\
 Returns:\n\
     numpy.ndarray: A new ``numpy.ndarray`` based the input ``GmicImage`` data.");
@@ -1173,7 +1175,11 @@ PyInit_gmic()
     // Numpy input-output matrix conversion formats
     // see from_numpy_array() and  to_numpy_array().
 
-    // does not alter dimensions orders or channels orders
+    // Default: does not alter dimensions order or channels order; channels
+    // always (de)interleaved
+    PyModule_AddIntConstant(m, "NUMPY_FORMAT_DEFAULT", 4L);
+    // does not alter dimensions order or channels order; channels not
+    // (de)interleaved
     PyModule_AddIntConstant(m, "NUMPY_FORMAT_GMIC", 0L);
     // depth-plane, width-rows, height-cols, channels interleaved
     PyModule_AddIntConstant(m, "NUMPY_FORMAT_SCIKIT_IMAGE", 2L);

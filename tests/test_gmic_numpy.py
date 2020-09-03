@@ -328,18 +328,33 @@ def test_numpy_format_attributes_existence():
 def test_fuzzy_1d_4d_random_gmic_matrices(
     size_1d, size_2d, size_3d, size_4d, pixel_value_min, pixel_value_max
 ):
-    a = []
+    import pdb
+
+    pdb.set_trace()
+    gmic_image_list = []
     gmic_command = "{},{},{},{} rand {},{}".format(
         size_1d, size_2d, size_3d, size_4d, pixel_value_min, pixel_value_max
     )
-    gmic.run(gmic_command, a)
-    result_image = a[-1]
-    numpy_result_image = (
-        result_image.to_numpy_array()
-    )  # or a[-1].to_numpy_array().shape
-    assert numpy_result_image.shape == (size_1d, size_2d, size_3d, size_4d)
-    assert numpy.amin(numpy_result_image) == pixel_value_min
-    assert numpy.amax(numpy_result_image) == pixel_value_max
+    gmic.run(gmic_command, gmic_image_list)
+    gmic_image = gmic_image_list[-1]
+    # Using the default astype dkind: float32
+    # Using default output formatter: gmic.NUMPY_FORMAT_DEFAULT which has interleave=True, permute=''
+    numpy_image = gmic_image.to_numpy_array()
+    assert numpy_image.shape == (size_1d, size_2d, size_3d, size_4d)
+    assert numpy_image.dtype == numpy.float32
+
+    # Ensure numpy pixel values fit in the random values range
+    numpy_image_min_value = numpy.amin(numpy_image)
+    numpy_image_max_value = numpy.amax(numpy_image)
+    assert pixel_value_min <= numpy_image_min_value <= pixel_value_max
+    assert pixel_value_min <= numpy_image_max_value <= pixel_value_max
+
+    # Ensure per-pixel equality in both numpy and gmic matrices
+    for x in range(size_1d):
+        for y in range(size_2d):
+            for z in range(size_3d):
+                for c in range(size_4d):
+                    assert numpy_image[x, y, z, c] == gmic_image(x, y, z, c)
 
 
 # Useful for some IDEs with debugging support
