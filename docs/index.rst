@@ -1,7 +1,30 @@
-.. gmic-py documentation - a Python 3.x binding to G'MIC's C++ API for image processing
-
 Welcome to gmic-py's documentation!
 ===================================
+``gmic-py`` is a Python 3 binding for the `G'MIC Image Processing Framework <https://gmic.eu/>`_ written in C++.
+
+G'MIC provides sound image-processing commands for 1D to 4D images, as well as many graphical filters.
+It is thus targetted at both artists and data-scientists.
+
+This work-in-progress documentation will showcase diverse uses of ``gmic-py``:
+
+* gmic-py alone in pure Python,
+* with `Numpy <https://numpy.org/>`_,
+* with the `Python Imaging Library (PIL) <https://python-pillow.org/>`_,
+* with `scikit-image <https://scikit-image.org/>`_,
+* with `pygame <https://www.pygame.org/>`_,
+* with `p5 processing for Python <https://pypi.org/project/p5/>`_.
+
+For Linux and MacOS, ``gmic-py`` can be installed for Python >= 3.6 using:
+
+.. code-block::
+
+    pip install gmic
+
+Windows will be supported in third quarter of 2020.
+
+Head over to the :doc:`installing` section for more setup details.
+
+Head over to the :doc:`gettingstarted` section for examples.
 
 .. toctree::
    :maxdepth: 2

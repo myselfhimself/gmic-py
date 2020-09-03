@@ -2,6 +2,8 @@ Numpy support
 =============
 Since gmic-py 2.9.1, you can convert a ``GmicImage`` from and to a ``numpy.ndarray``.
 
+Related ``from_numpy_array`` and ``to_numpy_array`` conversion methods are fully documented in the :doc:`gmic`.
+
 1. G'MIC from/to Numpy & PIL must-knows
 ########################################
 * G'MIC works in 1D, 2D, 3D, or 4D. Numpy can work from 0D (scalar) to N dimensions (>4D).
@@ -12,6 +14,20 @@ Since gmic-py 2.9.1, you can convert a ``GmicImage`` from and to a ``numpy.ndarr
 * G'MIC stores pixel values internally in a non-interleaved format, eg. ``R,R,R,G,G,G,B,B,B`` for ``(3,1,3)`` image shape.
 * The G'MIC => numpy.ndarray conversion (ie. ``GmicImage.to_numpy_array()``) will flip G'MIC's shape to look like a algebrae-culture-one, ie. (depth, height, width, spectrum), with all dimensions present and >= 1.
 
+* ``numpy`` is not a requirement for the G'MIC's Python binding to install, start and work
+* Though, ``numpy`` needs to be installed within your Python environment (but will be imported by G'MIC if you do not import it yourself) for the ``GmicImage.from_numpy_array()`` and ``GmicImage.to_numpy_array()`` to work.
+
+.. code-block:: sh
+
+    pip install numpy
+
+* ``numpy`` is very tolerant and does not have side-effects on your arrays in the ``G'MIC <=> numpy`` conversions, instead blame our G'MIC Python binding or PIL/other image-loading frameworks if used.
+* Use ``numpy.expand_dims`` and ``numpy.atleast_2d``, ``numpy.atleast_3d`` to fix your numpy arrays's dimensions.
+* You might want to flip your pixel values, depending on your pipeline to obtain a numpy array (eg. ``BGR<->RGB``).
+
+
+2. PIL support
+##############
 * PIL - the Python Imaging Library is often used to provide images from a file to numpy in order to end up with a numpy.ndarray object. PIL works in 2d mostly with 1 or more values per pixel.
 * PIL will display a shape of ``(h,w)`` for greyscale images (eg. pgm ones), which will be interpreted by G'MIC as (w,h,1,1).
 * PIL swaps the width and height of the 2d images it opens, giving shapes such as (h,w) (greyscale images) or (h,w,3) (RGB images).
@@ -27,18 +43,6 @@ Since gmic-py 2.9.1, you can convert a ``GmicImage`` from and to a ``numpy.ndarr
     import PIL.Image
     image_from_numpy = numpy.array(PIL.Image.open("myfile.png"))
     image_from_numpy.shape # eg. (480, 640, 3) for a 640x480 RGB image
-
-* ``numpy`` is not a requirement for the G'MIC's Python binding to install, start and work
-* Though, ``numpy`` needs to be installed within your Python environment (but will be imported by G'MIC if you do not import it yourself) for the ``GmicImage.from_numpy_array()`` and ``GmicImage.to_numpy_array()`` to work.
-
-.. code-block:: sh
-
-    pip install numpy
-
-* ``numpy`` is very tolerant and does not have side-effects on your arrays in the ``G'MIC <=> numpy`` conversions, instead blame our G'MIC Python binding or PIL/other image-loading frameworks if used.
-* Use ``numpy.expand_dims`` and ``numpy.atleast_2d``, ``numpy.atleast_3d`` to fix your numpy arrays's dimensions.
-* You might want to flip your pixel values, depending on your pipeline to obtain a numpy array (eg. ``BGR<->RGB``).
-
 
 2. Using GmicImage.from_numpy_array()
 #####################################
