@@ -5,6 +5,13 @@ PYTHON3=${PYTHON3:-python3}
 PIP3=${PIP3:-pip3}
 PYTHON_VERSION=$($PYTHON3 --version | cut -d' ' -f2 | cut -d'.' -f1,2)
 
+# Choose web browser executable (Linux or MacOS)
+BROWSER=xdg-open
+if ! command -v xdg-open &> /dev/null
+then
+    BROWSER=open
+fi
+
 # Guess target G'MIC version from VERSION file's contents
 if [ -f "VERSION" ]; then
     FILE_BASED_GMIC_VERSION=$(cat VERSION)
@@ -211,6 +218,15 @@ function 5_test_wheel () {
     $PIP3 install dist/gmic*.whl --no-cache-dir
     $PYTHON3 -m pytest tests/test_gmic_py.py -rxXs -vvv
     $PIP3 uninstall gmic -y
+}
+
+function 6_make_full_doc () {
+    # Use this for generating doc when gmicpy.cpp has been changed
+    20_reformat_all && 2b_compile_debug && 4_build_wheel && pip uninstall -y gmic && pip install `ls -Art dist/*.whl | tail -n 1` && cd docs && pip install -r requirements.txt && touch *.rst && make html && $BROWSER _build/html/index.html && cd ..
+}
+
+function 6b_make_doc_without_c_recompilation () {
+    20_reformat_all && cd docs && pip install -r requirements.txt && touch *.rst && make html && $BROWSER _build/html/index.html && cd ..
 }
 
 function --help () {

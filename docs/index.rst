@@ -14,13 +14,14 @@ This work-in-progress documentation will showcase diverse uses of ``gmic-py``:
 * with `pygame <https://www.pygame.org/>`_,
 * with `p5 processing for Python <https://pypi.org/project/p5/>`_.
 
-For Linux and MacOS, ``gmic-py`` can be installed for Python >= 3.6 using:
+For Linux and generally, ``gmic-py`` can be installed for Python >= 3.6 using:
 
-.. code-block::
+.. code-block:: sh
 
     pip install gmic
 
-Windows will be supported in third quarter of 2020.
+MacOS works the same but needs `libomp` on top.
+Windows will be supported in the third quarter of 2020.
 
 Head over to the :doc:`installing` section for more setup details.
 

@@ -1,6 +1,12 @@
 Hello fellow developer!
 Here is some help for working on the project :)
 
+# Disambiguation
+- G'MIC is the name of the C++ framework and language altogether.
+- `gmic` is the name of both the Github project and CLI executable.
+- `gmic-py` is the project name for the G'MIC Python binding, though its Python module (or package name) is just `gmic`
+- thus we do not `import gmic_py` but `import gmic`.
+
 # Cleaning, Formatting, Building and Testing
 - the gmic-py binding is super skinny and consists in files `gmicpy.cpp`, `gmicpy.h` and `setup.py` mostly. Pytest test cases belong in the `tests/` directory.
 - no specific IDE was used to build the code, sometimes vim, gedit, pycharm etc
@@ -26,7 +32,32 @@ Here is some help for working on the project :)
 - git push your tag
 - the builds that are sensible to `v*` tags will trigger in addition to the regular ones, make sure all turns green :)
 
-# Writing documentation
-- Offline Pythonic documentation: function/class parameters: for now no Python C Argument Clinic documentation has been written to help document parameters, especially as it needs a third-party build tool obviously. Basic pythonic `help()` support for most module-level types has been written though, with examples. If the binding were written in eg. Pybind11, fine-grain documentation would be easier.
-- An online user-friendly documentation is hosted and updated automatically for every Git push at [gmic-py.readthedocs.io](https://gmic-py.readthedocs.io). It is in sync with the master branch and the `docs/` directory. The readthedocs.io documentation is managed through myselfhimself's account (ie. the current Github repository manager's account), on [readthedocs.io](https://readthedocs.io). Build statuses for each Git push can be monitored and this may help in troubleshooting formatting or docs configuration files errors.
-  - In order to build and preview the documentation locally, you will need to `pip install sphinx` and `pip install recommonmark`. The command that is used (after a possibly needed `sphinx-quickstart` in the `docs/` directory) to build is `make html; firefox _build/html/index.html`.
+# Writing & generating documentation
+## Generating offline documentation
+- The project's documentation lies in the `docs/` directory, which is a Sphinx project formatted in ReST, intended for HTML rendering only.
+- In order to build the documentation, you might want to create a dedicated Python 3.7+ environment and run `pip install -r docs/requirements.txt`, then run `make html` within the `docs/` directory.
+  - The `gmicpy.cpp` binding code has `_doc` Pythonic variables for documenting in [Napoleon Google Style](https://github.com/sphinx-contrib/napoleon#google-vs-numpy) for parsing by Sphinx Apidoc
+  - `gmic.rst` contains the API Reference for `gmicpy.cpp` and is generated on the fly by parsing the virtual environment's installed `gmic` module's objects (most probably a robots scraps the `__doc__` attributes)
+    - `gmic.rst` contains API-generating macros and was generated once for all using a command similar to: `sphinx-apidoc -o . ../build/lib.linux-x86_64-3.7/ -f` from `docs/`, with `sphinx-apidoc` looking up the freshest `gmic-py` compiled module
+    - the html static webpage for `gmic.rst` has its detailed contents macros run thanks to the `gmic` module installed in your virtual environment, this is different than the `sphinx-apidoc` command just before, which uses a module directory path
+        - in order to render `gmic.rst` to HTML locally to reflect your current C code, you must:
+            - make sure `gmicpy.cpp` has had the reformatting pass by clang-format
+            - compile the `gmic` module if not done (eg. in debug mode for a shortest compilation time)
+            - generate a `.whl` file
+            - uninstall your current `gmic` module if installed, install the `gmic` wheel
+            - touch `gmic.rst` to make it feel changed to the `sphinx` generating command
+            - run `make html` in `docs/`
+            - in short, eg. on a Python37 environment targetting gmic 2.9.0, you can run this one-liner:
+            ```sh
+            bash build_tools.bash 6_make_full_doc
+            # or without recompilation:
+            bash build_tools.bash 6b_make_doc_without_c_recompilation
+            ```
+  - the rest of the `.rst` files are static but may use the home-made [gmic-sphinx directive](https://github.com/myselfhimself/gmic-sphinx)
+  - viewing the generated documentation can be done with eg. `firefox _build/html/index.html` (this is a plain static website).
+
+## Generating online documentation and `readthedocs.io` hosting:
+- The project documentation (API reference+regular pages) is hosted and updated automatically for every Git push at [gmic-py.readthedocs.io](https://gmic-py.readthedocs.io). It is in sync with the master branch and the `docs/` directory.
+- Note that the API Reference page is generated at build time within the `readthedocs.io` online pipeline and it depends on `pypi.org`'s latest `gmic` (so not the repository master `gmic` module). To have this page updated online, you should push a new release to pypi.org (ie. git tag push) :)
+- The `readthedocs.io` documentation is managed through myselfhimself's account (ie. the current Github repository manager's account), on [readthedocs.io](https://readthedocs.io).
+- Build statuses for each Git push can be monitored on `readthedocs.io` and this may help in troubleshooting formatting or docs configuration files errors.
