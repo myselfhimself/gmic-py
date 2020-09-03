@@ -2,7 +2,7 @@ Welcome to gmic-py's documentation!
 ===================================
 ``gmic-py`` is a Python 3 binding for the `G'MIC Image Processing Framework <https://gmic.eu/>`_ written in C++.
 
-G'MIC provides sound image-processing commands for 1D to 4D images, as well as many graphical filters.
+G'MIC provides image-processing commands for 1D to 4D images, as well as many graphical filters.
 It is thus targetted at both artists and data-scientists.
 
 This work-in-progress documentation will showcase diverse uses of ``gmic-py``:
