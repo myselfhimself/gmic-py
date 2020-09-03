@@ -319,6 +319,29 @@ def test_numpy_format_attributes_existence():
     getattr(gmic, "NUMPY_FORMAT_PIL")
 
 
+@pytest.mark.parametrize("size_1d", [1, 5])
+@pytest.mark.parametrize("size_2d", [1, 5])
+@pytest.mark.parametrize("size_3d", [1, 5])
+@pytest.mark.parametrize("size_4d", [1, 5])
+@pytest.mark.parametrize("pixel_value_min", [0, -200])
+@pytest.mark.parametrize("pixel_value_max", [0.00005, 1000])
+def test_fuzzy_1d_4d_random_gmic_matrices(
+    size_1d, size_2d, size_3d, size_4d, pixel_value_min, pixel_value_max
+):
+    a = []
+    gmic_command = "{},{},{},{} rand {},{}".format(
+        size_1d, size_2d, size_3d, size_4d, pixel_value_min, pixel_value_max
+    )
+    gmic.run(gmic_command, a)
+    result_image = a[-1]
+    numpy_result_image = (
+        result_image.to_numpy_array()
+    )  # or a[-1].to_numpy_array().shape
+    assert numpy_result_image.shape == (size_1d, size_2d, size_3d, size_4d)
+    assert numpy.amin(numpy_result_image) == pixel_value_min
+    assert numpy.amax(numpy_result_image) == pixel_value_max
+
+
 # Useful for some IDEs with debugging support
 if __name__ == "__main__":
     pytest.main([os.path.abspath(os.path.dirname(__file__))])
