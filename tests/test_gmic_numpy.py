@@ -123,15 +123,15 @@ def test_gmic_image_to_numpy_array_fuzzying(
     assert numpy_image1.shape == numpy_image2.shape
     if gmic_image._depth > 1:  # 3d image shape checking
         assert numpy_image1.shape == (
-            gmic_image._height,
             gmic_image._width,
+            gmic_image._height,
             gmic_image._depth,
             gmic_image._spectrum,
         )
     else:  # 2d image shape checking
         assert numpy_image1.shape == (
-            gmic_image._height,
             gmic_image._width,
+            gmic_image._height,
             gmic_image._spectrum,
         )
     if dtype1 is None:
