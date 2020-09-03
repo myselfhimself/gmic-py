@@ -173,9 +173,10 @@ function 33_build_manylinux () {
 
 function 3_test_compiled_so () {
     # Example usage: <this_script.bash> 3_test_compiled_so my_pytest_expr ====> pytest <the pytest file> -k my_pytest_expr
+    # Example usage: <this_script.bash> 3_test_compiled_so my_pytest_expr -x --pdb ====> pytest <the pytest file> -k my_pytest_expr -x --pdb
     PYTEST_EXPRESSION_PARAM=
     if ! [ -z "$1" ]; then
-        PYTEST_EXPRESSION_PARAM="-k $1"
+        PYTEST_EXPRESSION_PARAM="-k ${@:1}"
     fi
     TEST_FILES="${TEST_FILES:-../../tests/test_gmic_py.py ../../tests/test_gmic_numpy.py}"
     $PIP3 uninstall gmic -y; cd ./build/lib*$PYTHON_VERSION*/ ; LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH ; $PIP3 install -r ../../dev-requirements.txt ; pwd; ls; $PYTHON3 -m pytest $TEST_FILES $PYTEST_EXPRESSION_PARAM -vvv -rxXs || { echo "Fatal error while running pytests" ; exit 1 ; } ; cd ../..
