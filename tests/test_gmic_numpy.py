@@ -328,9 +328,6 @@ def test_numpy_format_attributes_existence():
 def test_fuzzy_1d_4d_random_gmic_matrices(
     size_1d, size_2d, size_3d, size_4d, pixel_value_min, pixel_value_max
 ):
-    import pdb
-
-    pdb.set_trace()
     gmic_image_list = []
     gmic_command = "{},{},{},{} rand {},{}".format(
         size_1d, size_2d, size_3d, size_4d, pixel_value_min, pixel_value_max

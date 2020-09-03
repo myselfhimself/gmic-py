@@ -941,7 +941,7 @@ PyGmicImage_to_numpy_array(PyGmicImage *self, PyObject *args, PyObject *kwargs)
         for (unsigned int z = 0; z < self->_gmic_image._depth; z++) {
             for (unsigned int y = 0; y < self->_gmic_image._height; y++) {
                 for (unsigned int x = 0; x < self->_gmic_image._width; x++) {
-                    for (unsigned int c = 0; c < 3; c++) {
+                    for (unsigned int c = 0; c < self->_gmic_image._spectrum; c++) {
                         (*ndarray_bytes_buffer_ptr++) =
                             self->_gmic_image(x, y, z, c);
                     }
