@@ -297,7 +297,7 @@ def test_basic_from_numpy_array_to_numpy_array():
     duck = []
     gmic.run("sp duck", duck)
     original_duck_gmic_image = duck[0]
-    duck_numpy_image = original_duck_gmic_image.to_numpy_array()
+    duck_numpy_image = original_duck_gmic_image.to_numpy_array(squeeze_shape=True)
     duck_io_gmic_image = gmic.GmicImage.from_numpy_array(duck_numpy_image)
 
     assert_gmic_images_are_identical(original_duck_gmic_image, duck_io_gmic_image)
@@ -310,7 +310,7 @@ def test_basic_to_numpy_array_from_numpy_array():
     pil_image = numpy.array(PIL.Image.open("duck.png"))
 
     pil_gmic_image = gmic.GmicImage.from_numpy_array(pil_image)
-    duck_io_numpy_image = pil_gmic_image.to_numpy_array()
+    duck_io_numpy_image = pil_gmic_image.to_numpy_array(squeeze_shape=True)
 
     assert numpy.array_equal(duck_io_numpy_image, pil_image)
 
