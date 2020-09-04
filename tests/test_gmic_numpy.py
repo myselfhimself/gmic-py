@@ -46,6 +46,10 @@ interleave_toggles2 = {
     "argnames": "interleave2",
     "argvalues": interleave_toggling_subset,
 }
+squeeze_toggles = {
+    "argnames": "squeeze",
+    "argvalues": [True, False],
+}
 
 
 @pytest.mark.parametrize(**gmic_instance_types)
@@ -92,13 +96,14 @@ def gmic_image_to_numpy_array_default_dtype_param(d):
 @pytest.mark.parametrize(**numpy_dtypes2)
 @pytest.mark.parametrize(**interleave_toggles1)
 @pytest.mark.parametrize(**interleave_toggles2)
+@pytest.mark.parametrize(**squeeze_toggles)
 @pytest.mark.parametrize(
     "gmic_command",
-    ["""16,16,16,3 fill_color 255,222,30""", "sp apples"],
+    ["""43,27,15,85,'x*cos(0.5236)+y*sin(0.5236)' -normalize 0,255""", "sp apples"],
     ids=["2dsample", "3dsample"],
 )
 def test_gmic_image_to_numpy_array_fuzzying(
-    dtype1, dtype2, interleave1, interleave2, gmic_command
+    dtype1, dtype2, interleave1, interleave2, squeeze, gmic_command
 ):
     expected_interleave_check = gmic_image_to_numpy_array_default_interleave_param(
         interleave1
@@ -113,6 +118,7 @@ def test_gmic_image_to_numpy_array_fuzzying(
         params1["interleave"] = interleave1
     if interleave2 is not None:
         params2["interleave"] = interleave2
+    params1["squeeze_shape"] = params2["squeeze_shape"] = squeeze
 
     single_image_list = []
     gmic.run(images=single_image_list, command=gmic_command)
@@ -123,17 +129,25 @@ def test_gmic_image_to_numpy_array_fuzzying(
     assert numpy_image1.shape == numpy_image2.shape
     if gmic_image._depth > 1:  # 3d image shape checking
         assert numpy_image1.shape == (
-            gmic_image._width,
-            gmic_image._height,
             gmic_image._depth,
+            gmic_image._height,
+            gmic_image._width,
             gmic_image._spectrum,
         )
     else:  # 2d image shape checking
-        assert numpy_image1.shape == (
-            gmic_image._width,
-            gmic_image._height,
-            gmic_image._spectrum,
-        )
+        if squeeze:
+            assert numpy_image1.shape == (
+                gmic_image._height,
+                gmic_image._width,
+                gmic_image._spectrum
+            )
+        else:
+            assert numpy_image1.shape == (
+                gmic_image._depth,
+                gmic_image._height,
+                gmic_image._width,
+                gmic_image._spectrum
+            )
     if dtype1 is None:
         dtype1 = numpy.float32
     if dtype2 is None:
@@ -157,6 +171,7 @@ def test_gmic_image_to_numpy_ndarray_basic_attributes(gmic_instance_run):
     numpy_image = gmic_image.to_numpy_array(interleave=False)
     assert numpy_image.dtype == numpy.float32
     assert numpy_image.shape == (
+        gmic_image._depth,
         gmic_image._height,
         gmic_image._width,
         gmic_image._spectrum,
