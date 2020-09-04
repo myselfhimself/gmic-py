@@ -726,11 +726,11 @@ PyGmicImage_repr(PyGmicImage *self)
 static PyObject *
 PyGmicImage_call(PyObject *self, PyObject *args, PyObject *kwargs)
 {
-    const char *keywords[] = {"x", "y", "z", "c", NULL};
+    const char *keywords[] = {"x", "y", "z", "s", NULL};
     int x, y, z, c;
     x = y = z = c = 0;
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "i|iii", (char **)keywords,
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|iiii", (char **)keywords,
                                      &x, &y, &z, &c)) {
         return NULL;
     }
@@ -816,7 +816,7 @@ PyModuleDef gmic_module = {PyModuleDef_HEAD_INIT, "gmic", gmic_module_doc, 0,
 PyDoc_STRVAR(
     PyGmicImage_doc,
     "GmicImage(data=None, width=1, height=1, depth=1, spectrum=1, shared=False)\n\n\
-Simplified mapping of the c++ gmic_image type. Stores non-publicly a binary buffer of data, a height, width, depth, spectrum.\n\n\
+Simplified mapping of the C++ ``gmic_image`` type. Stores a binary buffer of data, a height, width, depth, spectrum.\n\n\
 Example:\n\n\
     Several ways to use a GmicImage simply::\n\n\
         import gmic\n\
@@ -835,7 +835,22 @@ Args:\n\
     height (Optional[int]): Image height in pixels. Defaults to 1.\n\
     depth (Optional[int]): Image height in pixels. Defaults to 1.\n\
     spectrum (Optional[int]): Number of channels per pixel. Defaults to 1.\n\
-    shared (Optional[bool]): C++ option: whether the buffer should be shareable between several GmicImages and operations. Defaults to False.");
+    shared (Optional[bool]): C++ option: whether the buffer should be shareable between several GmicImages and operations. Defaults to False.\n\n\
+Note:\n\
+    **GmicImage(x=0, y=0, z=0, s=0)**\n\n\
+    This instance method allows you to read pixels in a ``GmicImage`` for given coordinates.\n\n\
+    You can read, but cannot write pixel values by passing some or all coordinates the following way::\n\n\
+        import gmic\n\
+        images = []\n\
+        gmic.run(\"sp apples\", images)\n\
+        image = images[0]\n\
+        print(image(0,2,0,2)) # or image(y=2,z=2)\n\
+        print(image(0,0,0,0)) # or image()\n\
+        for x in range(image._width):\n\
+            for y in range(image._height):\n\
+                for z in range(image._depth):\n\
+                    for c in range(image._spectrum):\n\
+                        print(image(x,y,z,c))");
 
 static PyMemberDef PyGmicImage_members[] = {
     {(char *)"_width", T_UINT, offsetof(PyGmicImage, _gmic_image), READONLY,

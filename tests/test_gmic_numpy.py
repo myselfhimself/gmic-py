@@ -139,14 +139,14 @@ def test_gmic_image_to_numpy_array_fuzzying(
             assert numpy_image1.shape == (
                 gmic_image._height,
                 gmic_image._width,
-                gmic_image._spectrum
+                gmic_image._spectrum,
             )
         else:
             assert numpy_image1.shape == (
                 gmic_image._depth,
                 gmic_image._height,
                 gmic_image._width,
-                gmic_image._spectrum
+                gmic_image._spectrum,
             )
     if dtype1 is None:
         dtype1 = numpy.float32

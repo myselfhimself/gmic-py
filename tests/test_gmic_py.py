@@ -447,6 +447,15 @@ def assert_gmic_image_is_filled_with(gmic_image, w, h, d, s, pixel_value):
                         assert isclose(pixel, pixel_value)
 
 
+def test_gmic_image_pixel_access():
+    images = []
+    gmic.run("sp apples", images)
+    image = images[0]
+    assert image(0, 0, 0, 0) == image()
+    assert image(s=3) == image(0, 0, 0, 3)
+    assert image(0, 2, 0, 2) == image(y=2, z=2)
+
+
 @pytest.mark.parametrize(**gmic_instance_types)
 def test_gmic_image_generation_and_gmic_multiple_resize_run(capfd, gmic_instance_run):
     import struct
