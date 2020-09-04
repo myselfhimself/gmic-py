@@ -344,6 +344,7 @@ def test_to_numpy_array_instance_method_existence():
 
 
 def test_numpy_format_attributes_existence():
+    getattr(gmic, "NUMPY_FORMAT_DEFAULT")
     getattr(gmic, "NUMPY_FORMAT_GMIC")
     getattr(gmic, "NUMPY_FORMAT_SCIKIT_IMAGE")
     getattr(gmic, "NUMPY_FORMAT_PIL")
