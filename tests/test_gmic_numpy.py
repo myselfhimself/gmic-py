@@ -303,6 +303,21 @@ def test_basic_from_numpy_array_to_numpy_array():
     assert_gmic_images_are_identical(original_duck_gmic_image, duck_io_gmic_image)
 
 
+def test_from_numpy_array_proper_dimensions_number():
+    zero_dimensions_array = numpy.ndarray([])
+
+    with pytest.raises(
+        gmic.GmicException, match=r".*'data'.*'numpy.ndarray'.*1D and 4D.*=0.*"
+    ):
+        gmic.GmicImage.from_numpy_array(zero_dimensions_array)
+
+    five_dimensions_array = numpy.zeros((1, 2, 3, 4, 5))
+    with pytest.raises(
+        gmic.GmicException, match=r".*'data'.*'numpy.ndarray'.*1D and 4D.*=5.*"
+    ):
+        gmic.GmicImage.from_numpy_array(five_dimensions_array)
+
+
 def test_basic_to_numpy_array_from_numpy_array():
     gmic.run("sp duck output duck.png")
     import PIL.Image

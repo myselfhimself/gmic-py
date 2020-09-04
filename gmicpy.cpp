@@ -391,6 +391,7 @@ PyGmicImage_from_numpy_array(PyObject *cls, PyObject *args, PyObject *kwargs)
         Py_True;  // Will deinterleave the incoming numpy.ndarray by default
     PyObject *py_arg_ndarray = NULL;
     PyObject *ndarray_type = NULL;
+    unsigned int ndarray_ndim = 0;
     PyObject *ndarray_dtype = NULL;
     PyObject *ndarray_dtype_kind = NULL;
     PyObject *float32_ndarray = NULL;
@@ -418,6 +419,17 @@ PyGmicImage_from_numpy_array(PyObject *cls, PyObject *args, PyObject *kwargs)
 
     Py_XINCREF(py_arg_ndarray);
     Py_XINCREF(py_arg_deinterleave);
+
+    // Get number of dimensions and ensure we are >=1D <=4D
+    ndarray_ndim = (unsigned int)PyLong_AsSize_t(
+        PyObject_GetAttrString(py_arg_ndarray, "ndim"));
+    if (ndarray_ndim < 1 || ndarray_ndim > 4) {
+        PyErr_Format(GmicException,
+                     "Provided 'data' of type 'numpy.ndarray' must be between "
+                     "1D and 4D ('data.ndim'=%d).",
+                     ndarray_ndim);
+        return NULL;
+    }
 
     // Get input ndarray.dtype and prevent non-integer/float/bool data types to
     // be processed
