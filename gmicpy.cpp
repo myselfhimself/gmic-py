@@ -796,10 +796,19 @@ PyDoc_STRVAR(gmic_module_doc,
 Use ``gmic.run`` or ``gmic.Gmic`` to run G'MIC commands inside the G'MIC C++ interpreter, manipulate ``gmic.GmicImage`` especially with ``numpy``.\n\n\
 Below are constants to be used by ``GmicImage.from_numpy_array`` and ``GmicImage.to_numpy_array`` conversion methods.\n\n\
 Attributes:\n\n\
-    NUMPY_FORMAT_DEFAULT: assuming input matrix is formatted as (width, depth, height, channels) and pixel values are interleaved. Pixel-channels deinterleaving will be done, no dimensions permutation will be done. Equates to (de)interleave=True, permute='' defaults.\n\
-    NUMPY_FORMAT_GMIC: assuming input matrix is formatted as (width, depth, height, channels) and pixel values are deinterleaved. No pixel-channels deinterleaving will be done, no dimensions permutation will be done. Equates to (de)interleave=False, permute='' defaults.\n\
-    NUMPY_FORMAT_PIL: assuming input matrix is formatted as ([depth,] height, width, channels) and pixel values are interleaved.Equates to (de)interleave=True, permute='zyxc'.\n\
-    NUMPY_FORMAT_SCIKIT_IMAGE: assuming input matrix is formatted as (depth, width, height, channels) and pixel values are interleaved. Equates to (de)interleave=True, permute='zxyc'.");
+    NUMPY_FORMAT_DEFAULT:\n\
+        Basically an interleaved non-squeezed ``zyxc`` array (the same as ``NUMPY_FORMAT_PIL`` but unsqueezed):\n\n\
+        - **output image:** shape will be *(depth, height, width, channels)* unsqueezed, pixel values will be interleaved. Equates to *interleave=True*, *permute='zyxc'*, *squeeze=False*.\n\
+        - **input image:** assuming shape as *(depth, height, width, channels)*, with interleaved pixel values. Equates to *deinterleave=True*, *permute='zyxc'*.\n\
+    NUMPY_FORMAT_GMIC: The exact same format as G'MIC internally - ``xyzc`` deinterleaved non-squeezed:\n\n\
+        - **output image:** shape will be *(width, depth, height, channels)* unsqueezed, pixel values will be deinterleaved. Equates to *interleave=False*, *permute='xyzc'* or *permute=''*, *squeeze=False*.\n\
+        - **input image:** assuming shape as *(width, depth, height, channels)*, with deinterleaved pixel values. Equates to *deinterleave=False*, *permute='xyzc'* or *permute=''*.\n\
+    NUMPY_FORMAT_PIL: The format liked by PIL/Pillow Python Imaging Library (2D) - ``(z)yxc`` interleaved squeezed:\n\n\
+        - **output image:** shape will be *([depth,] height, width, channels)* squeezed (ie. the depth=1 dimension is hidden), pixel values will be interleaved. Equates to *interleave=True*, *permute='zyxc'*, *squeeze=True*.\n\
+        - **input image:** assuming shape as *([depth,] height, width, channels)*, with interleaved pixel values. Equates to *deinterleave=True*, *permute='zyxc'*.\n\
+    NUMPY_FORMAT_SCIKIT_IMAGE: An interleaved ``zxyc`` unsqueezed array:\n\n\
+        - **output image:** shape will be *(depth, width, height, channels)* unsqueezed, pixel values will be interleaved. Equates to *interleave=True*, *permute='zxyc'*, *squeeze=True*.\n\
+        - **input image:** assuming shape as *(depth, width, height, channels)*, with interleaved pixel values. Equates to *deinterleave=True*, *permute='zxyc'*.");
 
 PyModuleDef gmic_module = {PyModuleDef_HEAD_INIT, "gmic", gmic_module_doc, 0,
                            gmic_methods};
@@ -922,12 +931,11 @@ PyGmicImage_to_numpy_array(PyGmicImage *self, PyObject *args, PyObject *kwargs)
 
     ndarray_shape_tuple = PyList_New(0);
     PyList_Append(ndarray_shape_tuple,
-                  PyLong_FromSize_t((size_t)self->_gmic_image._width));
+                  PyLong_FromSize_t((size_t)self->_gmic_image._depth));
     PyList_Append(ndarray_shape_tuple,
                   PyLong_FromSize_t((size_t)self->_gmic_image._height));
-
     PyList_Append(ndarray_shape_tuple,
-                  PyLong_FromSize_t((size_t)self->_gmic_image._depth));
+                  PyLong_FromSize_t((size_t)self->_gmic_image._width));
     PyList_Append(ndarray_shape_tuple,
                   PyLong_FromSize_t((size_t)self->_gmic_image._spectrum));
     ndarray_shape_list = PyList_AsTuple(ndarray_shape_tuple);
@@ -941,7 +949,8 @@ PyGmicImage_to_numpy_array(PyGmicImage *self, PyObject *args, PyObject *kwargs)
         for (unsigned int z = 0; z < self->_gmic_image._depth; z++) {
             for (unsigned int y = 0; y < self->_gmic_image._height; y++) {
                 for (unsigned int x = 0; x < self->_gmic_image._width; x++) {
-                    for (unsigned int c = 0; c < self->_gmic_image._spectrum; c++) {
+                    for (unsigned int c = 0; c < self->_gmic_image._spectrum;
+                         c++) {
                         (*ndarray_bytes_buffer_ptr++) =
                             self->_gmic_image(x, y, z, c);
                     }

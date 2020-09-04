@@ -324,7 +324,7 @@ def test_numpy_format_attributes_existence():
 @pytest.mark.parametrize("size_3d", [1, 5])
 @pytest.mark.parametrize("size_4d", [1, 5])
 @pytest.mark.parametrize("pixel_value_min", [0, -200])
-@pytest.mark.parametrize("pixel_value_max", [0.00005, 1000])
+@pytest.mark.parametrize("pixel_value_max", [0.05, 1000])
 def test_fuzzy_1d_4d_random_gmic_matrices(
     size_1d, size_2d, size_3d, size_4d, pixel_value_min, pixel_value_max
 ):
@@ -335,9 +335,10 @@ def test_fuzzy_1d_4d_random_gmic_matrices(
     gmic.run(gmic_command, gmic_image_list)
     gmic_image = gmic_image_list[-1]
     # Using the default astype dkind: float32
-    # Using default output formatter: gmic.NUMPY_FORMAT_DEFAULT which has interleave=True, permute=''
+    # Using default output formatter: gmic.NUMPY_FORMAT_DEFAULT which has interleave=True, permute='zyxc'
     numpy_image = gmic_image.to_numpy_array()
-    assert numpy_image.shape == (size_1d, size_2d, size_3d, size_4d)
+
+    assert numpy_image.shape == (size_3d, size_2d, size_1d, size_4d)
     assert numpy_image.dtype == numpy.float32
 
     # Ensure numpy pixel values fit in the random values range
@@ -351,7 +352,7 @@ def test_fuzzy_1d_4d_random_gmic_matrices(
         for y in range(size_2d):
             for z in range(size_3d):
                 for c in range(size_4d):
-                    assert numpy_image[x, y, z, c] == gmic_image(x, y, z, c)
+                    assert numpy_image[z, y, x, c] == gmic_image(x, y, z, c)
 
 
 # Useful for some IDEs with debugging support
