@@ -3,6 +3,7 @@ import os
 import pytest
 import gmic
 import numpy
+from memory_profiler import profile
 
 from test_gmic_py import (
     gmic_instance_types,
@@ -92,6 +93,7 @@ def gmic_image_to_numpy_array_default_dtype_param(d):
     return d if d is not None else numpy.float32
 
 
+@profile(precision=6)
 @pytest.mark.parametrize(**numpy_dtypes1)
 @pytest.mark.parametrize(**numpy_dtypes2)
 @pytest.mark.parametrize(**interleave_toggles1)
@@ -99,7 +101,7 @@ def gmic_image_to_numpy_array_default_dtype_param(d):
 @pytest.mark.parametrize(**squeeze_toggles)
 @pytest.mark.parametrize(
     "gmic_command",
-    ["""43,27,15,85,'x*cos(0.5236)+y*sin(0.5236)' -normalize 0,255""", "sp apples"],
+    ["sp apples", """43,27,15,4,'x*cos(0.5236)+y*sin(0.5236)' -normalize 0,255"""],
     ids=["2dsample", "3dsample"],
 )
 def test_gmic_image_to_numpy_array_fuzzying(
@@ -122,7 +124,9 @@ def test_gmic_image_to_numpy_array_fuzzying(
 
     single_image_list = []
     gmic.run(images=single_image_list, command=gmic_command)
+    # import sys, pdb;pdb.set_trace()
     gmic_image = single_image_list[0]
+    print(gmic_image)
     # Test default dtype parameter is numpy.float32
     numpy_image1 = gmic_image.to_numpy_array(**params1)
     numpy_image2 = gmic_image.to_numpy_array(**params2)
@@ -158,6 +162,22 @@ def test_gmic_image_to_numpy_array_fuzzying(
     # Actually, they could be equal with distinct types but same interlacing, but are skipping cross-types compatibility analysis..
     if (numpy_image1.dtype == numpy_image2.dtype) and expected_interleave_check:
         assert numpy.array_equal(numpy_image1, numpy_image2)
+
+    import sys
+
+    # import pdb;pdb.set_trace()
+    gmic_image = None
+    single_image_list = None
+    del single_image_list
+    numpy_image1 = None
+    numpy_image2 = None
+    del numpy_image1
+    del numpy_image2
+
+    a = [2] * (2 * 10 ** 7)
+    print(sys.getrefcount(a))
+    del a
+    print("")
 
 
 @pytest.mark.parametrize(**gmic_instance_types)
