@@ -5,6 +5,14 @@ PYTHON3=${PYTHON3:-python3}
 PIP3=${PIP3:-pip3}
 PYTHON_VERSION=$($PYTHON3 --version | cut -d' ' -f2 | cut -d'.' -f1,2)
 
+# Detect if Python is a debug build, per https://stackoverflow.com/a/647312/420684
+# Useful for testing leaks within the compiled .so library
+if python -c "import sys; sys.exit(int(hasattr(sys, 'gettotalrefcount')))"; then
+  PYTHON_DEBUG=
+else
+  PYTHON_DEBUG="y"
+fi
+
 # Choose web browser executable (Linux or MacOS)
 BROWSER=xdg-open
 if ! command -v xdg-open &> /dev/null
@@ -178,8 +186,14 @@ function 3_test_compiled_so () {
     if ! [ -z "$1" ]; then
         PYTEST_EXPRESSION_PARAM="-k ${@:1}"
     fi
+    if ! [ -z "$PYTHON_DEBUG" ]; then
+        GMIC_LIB_DIR="./build/lib*$PYTHON_VERSION*debug*/"
+    else
+        GMIC_LIB_DIR="./build/lib*$PYTHON_VERSION/"
+    fi
     TEST_FILES="${TEST_FILES:-../../tests/test_gmic_py.py ../../tests/test_gmic_numpy.py}"
-    $PIP3 uninstall gmic -y; cd ./build/lib*$PYTHON_VERSION*/ ; LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH ; $PIP3 install -r ../../dev-requirements.txt ; pwd; ls; $PYTHON3 -m pytest $TEST_FILES $PYTEST_EXPRESSION_PARAM -vvv -rxXs || { echo "Fatal error while running pytests" ; exit 1 ; } ; cd ../..
+    # $PIP3 uninstall gmic -y; cd $GMIC_LIB_DIR ; LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH ; $PIP3 install -r ../../dev-requirements.txt ; pwd; ls; PYTHONMALLOC=malloc valgrind --show-leak-kinds=all --leak-check=full --log-file=/tmp/valgrind-output $PYTHON3 -m pytest $TEST_FILES $PYTEST_EXPRESSION_PARAM -vvv -rxXs || { echo "Fatal error while running pytests" ; exit 1 ; } ; cd ../..
+    $PIP3 uninstall gmic -y; cd $GMIC_LIB_DIR ; LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH ; $PIP3 install -r ../../dev-requirements.txt ; pwd; ls; PYTHONMALLOC=malloc $PYTHON3 -m pytest $TEST_FILES $PYTEST_EXPRESSION_PARAM -vvv -rxXs || { echo "Fatal error while running pytests" ; exit 1 ; } ; cd ../..
 }
 
 function 3b_test_compiled_so_no_numpy () {

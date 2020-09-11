@@ -93,7 +93,7 @@ def gmic_image_to_numpy_array_default_dtype_param(d):
     return d if d is not None else numpy.float32
 
 
-@profile(precision=6)
+#@profile(precision=6)
 @pytest.mark.parametrize(**numpy_dtypes1)
 @pytest.mark.parametrize(**numpy_dtypes2)
 @pytest.mark.parametrize(**interleave_toggles1)
@@ -107,6 +107,9 @@ def gmic_image_to_numpy_array_default_dtype_param(d):
 def test_gmic_image_to_numpy_array_fuzzying(
     dtype1, dtype2, interleave1, interleave2, squeeze, gmic_command
 ):
+    import sys
+
+    print(__file__, sys.gettotalrefcount())
     expected_interleave_check = gmic_image_to_numpy_array_default_interleave_param(
         interleave1
     ) == gmic_image_to_numpy_array_default_interleave_param(interleave2)

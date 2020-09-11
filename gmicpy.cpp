@@ -753,6 +753,15 @@ static void
 PyGmicImage_dealloc(PyGmicImage *self)
 {
     delete self->_gmic_image;
+    self->_gmic_image = NULL;
+    Py_TYPE(self)->tp_free((PyObject *)self);
+}
+
+static void
+PyGmic_dealloc(PyGmic *self)
+{
+    delete self->_gmic;
+    self->_gmic = NULL;
     Py_TYPE(self)->tp_free((PyObject *)self);
 }
 
@@ -761,8 +770,15 @@ module_level_run_impl(PyObject *, PyObject *args, PyObject *kwargs)
 {
     PyObject *temp_gmic_instance =
         PyObject_CallObject((PyObject *)(&PyGmicType), NULL);
+
+    Py_INCREF(temp_gmic_instance);
+
     // Return None or a Python exception flag
-    return run_impl(temp_gmic_instance, args, kwargs);
+    PyObject *run_impl_result = run_impl(temp_gmic_instance, args, kwargs);
+
+    Py_XDECREF(temp_gmic_instance);
+
+    return run_impl_result;
 }
 
 PyDoc_STRVAR(module_level_run_impl_doc,
@@ -897,6 +913,7 @@ PyGmicImage_get__is_shared(PyGmicImage *self, void *closure)
 static PyObject *
 PyGmicImage_get__data(PyGmicImage *self, void *closure)
 {
+    // Py_FinalizeEx();
     return PyBytes_FromStringAndSize((char *)self->_gmic_image->_data,
                                      sizeof(T) * (self->_gmic_image->size()));
 }
@@ -1133,6 +1150,9 @@ PyGmicImage_richcompare(PyObject *self, PyObject *other, int op)
 {
     PyObject *result = NULL;
 
+    Py_INCREF(self);
+    Py_INCREF(other);
+
     if (Py_TYPE(other) != Py_TYPE(self)) {
         result = Py_NotImplemented;
     }
@@ -1161,7 +1181,9 @@ PyGmicImage_richcompare(PyObject *self, PyObject *other, int op)
         }
     }
 
-    Py_XINCREF(result);
+    Py_XDECREF(self);
+    Py_XDECREF(other);
+
     return result;
 }
 
@@ -1192,6 +1214,7 @@ PyInit_gmic()
     PyGmicImageType.tp_members = NULL;
     PyGmicImageType.tp_getset = PyGmicImage_getsets;
     PyGmicImageType.tp_richcompare = PyGmicImage_richcompare;
+    PyGmicImageType.tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE;
 
     if (PyType_Ready(&PyGmicImageType) < 0)
         return NULL;
@@ -1202,6 +1225,8 @@ PyInit_gmic()
     PyGmicType.tp_repr = (reprfunc)PyGmic_repr;
     PyGmicType.tp_init = (initproc)PyGmic_init;
     PyGmicType.tp_getattro = PyObject_GenericGetAttr;
+    PyGmicType.tp_dealloc = (destructor)PyGmic_dealloc;
+    PyGmicType.tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE;
 
     if (PyType_Ready(&PyGmicType) < 0)
         return NULL;
