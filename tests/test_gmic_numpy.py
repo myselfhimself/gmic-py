@@ -101,15 +101,12 @@ def gmic_image_to_numpy_array_default_dtype_param(d):
 @pytest.mark.parametrize(**squeeze_toggles)
 @pytest.mark.parametrize(
     "gmic_command",
-    ["sp apples", """43,27,15,4,'x*cos(0.5236)+y*sin(0.5236)' -normalize 0,255"""],
+    ["sp apples", """3,5,7,2,'x*cos(0.5236)+y*sin(0.8)' -normalize 0,255"""],
     ids=["2dsample", "3dsample"],
 )
 def test_gmic_image_to_numpy_array_fuzzying(
     dtype1, dtype2, interleave1, interleave2, squeeze, gmic_command
 ):
-    import sys
-
-    print(__file__, sys.gettotalrefcount())
     expected_interleave_check = gmic_image_to_numpy_array_default_interleave_param(
         interleave1
     ) == gmic_image_to_numpy_array_default_interleave_param(interleave2)
@@ -127,9 +124,7 @@ def test_gmic_image_to_numpy_array_fuzzying(
 
     single_image_list = []
     gmic.run(images=single_image_list, command=gmic_command)
-    # import sys, pdb;pdb.set_trace()
     gmic_image = single_image_list[0]
-    print(gmic_image)
     # Test default dtype parameter is numpy.float32
     numpy_image1 = gmic_image.to_numpy_array(**params1)
     numpy_image2 = gmic_image.to_numpy_array(**params2)
@@ -166,21 +161,10 @@ def test_gmic_image_to_numpy_array_fuzzying(
     if (numpy_image1.dtype == numpy_image2.dtype) and expected_interleave_check:
         assert numpy.array_equal(numpy_image1, numpy_image2)
 
-    import sys
-
-    # import pdb;pdb.set_trace()
-    gmic_image = None
-    single_image_list = None
+    del gmic_image
     del single_image_list
-    numpy_image1 = None
-    numpy_image2 = None
     del numpy_image1
     del numpy_image2
-
-    a = [2] * (2 * 10 ** 7)
-    print(sys.getrefcount(a))
-    del a
-    print("")
 
 
 @pytest.mark.parametrize(**gmic_instance_types)

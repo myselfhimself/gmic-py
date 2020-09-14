@@ -608,9 +608,10 @@ static PyMethodDef PyGmic_methods[] = {
 
 // ------------ G'MIC IMAGE BINDING ----//
 
-static int
-PyGmicImage_init(PyGmicImage *self, PyObject *args, PyObject *kwargs)
+PyObject *
+PyGmicImage_new(PyTypeObject *subtype, PyObject *args, PyObject *kwargs)
 {
+    PyGmicImage *self = NULL;
     unsigned int _width =
         1;  // Number of image columns (dimension along the X-axis)
     unsigned int _height =
@@ -621,11 +622,11 @@ PyGmicImage_init(PyGmicImage *self, PyObject *args, PyObject *kwargs)
         1;  // Number of image channels (dimension along the C-axis)
     Py_ssize_t
         dimensions_product;  // All integer parameters multiplied together,
-                             // will help for allocating (ie. assign()ing)
+    // will help for allocating (ie. assign()ing)
     Py_ssize_t _data_bytes_size;
     int _is_shared =
         0;  // Whether image should be shared across gmic operations (if true,
-            // operations like resize will fail)
+    // operations like resize will fail)
     PyObject *bytesObj = NULL;  // Incoming bytes buffer object pointer
 
     bool bytesObj_is_bytes = false;
@@ -636,7 +637,12 @@ PyGmicImage_init(PyGmicImage *self, PyObject *args, PyObject *kwargs)
     if (!PyArg_ParseTupleAndKeywords(
             args, kwargs, "|OIIIIp", (char **)keywords, &bytesObj, &_width,
             &_height, &_depth, &_spectrum, &_is_shared))
-        return -1;
+        return NULL;
+
+    self = (PyGmicImage *)subtype->tp_alloc(subtype, 0);
+    if (self == NULL) {
+        return NULL;
+    }
 
     // Default bytesObj value to None
     if (bytesObj == NULL) {
@@ -653,11 +659,12 @@ PyGmicImage_init(PyGmicImage *self, PyObject *args, PyObject *kwargs)
                          "Parameter 'data' must be a "
                          "pure-python 'bytes' buffer object.");
             // TODO pytest this
-            return -1;
+            Py_DECREF(self);
+            return NULL;
         }
     }
     else {  // if bytesObj is None, attempt to set it as an empty bytes object
-            // following image dimensions
+        // following image dimensions
         // If dimensions are OK, create a pixels-count-zero-filled
         // bytesarray-based bytes object to be ingested by the _data parameter
         if (_width >= 1 && _height >= 1 && _depth >= 1 && _spectrum >= 1) {
@@ -676,7 +683,8 @@ PyGmicImage_init(PyGmicImage *self, PyObject *args, PyObject *kwargs)
                          "If you do not provide a 'data' parameter, make at "
                          "least all dimensions >=1.");
             // TODO pytest this
-            return -1;
+            Py_DECREF(self);
+            return NULL;
         }
     }
 
@@ -690,7 +698,8 @@ PyGmicImage_init(PyGmicImage *self, PyObject *args, PyObject *kwargs)
                      "different than the _data buffer size in bytes (%d)",
                      dimensions_product, sizeof(T),
                      dimensions_product * sizeof(T), _data_bytes_size);
-        return -1;
+        Py_DECREF(self);
+        return NULL;
     }
 
     // Importing input data to an internal buffer
@@ -710,7 +719,8 @@ PyGmicImage_init(PyGmicImage *self, PyObject *args, PyObject *kwargs)
                      "are you requesting too much memory (%d bytes)?",
                      _width, _height, _depth, _spectrum,
                      dimensions_product * sizeof(T));
-        return -1;
+        Py_DECREF(self);
+        return NULL;
     }
 
     memcpy(self->_gmic_image->_data, PyBytes_AsString(bytesObj),
@@ -718,7 +728,7 @@ PyGmicImage_init(PyGmicImage *self, PyObject *args, PyObject *kwargs)
 
     Py_XDECREF(bytesObj);
 
-    return 0;
+    return (PyObject *)self;
 }
 
 static PyObject *
@@ -747,6 +757,20 @@ PyGmicImage_call(PyObject *self, PyObject *args, PyObject *kwargs)
 
     return PyFloat_FromDouble(
         (*((PyGmicImage *)self)->_gmic_image)(x, y, z, c));
+}
+
+static PyObject *
+PyGmicImage_alloc(PyTypeObject *type, Py_ssize_t nitems)
+{
+    PyObject *obj = (PyObject *)PyObject_Malloc(type->tp_basicsize);
+    PyObject_Init(obj, type);
+    return obj;
+}
+
+static void
+PyGmicImage_free(PyObject *v)
+{
+    PyObject_Free(v);
 }
 
 static void
@@ -1202,12 +1226,14 @@ PyInit_gmic()
         NULL, /* PyObject *base */
         NULL /* PyObject *dict */);
 
-    PyGmicImageType.tp_new = PyType_GenericNew;
+    PyGmicImageType.tp_new = (newfunc)PyGmicImage_new;
+    PyGmicImageType.tp_init = 0;
     PyGmicImageType.tp_basicsize = sizeof(PyGmicImage);
     PyGmicImageType.tp_dealloc = (destructor)PyGmicImage_dealloc;
+    PyGmicImageType.tp_alloc = (allocfunc)PyGmicImage_alloc;
+    PyGmicImageType.tp_free = (freefunc)PyGmicImage_free;
     PyGmicImageType.tp_methods = PyGmicImage_methods;
     PyGmicImageType.tp_repr = (reprfunc)PyGmicImage_repr;
-    PyGmicImageType.tp_init = (initproc)PyGmicImage_init;
     PyGmicImageType.tp_call = (ternaryfunc)PyGmicImage_call;
     PyGmicImageType.tp_getattro = PyObject_GenericGetAttr;
     PyGmicImageType.tp_doc = PyGmicImage_doc;
