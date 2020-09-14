@@ -3,7 +3,6 @@ import os
 import pytest
 import gmic
 import numpy
-from memory_profiler import profile
 
 from test_gmic_py import (
     gmic_instance_types,
@@ -93,7 +92,6 @@ def gmic_image_to_numpy_array_default_dtype_param(d):
     return d if d is not None else numpy.float32
 
 
-@profile(precision=6)
 @pytest.mark.parametrize(**numpy_dtypes1)
 @pytest.mark.parametrize(**numpy_dtypes2)
 @pytest.mark.parametrize(**interleave_toggles1)
