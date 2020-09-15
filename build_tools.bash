@@ -191,7 +191,7 @@ function 3_test_compiled_so () {
     else
         GMIC_LIB_DIR="./build/lib*$PYTHON_VERSION/"
     fi
-    TEST_FILES="${TEST_FILES:-../../tests/test_gmic_py.py ../../tests/test_gmic_numpy.py}"
+    TEST_FILES="${TEST_FILES:-../../tests/test_gmic_py.py ../../tests/test_gmic_numpy.py ../../tests/test_gmic_py_memfreeing.py}"
     # $PIP3 uninstall gmic -y; cd $GMIC_LIB_DIR ; LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH ; $PIP3 install -r ../../dev-requirements.txt ; pwd; ls; PYTHONMALLOC=malloc valgrind --show-leak-kinds=all --leak-check=full --log-file=/tmp/valgrind-output $PYTHON3 -m pytest $TEST_FILES $PYTEST_EXPRESSION_PARAM -vvv -rxXs || { echo "Fatal error while running pytests" ; exit 1 ; } ; cd ../..
     $PIP3 uninstall gmic -y; cd $GMIC_LIB_DIR ; LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH ; $PIP3 install -r ../../dev-requirements.txt ; pwd; ls; $PYTHON3 -m pytest $TEST_FILES $PYTEST_EXPRESSION_PARAM -vvv -rxXs || { echo "Fatal error while running pytests" ; exit 1 ; } ; cd ../..
 }
