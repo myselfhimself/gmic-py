@@ -1186,15 +1186,15 @@ PyGmicImage_richcompare(PyObject *self, PyObject *other, int op)
                 break;
             case Py_EQ:
                 // Leverage the CImg == C++ operator
-                result = ((PyGmicImage *)self)->_gmic_image ==
-                                 ((PyGmicImage *)other)->_gmic_image
+                result = *((PyGmicImage *)self)->_gmic_image ==
+                                 *((PyGmicImage *)other)->_gmic_image
                              ? Py_True
                              : Py_False;
                 break;
             case Py_NE:
                 // Leverage the CImg != C++ operator
-                result = ((PyGmicImage *)self)->_gmic_image !=
-                                 ((PyGmicImage *)other)->_gmic_image
+                result = *((PyGmicImage *)self)->_gmic_image !=
+                                 *((PyGmicImage *)other)->_gmic_image
                              ? Py_True
                              : Py_False;
                 break;
