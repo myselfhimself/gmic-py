@@ -28,7 +28,7 @@ typedef struct {
 
 typedef struct {
     PyObject_HEAD
-        // Using a pointer here and PyGmic_init()-time instantiation fixes a
+        // Using a pointer here and PyGmic_new()-time instantiation fixes a
         // crash with empty G'MIC command-set.
         gmic *_gmic;  // G'MIC library's interpreter instance
 } PyGmic;
@@ -539,11 +539,12 @@ PyGmicImage_from_numpy_array(PyObject *cls, PyObject *args, PyObject *kwargs)
 
 /** Instancing of any c++ gmic::gmic G'MIC language interpreter object (Python:
  * gmic.Gmic) **/
-static int
-PyGmic_init(PyGmic *self, PyObject *args, PyObject *kwargs)
+PyObject *
+PyGmic_new(PyTypeObject *subtype, PyObject *args, PyObject *kwargs)
 {
-    int result = 0;
-    self->_gmic = new gmic();
+    PyGmic *self = NULL;
+
+    self = (PyGmic *)subtype->tp_alloc(subtype, 0);
 
     // Init resources folder.
     if (!gmic::init_rc()) {
@@ -562,9 +563,12 @@ PyGmic_init(PyGmic *self, PyObject *args, PyObject *kwargs)
     // exceptions raising without returning anything if things go well
     if (args != Py_None && ((args && (int)PyTuple_Size(args) > 0) ||
                             (kwargs && (int)PyDict_Size(kwargs) > 0))) {
-        result = (run_impl((PyObject *)self, args, kwargs) != NULL) ? 0 : -1;
+        if (run_impl((PyObject *)self, args, kwargs) == NULL) {
+            return NULL;
+        }
     }
-    return result;
+
+    return (PyObject *)self;
 }
 
 PyDoc_STRVAR(run_impl_doc,
@@ -759,6 +763,17 @@ PyGmicImage_alloc(PyTypeObject *type, Py_ssize_t nitems)
 {
     PyObject *obj = (PyObject *)PyObject_Malloc(type->tp_basicsize);
     ((PyGmicImage *)obj)->_gmic_image = new gmic_image<T>();
+    // printf("pygmicimage_alloc");
+    PyObject_Init(obj, type);
+    return obj;
+}
+
+static PyObject *
+PyGmic_alloc(PyTypeObject *type, Py_ssize_t nitems)
+{
+    PyObject *obj = (PyObject *)PyObject_Malloc(type->tp_basicsize);
+    ((PyGmic *)obj)->_gmic = new gmic();
+    // printf("pygmic_alloc");
     PyObject_Init(obj, type);
     return obj;
 }
@@ -770,10 +785,17 @@ PyGmicImage_free(PyObject *v)
 }
 
 static void
+PyGmic_free(PyObject *v)
+{
+    PyObject_Free(v);
+}
+
+static void
 PyGmicImage_dealloc(PyGmicImage *self)
 {
     delete self->_gmic_image;
     self->_gmic_image = NULL;
+    // printf("pygmicimage_dealloc");
     Py_TYPE(self)->tp_free((PyObject *)self);
 }
 
@@ -782,6 +804,7 @@ PyGmic_dealloc(PyGmic *self)
 {
     delete self->_gmic;
     self->_gmic = NULL;
+    // printf("pygmic_dealloc");
     Py_TYPE(self)->tp_free((PyObject *)self);
 }
 
@@ -1241,13 +1264,15 @@ PyInit_gmic()
     if (PyType_Ready(&PyGmicImageType) < 0)
         return NULL;
 
-    PyGmicType.tp_new = PyType_GenericNew;
+    PyGmicType.tp_new = (newfunc)PyGmic_new;
     PyGmicType.tp_basicsize = sizeof(PyGmic);
     PyGmicType.tp_methods = PyGmic_methods;
     PyGmicType.tp_repr = (reprfunc)PyGmic_repr;
-    PyGmicType.tp_init = (initproc)PyGmic_init;
+    PyGmicType.tp_init = 0;
+    PyGmicType.tp_alloc = (allocfunc)PyGmic_alloc;
     PyGmicType.tp_getattro = PyObject_GenericGetAttr;
     PyGmicType.tp_dealloc = (destructor)PyGmic_dealloc;
+    PyGmicType.tp_free = (freefunc)PyGmic_free;
     PyGmicType.tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE;
 
     if (PyType_Ready(&PyGmicType) < 0)
