@@ -659,7 +659,6 @@ PyGmicImage_new(PyTypeObject *subtype, PyObject *args, PyObject *kwargs)
                          "Parameter 'data' must be a "
                          "pure-python 'bytes' buffer object.");
             // TODO pytest this
-            Py_DECREF(self);
             return NULL;
         }
     }
@@ -683,7 +682,6 @@ PyGmicImage_new(PyTypeObject *subtype, PyObject *args, PyObject *kwargs)
                          "If you do not provide a 'data' parameter, make at "
                          "least all dimensions >=1.");
             // TODO pytest this
-            Py_DECREF(self);
             return NULL;
         }
     }
@@ -698,13 +696,11 @@ PyGmicImage_new(PyTypeObject *subtype, PyObject *args, PyObject *kwargs)
                      "different than the _data buffer size in bytes (%d)",
                      dimensions_product, sizeof(T),
                      dimensions_product * sizeof(T), _data_bytes_size);
-        Py_DECREF(self);
         return NULL;
     }
 
     // Importing input data to an internal buffer
     try {
-        self->_gmic_image = new gmic_image<T>();
         self->_gmic_image->assign(_width, _height, _depth, _spectrum,
                                   _is_shared);
     }
@@ -719,7 +715,6 @@ PyGmicImage_new(PyTypeObject *subtype, PyObject *args, PyObject *kwargs)
                      "are you requesting too much memory (%d bytes)?",
                      _width, _height, _depth, _spectrum,
                      dimensions_product * sizeof(T));
-        Py_DECREF(self);
         return NULL;
     }
 
@@ -763,6 +758,7 @@ static PyObject *
 PyGmicImage_alloc(PyTypeObject *type, Py_ssize_t nitems)
 {
     PyObject *obj = (PyObject *)PyObject_Malloc(type->tp_basicsize);
+    ((PyGmicImage *)obj)->_gmic_image = new gmic_image<T>();
     PyObject_Init(obj, type);
     return obj;
 }
