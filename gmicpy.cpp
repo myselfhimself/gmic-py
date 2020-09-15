@@ -701,8 +701,8 @@ PyGmicImage_new(PyTypeObject *subtype, PyObject *args, PyObject *kwargs)
 
     // Importing input data to an internal buffer
     try {
-        self->_gmic_image->assign(_width, _height, _depth, _spectrum,
-                                  _is_shared);
+        self->_gmic_image->assign(_width, _height, _depth, _spectrum);
+        self->_gmic_image->_is_shared = _is_shared;
     }
     // Ugly exception catching, probably to catch a
     // cimg::GmicInstanceException()
@@ -927,7 +927,7 @@ PyGmicImage_get_spectrum(PyGmicImage *self, void *closure)
 static PyObject *
 PyGmicImage_get__is_shared(PyGmicImage *self, void *closure)
 {
-    return PyLong_FromSize_t(self->_gmic_image->_is_shared);
+    return PyBool_FromLong((long)self->_gmic_image->_is_shared);
 }
 
 static PyObject *
