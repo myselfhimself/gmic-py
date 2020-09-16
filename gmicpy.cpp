@@ -3,12 +3,23 @@
 #include <Python.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include <iostream>
 
 #include "structmember.h"
 
 using namespace std;
+
+//------- G'MIC-PY MACROS ----------//
+
+// Set the GMIC_PY_DEBUG environment variable to any value to enable logging
+#ifndef GMIC_PY_LOG
+#define GMIC_PY_LOG(msg)           \
+    if (getenv("GMIC_PY_DEBUG")) { \
+        cout << msg;               \
+    }
+#endif
 
 //------- G'MIC MAIN TYPES ----------//
 
@@ -763,7 +774,7 @@ PyGmicImage_alloc(PyTypeObject *type, Py_ssize_t nitems)
 {
     PyObject *obj = (PyObject *)PyObject_Malloc(type->tp_basicsize);
     ((PyGmicImage *)obj)->_gmic_image = new gmic_image<T>();
-    // printf("pygmicimage_alloc");
+    GMIC_PY_LOG("PyGmicImage_alloc\n");
     PyObject_Init(obj, type);
     return obj;
 }
@@ -773,7 +784,7 @@ PyGmic_alloc(PyTypeObject *type, Py_ssize_t nitems)
 {
     PyObject *obj = (PyObject *)PyObject_Malloc(type->tp_basicsize);
     ((PyGmic *)obj)->_gmic = new gmic();
-    // printf("pygmic_alloc");
+    GMIC_PY_LOG("PyGmic_alloc\n");
     PyObject_Init(obj, type);
     return obj;
 }
@@ -795,7 +806,7 @@ PyGmicImage_dealloc(PyGmicImage *self)
 {
     delete self->_gmic_image;
     self->_gmic_image = NULL;
-    // printf("pygmicimage_dealloc");
+    GMIC_PY_LOG("PyGmicImage_dealloc\n");
     Py_TYPE(self)->tp_free((PyObject *)self);
 }
 
@@ -804,7 +815,8 @@ PyGmic_dealloc(PyGmic *self)
 {
     delete self->_gmic;
     self->_gmic = NULL;
-    // printf("pygmic_dealloc");
+    // keep this in place for test_gmic_py_memfreeing.py pytest case
+    GMIC_PY_LOG("PyGmic_dealloc\n");
     Py_TYPE(self)->tp_free((PyObject *)self);
 }
 
