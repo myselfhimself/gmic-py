@@ -143,7 +143,7 @@ function 22_reformat_c_style () {
 }
 
 function 23i_install_black_python_formatter () {
-    python -c "import black" || pip install black==$BLACK_FORMATTER_VERSION
+    python -c "import black" &>/dev/null || pip install black==$BLACK_FORMATTER_VERSION
 }
 
 function 23_check_python_style () {
