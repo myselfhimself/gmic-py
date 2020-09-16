@@ -191,10 +191,17 @@ function 3_test_compiled_so () {
     else
         GMIC_LIB_DIR="./build/lib*$PYTHON_VERSION/"
     fi
-    #TEST_FILES="${TEST_FILES:-../../tests/test_gmic_py.py ../../tests/test_gmic_numpy.py ../../tests/test_gmic_py_memfreeing.py}"
-    TEST_FILES="${TEST_FILES:-../../tests/test_gmic_py_memfreeing.py}"
-    # $PIP3 uninstall gmic -y; cd $GMIC_LIB_DIR ; LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH ; $PIP3 install -r ../../dev-requirements.txt ; pwd; ls; PYTHONMALLOC=malloc valgrind --show-leak-kinds=all --leak-check=full --log-file=/tmp/valgrind-output $PYTHON3 -m pytest $TEST_FILES $PYTEST_EXPRESSION_PARAM -vvv -rxXs || { echo "Fatal error while running pytests" ; exit 1 ; } ; cd ../..
-    $PIP3 uninstall gmic -y; cd $GMIC_LIB_DIR ; LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH ; $PIP3 install -r ../../dev-requirements.txt ; pwd; ls; $PYTHON3 -m pytest $TEST_FILES $PYTEST_EXPRESSION_PARAM -vvv -rxX || { echo "Fatal error while running pytests" ; exit 1 ; } ; cd ../..
+    TEST_FILES="${TEST_FILES:-../../tests/test_gmic_py.py ../../tests/test_gmic_numpy.py ../../tests/test_gmic_py_memfreeing.py}"
+    #TEST_FILES="${TEST_FILES:-../../tests/test_gmic_py_memfreeing.py}"
+    FAILED_SUITE=
+    $PIP3 uninstall gmic -y; cd $GMIC_LIB_DIR ; LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH ; $PIP3 install -r ../../dev-requirements.txt ; pwd; ls; 
+
+    for TEST_FILE in $TEST_FILES; do
+        # $PIP3 uninstall gmic -y; cd $GMIC_LIB_DIR ; LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH ; $PIP3 install -r ../../dev-requirements.txt ; pwd; ls; PYTHONMALLOC=malloc valgrind --show-leak-kinds=all --leak-check=full --log-file=/tmp/valgrind-output $PYTHON3 -m pytest $TEST_FILES $PYTEST_EXPRESSION_PARAM -vvv -rxXs || { echo "Fatal error while running pytests" ; exit 1 ; } ; cd ../..
+        $PYTHON3 -m pytest $TEST_FILES $PYTEST_EXPRESSION_PARAM -vvv -rxX || { echo "Fatal error while running pytest suite $TEST_FILE" ; FAILED_SUITE=1 ; }
+    done
+    cd ../..
+    test $FAILED && { echo "One of the pytest suites failed. Exiting with fatal error"; exit 1;}
 }
 
 function 3b_test_compiled_so_no_numpy () {
