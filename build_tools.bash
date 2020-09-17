@@ -201,7 +201,12 @@ function 3_test_compiled_so () {
         $PYTHON3 -m pytest $TEST_FILE $PYTEST_EXPRESSION_PARAM -vvv -rxX || { echo "Fatal error while running pytest suite $TEST_FILE" ; FAILED_SUITES=$((FAILED_SUITES+1)) ; }
     done
     cd ../..
-    [ "$FAILED_SUITES" -gt "0" ] && { echo "Fatal error: $FAILED_SUITES pytest suites failed. Exiting."; exit 1;}
+    if [ "$FAILED_SUITES" -gt "0" ]; then
+        echo "Fatal error: $FAILED_SUITES pytest suites failed. Exiting.";
+       	exit 1;
+    else
+        return 0;
+    fi
 }
 
 function 3b_test_compiled_so_no_numpy () {
