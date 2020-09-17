@@ -532,15 +532,15 @@ PyGmicImage_from_numpy_array(PyObject *cls, PyObject *args, PyObject *kwargs)
 
     Py_XDECREF(py_arg_ndarray);
     Py_XDECREF(py_arg_deinterleave);
-    Py_DECREF(ndarray_dtype);
-    Py_DECREF(ndarray_dtype_kind);
-    Py_DECREF(float32_ndarray);
-    Py_DECREF(ndarray_as_3d_unsqueezed_view);
-    Py_DECREF(ndarray_as_3d_unsqueezed_view_expanded_dims);
-    Py_DECREF(ndarray_shape_tuple);
-    Py_DECREF(ndarray_data_bytesObj);
-    Py_DECREF(ndarray_type);
-    Py_DECREF(numpy_module);
+    Py_XDECREF(ndarray_dtype);
+    Py_XDECREF(ndarray_dtype_kind);
+    Py_XDECREF(float32_ndarray);
+    Py_XDECREF(ndarray_as_3d_unsqueezed_view);
+    Py_XDECREF(ndarray_as_3d_unsqueezed_view_expanded_dims);
+    Py_XDECREF(ndarray_shape_tuple);
+    Py_XDECREF(ndarray_data_bytesObj);
+    Py_XDECREF(ndarray_type);
+    Py_XDECREF(numpy_module);
 
     return (PyObject *)py_gmicimage_to_fill;
 }
@@ -1110,12 +1110,12 @@ PyGmicImage_to_numpy_array(PyGmicImage *self, PyObject *args, PyObject *kwargs)
             PyObject_CallMethod(return_ndarray, "astype", "O", arg_astype);
     }
 
-    Py_DECREF(ndarray_type);
-    Py_DECREF(ndarray_shape_list);
-    Py_DECREF(ndarray_shape_tuple);
-    Py_DECREF(float32_dtype);
-    Py_DECREF(numpy_bytes_buffer);
-    Py_DECREF(numpy_module);
+    Py_XDECREF(ndarray_type);
+    Py_XDECREF(ndarray_shape_list);
+    Py_XDECREF(ndarray_shape_tuple);
+    Py_XDECREF(float32_dtype);
+    Py_XDECREF(numpy_bytes_buffer);
+    Py_XDECREF(numpy_module);
 
     return return_ndarray;
 }
@@ -1205,35 +1205,35 @@ PyGmicImage_richcompare(PyObject *self, PyObject *other, int op)
 {
     PyObject *result = NULL;
 
+    if (Py_TYPE(other) != Py_TYPE(self)) {
+        Py_RETURN_NOTIMPLEMENTED;
+    }
+
     Py_INCREF(self);
     Py_INCREF(other);
 
-    if (Py_TYPE(other) != Py_TYPE(self)) {
-        result = Py_NotImplemented;
-    }
-    else {
-        switch (op) {
-            case Py_LT:
-            case Py_LE:
-            case Py_GT:
-            case Py_GE:
-                result = Py_NotImplemented;
-                break;
-            case Py_EQ:
-                // Leverage the CImg == C++ operator
-                result = *((PyGmicImage *)self)->_gmic_image ==
-                                 *((PyGmicImage *)other)->_gmic_image
-                             ? Py_True
-                             : Py_False;
-                break;
-            case Py_NE:
-                // Leverage the CImg != C++ operator
-                result = *((PyGmicImage *)self)->_gmic_image !=
-                                 *((PyGmicImage *)other)->_gmic_image
-                             ? Py_True
-                             : Py_False;
-                break;
-        }
+    switch (op) {
+        case Py_LT:
+        case Py_LE:
+        case Py_GT:
+        case Py_GE:
+            Py_XDECREF(self);
+            Py_XDECREF(other);
+            Py_RETURN_NOTIMPLEMENTED;
+        case Py_EQ:
+            // Leverage the CImg == C++ operator
+            result = *((PyGmicImage *)self)->_gmic_image ==
+                             *((PyGmicImage *)other)->_gmic_image
+                         ? Py_True
+                         : Py_False;
+            break;
+        case Py_NE:
+            // Leverage the CImg != C++ operator
+            result = *((PyGmicImage *)self)->_gmic_image !=
+                             *((PyGmicImage *)other)->_gmic_image
+                         ? Py_True
+                         : Py_False;
+            break;
     }
 
     Py_XDECREF(self);
