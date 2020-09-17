@@ -25,11 +25,11 @@ def test_freeing_gmic_module(p):
 
     assert sys.getrefcount(gmic) in (7, 5)  # numpy has getrefcount=41!!
     pp2 = p.memory_percent()
-    assert (pp2 - pp) / pp > 1  # >100 % memory increase
+    assert (pp2 - pp) / pp > 0.1  # >10 % memory increase
     del gmic
     pp3 = p.memory_percent()
     print(pp, pp2, pp3)
-    assert (pp3 - pp) / pp > 1  # >100 % memory decrease
+    assert abs(pp3 - pp) / pp < 0.2  # <20 % start-end memory variation 
 
 
 def test_freeing_numpy_array(p):
