@@ -387,6 +387,53 @@ import_numpy_module()
     return numpy_module;
 }
 
+static PyObject *
+PyGmicImage_validate_numpy_preset(PyObject *cls, PyObject *args,
+                                  PyObject *kwargs)
+{
+    const unsigned int preset_length = 6;
+    char const *keywords[] = {"numpy_conversion_preset", NULL};
+    char *preset = NULL;
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, (const char *)"s",
+                                     (char **)keywords, &preset))
+        return NULL;
+
+    if (strlen(preset) != preset_length) {
+        PyErr_Format(
+            GmicException,
+            "Numpy conversion preset string must be %d-characters long.",
+            preset_length);
+        return NULL;
+    }
+
+    if (preset[1] != '_') {
+        PyErr_Format(GmicException,
+                     "Numpy conversion preset string must be like '*_*****'.");
+        return NULL;
+    }
+
+    if (preset[0] != 'i' && preset[0] != 'd') {
+        PyErr_Format(GmicException,
+                     "Numpy conversion preset string must start with either "
+                     "'i' or 'd', for interleaved / deinterleaved.");
+        return NULL;
+    }
+
+    for (unsigned int i = 2; i < preset_length; i++) {
+        if (preset[i] != 'x' && preset[i] != 'y' && preset[i] != 'z' &&
+            preset[i] != 'c') {
+            PyErr_Format(GmicException,
+                         "Numpy conversion preset string's list of axes to "
+                         "permute must be made of letters 'x','y','z' and "
+                         "'c'. Encountered letter '%c' at position '%d'",
+                         preset[i], i);
+            return NULL;
+        }
+    }
+
+    Py_RETURN_TRUE;
+}
+
 /*
  * GmicImage class method from_numpy_array().
  * This factory class method generates a G'MIC Image from a
@@ -877,8 +924,9 @@ static PyMethodDef gmic_methods[] = {
 PyDoc_STRVAR(gmic_module_doc,
              "G'MIC image processing library Python binary module.\n\n\
 Use ``gmic.run`` or ``gmic.Gmic`` to run G'MIC commands inside the G'MIC C++ interpreter, manipulate ``gmic.GmicImage`` especially with ``numpy``.\n\n\
-Below are constants to be used by ``GmicImage.from_numpy_array`` and ``GmicImage.to_numpy_array`` conversion methods.\n\n\
-Attributes:\n\n\
+Below are constants to be used by ``GmicImage.from_numpy_array`` and ``GmicImage.to_numpy_array`` conversion methods.\n\n"
+#ifdef gmic_py_numpy
+             "\nAttributes:\n\n\
     NUMPY_FORMAT_DEFAULT:\n\
         Basically an interleaved non-squeezed ``zyxc`` array (the same as ``NUMPY_FORMAT_PIL`` but unsqueezed):\n\n\
         - **output image:** shape will be *(depth, height, width, channels)* unsqueezed, pixel values will be interleaved. Equates to *interleave=True*, *permute='zyxc'*, *squeeze=False*.\n\
@@ -892,6 +940,7 @@ Attributes:\n\n\
     NUMPY_FORMAT_SCIKIT_IMAGE: An interleaved ``zxyc`` unsqueezed array:\n\n\
         - **output image:** shape will be *(depth, width, height, channels)* unsqueezed, pixel values will be interleaved. Equates to *interleave=True*, *permute='zxyc'*, *squeeze=True*.\n\
         - **input image:** assuming shape as *(depth, width, height, channels)*, with interleaved pixel values. Equates to *deinterleave=True*, *permute='zxyc'*.");
+#endif
 
 PyModuleDef gmic_module = {PyModuleDef_HEAD_INIT, "gmic", gmic_module_doc, 0,
                            gmic_methods};
@@ -1187,6 +1236,17 @@ Args:\n\
 \n\
 Returns:\n\
     numpy.ndarray: A new ``numpy.ndarray`` based the input ``GmicImage`` data.");
+
+PyDoc_STRVAR(PyGmicImage_validate_numpy_preset_doc,
+             "GmicImage.validate_numpy_preset(numpy_conversion_preset)\n\n\
+Validate a preset encoded string for ``GmicImage.to_numpy_array`` and ``GmicImage.from_numpy_array``.\n\
+G'MIC defines its own ``gmic.NUMPY_FORMAT_*`` validation presets, but you can define your own as a string in the form of ``d`` (deinterleaved pixel channels) or ``i`` (interleaved pixel channels) followed by a 5-letters axes-permutation string.\n\n\
+Example: ``i_xyzc``.\n\n\
+Args:\n\
+    numpy_conversion_preset: a ``gmic.NUMPY_FORMAT_*``-like preset string to validate.\n\
+\n\
+Returns:\n\
+    bool: ``True`` or raises a ``GmicException`` with an explanatoray misvalidation error.");
 #endif
 
 static PyMethodDef PyGmicImage_methods[] = {
@@ -1196,6 +1256,9 @@ static PyMethodDef PyGmicImage_methods[] = {
      PyGmicImage_from_numpy_array_doc},
     {"to_numpy_array", (PyCFunction)PyGmicImage_to_numpy_array,
      METH_VARARGS | METH_KEYWORDS, PyGmicImage_to_numpy_array_doc},
+    {"validate_numpy_preset", (PyCFunction)PyGmicImage_validate_numpy_preset,
+     METH_CLASS | METH_VARARGS | METH_KEYWORDS,
+     PyGmicImage_validate_numpy_preset_doc},
 #endif
     {NULL} /* Sentinel */
 };
@@ -1313,19 +1376,27 @@ PyInit_gmic()
     // For more debugging, the user can look at __spec__ automatically set by
     // setup.py
 
-    // Numpy input-output matrix conversion formats
-    // see from_numpy_array() and  to_numpy_array().
+    // Numpy input-output matrix conversion presets
+    // see from_numpy_array() and to_numpy_array(), as well as their
+    // resepective C doc strings. Each preset constant format value is as
+    // follows:
+    // -'i'(interleaved pixel channels) or 'd'(interleaved pixel channels) - in
+    // terms of how the matrix is, when outside G'MIC
+    // -'_' separator
+    // -'llll' 5-letters axes-permutation* string to be handled to G'MIC's
+    // 'permute' command. 'l' can be any of 'x','y','z','c' *Note that a
+    // 'permute' string is unique and valid for both conversion directions:
+    // from and to numpy or G'MIC.
 
-    // Default: does not alter dimensions order or channels order; channels
-    // always (de)interleaved
-    PyModule_AddIntConstant(m, "NUMPY_FORMAT_DEFAULT", 4L);
-    // does not alter dimensions order or channels order; channels not
-    // (de)interleaved
-    PyModule_AddIntConstant(m, "NUMPY_FORMAT_GMIC", 0L);
+    // Default: width, depth, height, channels interleaved - same as
+    // NUMPY_FORMAT_PIL
+    PyModule_AddStringConstant(m, "NUMPY_FORMAT_DEFAULT", "i_xyzc");
+    // depth, height, width (ie. no axis swapping); channels NOT interleaved
+    PyModule_AddStringConstant(m, "NUMPY_FORMAT_GMIC", "d_xyzc");
     // depth-plane, width-rows, height-cols, channels interleaved
-    PyModule_AddIntConstant(m, "NUMPY_FORMAT_SCIKIT_IMAGE", 2L);
+    PyModule_AddStringConstant(m, "NUMPY_FORMAT_SCIKIT_IMAGE", "i_zxyc");
     // depth, height, width, channels interleaved
-    PyModule_AddIntConstant(m, "NUMPY_FORMAT_PIL", 3L);
+    PyModule_AddStringConstant(m, "NUMPY_FORMAT_PIL", "i_zyxc");
 
     return m;
 }
