@@ -16,6 +16,7 @@ gmic_instance_types = {
 }
 
 FLOAT_SIZE_IN_BYTES = 4
+GMIC_VERSION_INT = int(gmic.__version__.replace(".", ""))
 
 
 def assert_non_empty_file_exists(filename):
@@ -225,6 +226,10 @@ def test_gmic_user_file_explicit_load_and_use(gmic_instance_run, capfd):
             gmic_instance_run("sp leno " + gmicpy_testing_command)
 
 
+# Skipping test per https://github.com/dtschump/gmic/issues/256#issuecomment-694121423
+@pytest.mark.skipif(
+    GMIC_VERSION_INT < 293, reason="requires a fix from libgmic >= 2.9.3"
+)
 @pytest.mark.parametrize(**gmic_instance_types)
 def test_gmic_filters_data_json_validation_and_gmicimage__data_str_attribute(
     gmic_instance_run,
@@ -232,7 +237,8 @@ def test_gmic_filters_data_json_validation_and_gmicimage__data_str_attribute(
     import json
     import re
 
-    assert int(gmic.__version__.replace(".", "")) >= 290
+    # testing the parse_gui command introduced in libgmic >= 2.9.0
+    assert GMIC_VERSION_INT >= 290
     json_result = []
     gmic_instance_run("update")
     gmic_instance_run("parse_gui blur,json", images=json_result)

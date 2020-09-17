@@ -84,7 +84,7 @@ def test_freeing_gmic_interpreter(p, gmicpylog, capfd):
     pp2 = p.memory_percent()
     assert (pp2 - pp) / pp > 0.005 and (
         pp2 - pp
-    ) / pp < 0.1  # >0.5 % <10 % memory variation
+    ) / pp < 0.2  # >0.5 % <20 % memory variation
     del a
 
     outerr = capfd.readouterr()
