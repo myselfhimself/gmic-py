@@ -1148,6 +1148,9 @@ PyGmicImage_to_numpy_array(PyGmicImage *self, PyObject *args, PyObject *kwargs)
                     break;
             }
         }
+        PyList_Append(ndarray_shape_tuple,
+                      PyLong_FromSize_t((size_t)self->_gmic_image->_spectrum));
+        PyList_Append(ndarray_transpose_tuple, PyLong_FromLong(3L));
     }
     ndarray_shape_list = PyList_AsTuple(ndarray_shape_tuple);
 
