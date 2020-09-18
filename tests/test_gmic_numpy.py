@@ -98,11 +98,12 @@ def gmic_image_to_numpy_array_default_dtype_param(d):
         ("", False),
         ("i", False),
         ("i_", False),
-        ("_xyzc", False),
+        ("_xyz", False),
         ("ixyzc", False),
         ("d", False),
-        ("d_xzcy", True),
-        ("i_xyzc", True),
+        ("d_xzy", True),
+        ("i_xzy", True),
+        ("i_xyc", False),
         (gmic.NUMPY_FORMAT_DEFAULT, True),
         (gmic.NUMPY_FORMAT_GMIC, True),
         (gmic.NUMPY_FORMAT_PIL, True),
@@ -115,6 +116,11 @@ def test_gmic_image_validate_numpy_preset(test_str, must_validate):
             gmic.GmicImage.validate_numpy_preset(test_str)
     else:
         assert True == gmic.GmicImage.validate_numpy_preset(test_str)
+
+
+def test_gmic_image_to_numpy_array_presets_simple(preset_str):
+    # TODO
+    pass
 
 
 @pytest.mark.parametrize(**numpy_dtypes1)

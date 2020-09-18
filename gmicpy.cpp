@@ -391,7 +391,7 @@ static PyObject *
 PyGmicImage_validate_numpy_preset(PyObject *cls, PyObject *args,
                                   PyObject *kwargs)
 {
-    const unsigned int preset_length = 6;
+    const unsigned int preset_length = 5;
     char const *keywords[] = {"numpy_conversion_preset", NULL};
     char *preset = NULL;
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, (const char *)"s",
@@ -408,7 +408,7 @@ PyGmicImage_validate_numpy_preset(PyObject *cls, PyObject *args,
 
     if (preset[1] != '_') {
         PyErr_Format(GmicException,
-                     "Numpy conversion preset string must be like '*_*****'.");
+                     "Numpy conversion preset string must be like '*_***'.");
         return NULL;
     }
 
@@ -420,12 +420,11 @@ PyGmicImage_validate_numpy_preset(PyObject *cls, PyObject *args,
     }
 
     for (unsigned int i = 2; i < preset_length; i++) {
-        if (preset[i] != 'x' && preset[i] != 'y' && preset[i] != 'z' &&
-            preset[i] != 'c') {
+        if (preset[i] != 'x' && preset[i] != 'y' && preset[i] != 'z') {
             PyErr_Format(GmicException,
                          "Numpy conversion preset string's list of axes to "
-                         "permute must be made of letters 'x','y','z' and "
-                         "'c'. Encountered letter '%c' at position '%d'",
+                         "permute must be made of letters 'x','y','z'. "
+                         "Encountered letter '%c' at position '%d'",
                          preset[i], i);
             return NULL;
         }
@@ -1068,13 +1067,14 @@ PyGetSetDef PyGmicImage_getsets[] = {
 static PyObject *
 PyGmicImage_to_numpy_array(PyGmicImage *self, PyObject *args, PyObject *kwargs)
 {
-    char const *keywords[] = {"astype", "interleave", "squeeze_shape", NULL};
-    // TODO add "permute" and "output_format" keywords + implementation
+    char const *keywords[] = {"astype",        "interleave", "permute",
+                              "squeeze_shape", "preset",     NULL};
     PyObject *numpy_module = NULL;
     PyObject *ndarray_type = NULL;
     PyObject *return_ndarray = NULL;
     PyObject *ndarray_shape_tuple = NULL;
     PyObject *ndarray_shape_list = NULL;
+    PyObject *ndarray_transpose_tuple = NULL;
     PyObject *float32_dtype = NULL;
     PyObject *numpy_bytes_buffer = NULL;
     float *numpy_buffer = NULL;
@@ -1084,29 +1084,78 @@ PyGmicImage_to_numpy_array(PyGmicImage *self, PyObject *args, PyObject *kwargs)
     int arg_interleave = 1;     // Will interleave the final matrix by default
     int arg_squeeze_shape = 0;  // Will squeeze the final shape if asked, for
                                 // easier python-matplotlib display
+    char *arg_permute = NULL;
+    char *arg_preset = NULL;
+    char const default_arg_preset[] = "i_xyz";
+    PyObject *bool_arg_preset_validated = NULL;
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|Opp", (char **)keywords,
-                                     &arg_astype, &arg_interleave,
-                                     &arg_squeeze_shape)) {
+    if (!PyArg_ParseTupleAndKeywords(
+            args, kwargs, "|Opsps", (char **)keywords, &arg_astype,
+            &arg_interleave, &arg_permute, &arg_squeeze_shape, &arg_preset)) {
         return NULL;
     }
+    ndarray_shape_tuple = PyList_New(0);
+    ndarray_transpose_tuple = PyList_New(0);
+
+    if (arg_preset == NULL) {
+        arg_preset = (char *)default_arg_preset;  // ie. "NUMPY_FORMAT_DEFAULT"
+    }
+    bool_arg_preset_validated =
+        PyObject_CallMethod((PyObject *)self, "validate_numpy_preset",
+                            (const char *)"s", arg_preset);
+    if (bool_arg_preset_validated == Py_True) {
+        // Skip the non-potent preset
+        if (strcmp(arg_preset, "d_xyz") == 0) {
+            // do nothing
+        }
+        else {
+            if (arg_preset[0] == 'i') {
+                arg_interleave = 1;
+            }
+            // arg_permute becomes 'xyz\0' in the eg. 'i_xyz\0' string
+            arg_permute = arg_preset + 2;
+        }
+    }
+    else {
+        // throw further upstream the preset validation error
+        return NULL;
+    }
+
+    // Build the .(re)shape (w,h,d,s) and .transpose (axes permutation) tuples
+    if (arg_permute) {
+        for (int permute_axis = 0; permute_axis < 3; permute_axis++) {
+            switch (arg_permute[permute_axis]) {
+                case 'x':
+                    PyList_Append(
+                        ndarray_shape_tuple,
+                        PyLong_FromSize_t((size_t)self->_gmic_image->_width));
+                    PyList_Append(ndarray_transpose_tuple,
+                                  PyLong_FromLong(0L));
+                    break;
+                case 'y':
+                    PyList_Append(
+                        ndarray_shape_tuple,
+                        PyLong_FromSize_t((size_t)self->_gmic_image->_height));
+                    PyList_Append(ndarray_transpose_tuple,
+                                  PyLong_FromLong(1L));
+                    break;
+                case 'z':
+                    PyList_Append(
+                        ndarray_shape_tuple,
+                        PyLong_FromSize_t((size_t)self->_gmic_image->_depth));
+                    PyList_Append(ndarray_transpose_tuple,
+                                  PyLong_FromLong(2L));
+                    break;
+            }
+        }
+    }
+    ndarray_shape_list = PyList_AsTuple(ndarray_shape_tuple);
 
     numpy_module = import_numpy_module();
     if (!numpy_module)
         return NULL;
 
     ndarray_type = PyObject_GetAttrString(numpy_module, "ndarray");
-
-    ndarray_shape_tuple = PyList_New(0);
-    PyList_Append(ndarray_shape_tuple,
-                  PyLong_FromSize_t((size_t)self->_gmic_image->_depth));
-    PyList_Append(ndarray_shape_tuple,
-                  PyLong_FromSize_t((size_t)self->_gmic_image->_height));
-    PyList_Append(ndarray_shape_tuple,
-                  PyLong_FromSize_t((size_t)self->_gmic_image->_width));
-    PyList_Append(ndarray_shape_tuple,
-                  PyLong_FromSize_t((size_t)self->_gmic_image->_spectrum));
-    ndarray_shape_list = PyList_AsTuple(ndarray_shape_tuple);
 
     float32_dtype = PyObject_GetAttrString(numpy_module, "float32");
     buffer_size = sizeof(T) * self->_gmic_image->size();
@@ -1142,6 +1191,34 @@ PyGmicImage_to_numpy_array(PyGmicImage *self, PyObject *args, PyObject *kwargs)
                                            ndarray_shape_list, float32_dtype,
                                            numpy_bytes_buffer);
 
+    // arg_astype should be according to ndarray.astype's documentation, a
+    // string, python type or numpy.dtype delegating this type check to the
+    // astype() method
+    if (return_ndarray != NULL && arg_astype != NULL) {
+        return_ndarray =
+            PyObject_CallMethod(return_ndarray, "astype", "O", arg_astype);
+        if (!return_ndarray) {
+            PyErr_Format(GmicException,
+                         "'%.50s' failed to run numpy.ndarray.astype.",
+                         ((PyTypeObject *)Py_TYPE(ndarray_type))->tp_name);
+
+            return NULL;
+        }
+    }
+
+    if (arg_permute != NULL) {
+        return_ndarray = PyObject_CallMethod(return_ndarray, "transpose", "O",
+                                             ndarray_transpose_tuple);
+        if (!return_ndarray) {
+            PyErr_Format(
+                GmicException,
+                "'%.50s' failed to run numpy.ndarray.transpose (permute).",
+                ((PyTypeObject *)Py_TYPE(ndarray_type))->tp_name);
+
+            return NULL;
+        }
+    }
+
     if (arg_squeeze_shape) {
         return_ndarray =
             PyObject_CallMethod(numpy_module, "squeeze", "O", return_ndarray);
@@ -1151,17 +1228,10 @@ PyGmicImage_to_numpy_array(PyGmicImage *self, PyObject *args, PyObject *kwargs)
         }
     }
 
-    // arg_astype should be according to ndarray.astype's documentation, a
-    // string, python type or numpy.dtype delegating this type check to the
-    // astype() method
-    if (return_ndarray != NULL && arg_astype != NULL) {
-        return_ndarray =
-            PyObject_CallMethod(return_ndarray, "astype", "O", arg_astype);
-    }
-
     Py_XDECREF(ndarray_type);
     Py_XDECREF(ndarray_shape_list);
     Py_XDECREF(ndarray_shape_tuple);
+    Py_XDECREF(ndarray_transpose_tuple);
     Py_XDECREF(float32_dtype);
     Py_XDECREF(numpy_bytes_buffer);
     Py_XDECREF(numpy_module);
@@ -1240,8 +1310,8 @@ Returns:\n\
 PyDoc_STRVAR(PyGmicImage_validate_numpy_preset_doc,
              "GmicImage.validate_numpy_preset(numpy_conversion_preset)\n\n\
 Validate a preset encoded string for ``GmicImage.to_numpy_array`` and ``GmicImage.from_numpy_array``.\n\
-G'MIC defines its own ``gmic.NUMPY_FORMAT_*`` validation presets, but you can define your own as a string in the form of ``d`` (deinterleaved pixel channels) or ``i`` (interleaved pixel channels) followed by a 5-letters axes-permutation string.\n\n\
-Example: ``i_xyzc``.\n\n\
+G'MIC defines its own ``gmic.NUMPY_FORMAT_*`` validation presets, but you can define your own as a string in the form of ``d`` (deinterleaved pixel channels) or ``i`` (interleaved pixel channels) followed by '_' and a 3-letters axes-permutation string.\n\n\
+Example: ``i_xyz``.\n\n\
 Args:\n\
     numpy_conversion_preset: a ``gmic.NUMPY_FORMAT_*``-like preset string to validate.\n\
 \n\
@@ -1274,7 +1344,8 @@ static PyMethodDef PyGmicImage_methods[] = {
      PyGmicImage_validate_numpy_preset_doc},
 #endif
     {"__copy__", (PyCFunction)PyGmicImage__copy__, METH_VARARGS,
-     "Copy method for copy.copy() support. Deepcopying and pickle-ing are not "
+     "Copy method for copy.copy() support. Deepcopying and pickle-ing "
+     "are not "
      "supported."},
     {NULL} /* Sentinel */
 };
@@ -1328,13 +1399,17 @@ PyInit_gmic()
 
     // The GmicException inherits Python's builtin Exception.
     // Used for non-precise errors raised from this module.
-    GmicException = PyErr_NewExceptionWithDoc(
-        "gmic.GmicException", /* char *name */
-        "Only exception class of the Gmic module.\n\nThis wraps G'MIC's C++ "
-        "gmic_exception. Refer to the exception message itself.", /* char *doc
-                                                                   */
-        NULL, /* PyObject *base */
-        NULL /* PyObject *dict */);
+    GmicException =
+        PyErr_NewExceptionWithDoc("gmic.GmicException", /* char *name
+                                                         */
+                                  "Only exception class of the Gmic "
+                                  "module.\n\nThis wraps G'MIC's C++ "
+                                  "gmic_exception. Refer to the "
+                                  "exception message itself.", /* char
+                                                                * *doc
+                                                                */
+                                  NULL, /* PyObject *base */
+                                  NULL /* PyObject *dict */);
 
     PyGmicImageType.tp_new = (newfunc)PyGmicImage_new;
     PyGmicImageType.tp_init = 0;
@@ -1376,11 +1451,12 @@ PyInit_gmic()
     Py_INCREF(&PyGmicImageType);
     Py_INCREF(&PyGmicType);
     Py_INCREF(GmicException);
+    PyModule_AddObject(m, "GmicImage",
+                       (PyObject *)&PyGmicImageType);  // Add GmicImage object
+                                                       // to the module
     PyModule_AddObject(
-        m, "GmicImage",
-        (PyObject *)&PyGmicImageType);  // Add GmicImage object to the module
-    PyModule_AddObject(
-        m, "Gmic", (PyObject *)&PyGmicType);  // Add Gmic object to the module
+        m, "Gmic",
+        (PyObject *)&PyGmicType);  // Add Gmic object to the module
     PyModule_AddObject(
         m, "GmicException",
         (PyObject *)GmicException);  // Add Gmic object to the module
@@ -1389,30 +1465,39 @@ PyInit_gmic()
         PyUnicode_Join(PyUnicode_FromString("."),
                        PyUnicode_FromString(xstr(gmic_version))));
     PyModule_AddObject(m, "__build__", gmicpy_build_info);
-    // For more debugging, the user can look at __spec__ automatically set by
-    // setup.py
+    // For more debugging, the user can look at __spec__ automatically
+    // set by setup.py
 
     // Numpy input-output matrix conversion presets
     // see from_numpy_array() and to_numpy_array(), as well as their
-    // resepective C doc strings. Each preset constant format value is as
-    // follows:
-    // -'i'(interleaved pixel channels) or 'd'(interleaved pixel channels) - in
-    // terms of how the matrix is, when outside G'MIC
+    // resepective C doc strings. Each preset constant format value is
+    // as follows:
+    // -'i'(interleaved pixel channels) or 'd'(interleaved pixel
+    // channels) - in terms of how the matrix is, when outside G'MIC
     // -'_' separator
-    // -'llll' 5-letters axes-permutation* string to be handled to G'MIC's
-    // 'permute' command. 'l' can be any of 'x','y','z','c' *Note that a
-    // 'permute' string is unique and valid for both conversion directions:
-    // from and to numpy or G'MIC.
+    // -'llll' 5-letters axes-permutation* string to be handled to
+    // G'MIC's 'permute' command. 'l' can be any of 'x','y','z' *Note
+    // that a 'permute' string is unique and valid for both conversion
+    // directions: from and to numpy or G'MIC.
+    //
+    // When inputting/outputting numpy array, 'i_' equates to moving
+    // 'c' to the beginning of the permute string eg. i_xyz <=>
+    // 'permute cxyz' with the final shape leaving channels(=spectrum)
+    // in the last position: w,h,d,S while 'd_' will be non-potent
+    // regarding interleaveing and equivalent to keeping the 'c' at the
+    // end eg. d_xyz <=> 'permute xyzc' with the final shape leaving
+    // channels(=spectrum) in the last position: w,h,d,S
 
     // Default: width, depth, height, channels interleaved - same as
     // NUMPY_FORMAT_PIL
-    PyModule_AddStringConstant(m, "NUMPY_FORMAT_DEFAULT", "i_xyzc");
-    // depth, height, width (ie. no axis swapping); channels NOT interleaved
-    PyModule_AddStringConstant(m, "NUMPY_FORMAT_GMIC", "d_xyzc");
+    PyModule_AddStringConstant(m, "NUMPY_FORMAT_DEFAULT", "i_xyz");
+    // depth, height, width (ie. no axis swapping); channels NOT
+    // interleaved
+    PyModule_AddStringConstant(m, "NUMPY_FORMAT_GMIC", "d_xyz");
     // depth-plane, width-rows, height-cols, channels interleaved
-    PyModule_AddStringConstant(m, "NUMPY_FORMAT_SCIKIT_IMAGE", "i_zxyc");
+    PyModule_AddStringConstant(m, "NUMPY_FORMAT_SCIKIT_IMAGE", "i_zxy");
     // depth, height, width, channels interleaved
-    PyModule_AddStringConstant(m, "NUMPY_FORMAT_PIL", "i_zyxc");
+    PyModule_AddStringConstant(m, "NUMPY_FORMAT_PIL", "i_zyx");
 
     return m;
 }
