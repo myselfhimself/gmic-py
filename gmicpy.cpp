@@ -1249,6 +1249,19 @@ Returns:\n\
     bool: ``True`` or raises a ``GmicException`` with an explanatoray misvalidation error.");
 #endif
 
+static PyObject *
+PyGmicImage__copy__(PyGmicImage *self, PyObject *args)
+{
+    return PyObject_CallFunction(
+        (PyObject *)&PyGmicImageType, (const char *)"SIIIIi",
+        PyGmicImage_get__data((PyGmicImage *)self, (void *)NULL),
+        (unsigned int)((PyGmicImage *)self)->_gmic_image->_width,
+        (unsigned int)((PyGmicImage *)self)->_gmic_image->_height,
+        (unsigned int)((PyGmicImage *)self)->_gmic_image->_depth,
+        (unsigned int)((PyGmicImage *)self)->_gmic_image->_spectrum,
+        (int)((PyGmicImage *)self)->_gmic_image->_is_shared);
+}
+
 static PyMethodDef PyGmicImage_methods[] = {
 #ifdef gmic_py_numpy
     {"from_numpy_array", (PyCFunction)PyGmicImage_from_numpy_array,
@@ -1259,6 +1272,9 @@ static PyMethodDef PyGmicImage_methods[] = {
     {"validate_numpy_preset", (PyCFunction)PyGmicImage_validate_numpy_preset,
      METH_CLASS | METH_VARARGS | METH_KEYWORDS,
      PyGmicImage_validate_numpy_preset_doc},
+    {"__copy__", (PyCFunction)PyGmicImage__copy__, METH_VARARGS,
+     "Copy method for copy.copy() support. Deepcopying and pickle-ing are not "
+     "supported."},
 #endif
     {NULL} /* Sentinel */
 };

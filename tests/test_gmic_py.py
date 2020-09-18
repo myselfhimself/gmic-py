@@ -303,6 +303,16 @@ def test_run_gmic_instance_run_simple_3pixels_bmp_output(gmic_instance_run):
     assert_non_empty_file_exists(bmp_filename).unlink()
 
 
+def test_gmic_image_copy():
+    # This tests the __copy__ method
+    import struct
+    import copy
+
+    a = gmic.GmicImage(struct.pack("6f", 1, 2, 3, 4, 5, 6), 3, 2, 1)
+    i = copy.copy(a)
+    assert i == a
+
+
 def test_gmic_image_parameters_fuzzying():
     import struct
 
