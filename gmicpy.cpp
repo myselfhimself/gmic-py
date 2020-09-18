@@ -1272,10 +1272,10 @@ static PyMethodDef PyGmicImage_methods[] = {
     {"validate_numpy_preset", (PyCFunction)PyGmicImage_validate_numpy_preset,
      METH_CLASS | METH_VARARGS | METH_KEYWORDS,
      PyGmicImage_validate_numpy_preset_doc},
+#endif
     {"__copy__", (PyCFunction)PyGmicImage__copy__, METH_VARARGS,
      "Copy method for copy.copy() support. Deepcopying and pickle-ing are not "
      "supported."},
-#endif
     {NULL} /* Sentinel */
 };
 
