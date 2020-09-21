@@ -191,7 +191,7 @@ function 3_test_compiled_so () {
     else
         GMIC_LIB_DIR="./build/lib*$PYTHON_VERSION/"
     fi
-    TEST_FILES="${TEST_FILES:-../../tests/test_gmic_py.py ../../tests/test_gmic_numpy.py ../../tests/test_gmic_py_memfreeing.py}"
+    TEST_FILES="${TEST_FILES:-../../tests/test_gmic_py.py ../../tests/test_gmic_numpy.py ../../tests/test_gmic_numpy_toolkits.py ../../tests/test_gmic_py_memfreeing.py}"
     #TEST_FILES="${TEST_FILES:-../../tests/test_gmic_py_memfreeing.py}"
     FAILED_SUITES=0
     $PIP3 uninstall gmic -y; cd $GMIC_LIB_DIR ; LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH ; $PIP3 install -r ../../dev-requirements.txt ; pwd; ls; 
