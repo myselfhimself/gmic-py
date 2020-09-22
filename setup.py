@@ -28,6 +28,10 @@ define_macros = [
     ("cimg_use_zlib", None),
     ("cimg_use_openmp", None),
     ("gmic_py_numpy", None),  # Numpy support
+    (
+        "gmic_py_jupyter_ipython_display",
+        None,
+    ),  # "display" statements display for Jupyter/Ipython
 ]
 
 # Only require x11 if found

@@ -92,10 +92,185 @@ swap_gmic_list_item_into_gmic_image(gmic_list<T> &images, int position,
     images[position]._data = 0;
 }
 
+#ifdef gmic_py_jupyter_ipython_display
+
+// Cross-platform way to have a temp directory string, through Python
+const char *
+get_temp_dir()
+{
+    PyObject *module = NULL;
+    PyObject *pystr = NULL;
+    module = PyImport_ImportModule("tempfile");
+    pystr = PyObject_CallMethod(module, "gettempdir", NULL);
+    Py_XDECREF(pystr);
+    Py_XDECREF(module);
+    return PyUnicode_AsUTF8(pystr);
+}
+
+// Cross-platform way to have a unique id string, through Python
+const char *
+get_uuid()
+{
+    PyObject *module = NULL;
+    PyObject *pystr = NULL;
+    module = PyImport_ImportModule("uuid");
+    pystr = PyObject_Str(PyObject_CallMethod(module, "uuid1", NULL));
+    Py_XDECREF(pystr);
+    Py_XDECREF(module);
+    return PyUnicode_AsUTF8(pystr);
+}
+
+// You must free the result if result is non-NULL.
+// Modified from https://stackoverflow.com/a/779960/420684
+PyObject *
+gmic_py_str_replace_display_to_output(char *orig, char *rep, char *extension)
+{
+    PyObject *pyresult = NULL;  // A (result_commands_line, (list,of,filename,
+                                // glob,strings)) 2-elements tuple
+    PyObject *pyglobs = NULL;   // A (result_commands_line, (list,of,filename,
+                                // glob,strings)) 2-elements tuple
+    char *result;               // the return string
+    char *ins;                  // the next insert point
+    char *tmp;                  // varies
+    int len_rep;                // length of rep (the string to remove)
+    int len_with;            // length of with (the string to replace rep with)
+    int len_front;           // distance between rep and end of last rep
+    int count;               // number of replacements
+    char with[512];          // replacement path
+    char with_globbed[512];  // replacement path with glob ending
+
+    with[0] = '\0';
+    with_globbed[0] = '\0';
+    pyglobs = PyList_New(0);
+    Py_INCREF(pyglobs);
+
+    // sanity checks and initialization
+    if (!orig || !rep)
+        return NULL;
+    len_rep = strlen(rep);
+    if (len_rep == 0)
+        return NULL;  // empty rep causes infinite loop during count
+
+    // build a first uuid to detect fixed replacement string length
+    // 'with' becomes thus '/tmp/unique-id.png'
+    // 'with_globbed' becomes '/tmp/unique-id*.png'
+    strcat(with, " output ");
+    strcat(with, get_temp_dir());
+    strcat(with, "/");
+    strcat(with, get_uuid());
+    strcpy(with_globbed, with);
+    strcat(with_globbed, "*");
+    strcat(with, extension);
+    strcat(with_globbed, extension);
+    len_with = strlen(with);
+
+    // count the number of replacements needed
+    ins = orig;
+    for (count = 0; (tmp = strstr(ins, rep)); ++count) {
+        ins = tmp + len_rep;
+    }
+
+    tmp = result =
+        (char *)malloc(strlen(orig) + (len_with - len_rep) * count + 1);
+
+    if (!result)
+        return NULL;
+
+    // first time through the loop, all the variable are set correctly
+    // from here on,
+    //    tmp points to the end of the result string
+    //    ins points to the next occurrence of rep in orig
+    //    orig points to the remainder of orig after "end of rep"
+    while (count--) {
+        PyList_Append(pyglobs,
+                      Py_BuildValue("s", with_globbed + strlen(" output ")));
+        ins = strstr(orig, rep);
+
+        len_front = ins - orig;
+        tmp = strncpy(tmp, orig, len_front) + len_front;
+        tmp = strcpy(tmp, with) + len_with;
+        orig += len_front + len_rep;  // move to next "end of rep"
+
+        // recompute a uuid file path for each replacement
+        with[0] = '\0';
+        with_globbed[0] = '\0';
+        strcat(with, " output ");
+        strcat(with, get_temp_dir());
+        strcat(with, "/");
+        strcat(with, get_uuid());
+        strcpy(with_globbed, with);
+        strcat(with_globbed, "*");
+        strcat(with, extension);
+        strcat(with_globbed, extension);
+    }
+    strcpy(tmp, orig);
+
+    pyresult = PyList_New(0);
+    PyList_Append(pyresult, Py_BuildValue("s", result));
+    PyList_Append(pyresult, pyglobs);
+    Py_DECREF(pyglobs);
+
+    return pyresult;
+}
+
+PyObject *
+gmic_py_display_with_ipython(PyObject *image_files_glob_strings)
+{
+    /*
+
+                    from IPython.core.display import Image, display
+
+                    display(Image('image_path...', unconfined=True))
+
+     * */
+    if (!PyList_Check(image_files_glob_strings)) {
+        PyErr_Format(GmicException, "input globs list is not a Python list");
+
+        return NULL;
+    }
+    PyObject *ipython_display_module = NULL;
+    PyObject *glob_module = NULL;
+    PyObject *image_glob_str = NULL;
+    PyObject *image_expanded_filenames = NULL;
+    PyObject *image = NULL;
+    PyObject *display_result = NULL;
+    unsigned int i = 0;
+    unsigned int j = 0;
+    ipython_display_module = PyImport_ImportModule("IPython.core.display");
+    glob_module = PyImport_ImportModule("glob");
+    for (i = 0; i < PyList_Size(image_files_glob_strings); i++) {
+        // display(Image('image_path...', unconfined=True))
+        image_glob_str = PyList_GetItem(image_files_glob_strings, i);
+        image_expanded_filenames = PyList_New(0);
+        image_expanded_filenames =
+            PyObject_CallMethod(glob_module, "glob", "O", image_glob_str);
+        for (j = 0; j < PyList_Size(image_expanded_filenames); j++) {
+            image = PyObject_CallMethod(
+                ipython_display_module, "Image", "O",
+                PyList_GetItem(image_expanded_filenames, j));
+            display_result = PyObject_CallMethod(ipython_display_module,
+                                                 "display", "O", image);
+            if (display_result == NULL) {
+                return display_result;
+            }
+        }
+        Py_XDECREF(image);
+    }
+
+    Py_XDECREF(ipython_display_module);
+    Py_XDECREF(glob_module);
+
+    return display_result;
+}
+
+// end gmic_py_jupyter_ipython_display
+#endif
+
 static PyObject *
 run_impl(PyObject *self, PyObject *args, PyObject *kwargs)
 {
-    char const *keywords[] = {"command", "images", "image_names", NULL};
+    char const *keywords[] = {"command", "images", "image_names", "nodisplay",
+                              NULL};
     PyObject *input_gmic_images = NULL;
     PyObject *input_gmic_image_names = NULL;
     char *commands_line = NULL;
@@ -108,16 +283,36 @@ run_impl(PyObject *self, PyObject *args, PyObject *kwargs)
     PyObject *current_image = NULL;
     PyObject *current_image_name = NULL;
     PyObject *iter = NULL;
-
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "s|OO", (char **)keywords,
-                                     &commands_line, &input_gmic_images,
-                                     &input_gmic_image_names)) {
+#ifdef gmic_py_jupyter_ipython_display
+    int arg_nodisplay = 0;
+    PyObject *commands_line_display_to_ouput_result = NULL;
+#endif
+    if (!PyArg_ParseTupleAndKeywords(
+            args, kwargs, "s|OOp", (char **)keywords, &commands_line,
+            &input_gmic_images, &input_gmic_image_names, &arg_nodisplay)) {
         return NULL;
     }
 
     try {
         Py_XINCREF(input_gmic_images);
         Py_XINCREF(input_gmic_image_names);
+
+#ifdef gmic_py_jupyter_ipython_display
+        // Use a special way of displaying only if the OS's display is not
+        // available
+        if (arg_nodisplay == 1) {
+            //  getenv("DISPLAY") == NULL
+            // Provide a fallback for gmic "display" command (without
+            // supporting arguments) The idea is to replace all occurences of
+            // "display" by "output someprefix.png
+            commands_line_display_to_ouput_result =
+                gmic_py_str_replace_display_to_output(
+                    commands_line, (char *)" display", (char *)".png");
+            // TODO catch exception
+            commands_line = (char *)PyUnicode_AsUTF8(
+                PyList_GetItem(commands_line_display_to_ouput_result, 0));
+        }
+#endif
 
         // Grab image names or single image name and check typings
         if (input_gmic_image_names != NULL) {
@@ -345,7 +540,7 @@ run_impl(PyObject *self, PyObject *args, PyObject *kwargs)
                 // the input string's content here :) :/
             }
         }
-        else {
+        else {  // If no gmic_images given
             T pixel_type;
             ((PyGmic *)self)
                 ->_gmic->run((const char *const)commands_line,
@@ -364,6 +559,20 @@ run_impl(PyObject *self, PyObject *args, PyObject *kwargs)
         PyErr_SetString(GmicException, e.what());
         return NULL;
     }
+#ifdef gmic_py_jupyter_ipython_display
+    // Use a special way of displaying only if the OS's display is not
+    // available
+    if (arg_nodisplay == 1) {
+        //  getenv("DISPLAY") == NULL
+        // Provide a fallback for gmic "display" command (without supporting
+        // arguments) The idea is to replace all occurences of "display" by
+        // "output someprefix.png
+        // display in ipython
+        gmic_py_display_with_ipython(
+            PyList_GetItem(commands_line_display_to_ouput_result, 1));
+    }
+#endif
+
     Py_RETURN_NONE;
 }
 
