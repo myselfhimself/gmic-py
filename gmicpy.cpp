@@ -214,50 +214,124 @@ gmic_py_str_replace_display_to_output(char *orig, char *rep, char *extension)
 }
 
 PyObject *
-gmic_py_display_with_ipython(PyObject *image_files_glob_strings)
+gmic_py_display_with_matplotlib_or_ipython(PyObject *image_files_glob_strings)
 {
-    /*
-
-                    from IPython.core.display import Image, display
-
-                    display(Image('image_path...', unconfined=True))
-
-     * */
     if (!PyList_Check(image_files_glob_strings)) {
         PyErr_Format(GmicException, "input globs list is not a Python list");
 
         return NULL;
     }
     PyObject *ipython_display_module = NULL;
+    PyObject *matplotlib_pyplot_module = NULL;
+    PyObject *matplotlib_image_module = NULL;
     PyObject *glob_module = NULL;
     PyObject *image_glob_str = NULL;
     PyObject *image_expanded_filenames = NULL;
+    PyObject *all_image_expanded_filenames = NULL;
     PyObject *image = NULL;
     PyObject *display_result = NULL;
+    unsigned int nb_subplots = 0;
+    int matplotlib_subplot_id = 1;
+    bool use_matplotlib = false;
+    bool use_ipython = false;
     unsigned int i = 0;
     unsigned int j = 0;
-    ipython_display_module = PyImport_ImportModule("IPython.core.display");
+    matplotlib_pyplot_module = PyImport_ImportModule("matplotlib.pyplot");
+    if (matplotlib_pyplot_module == NULL) {
+        use_matplotlib = false;
+        ipython_display_module = PyImport_ImportModule("IPython.core.display");
+        if (ipython_display_module == NULL) {
+            use_ipython = false;
+            PyErr_Clear();
+            PyErr_Format(GmicException,
+                         "Could not use matplotlib neither ipython to try to "
+                         "display images");
+            return NULL;
+        }
+        else {
+            PyErr_Clear();
+            use_ipython = true;
+        }
+    }
+    else {
+        use_matplotlib = true;
+        use_ipython = false;
+        matplotlib_image_module = PyImport_ImportModule("matplotlib.image");
+    }
+
+    all_image_expanded_filenames = PyList_New(0);
     glob_module = PyImport_ImportModule("glob");
     for (i = 0; i < PyList_Size(image_files_glob_strings); i++) {
         // display(Image('image_path...', unconfined=True))
         image_glob_str = PyList_GetItem(image_files_glob_strings, i);
-        image_expanded_filenames = PyList_New(0);
         image_expanded_filenames =
             PyObject_CallMethod(glob_module, "glob", "O", image_glob_str);
         for (j = 0; j < PyList_Size(image_expanded_filenames); j++) {
+            PyList_Append(all_image_expanded_filenames,
+                          PyList_GetItem(image_expanded_filenames, j));
+        }
+    }
+
+    nb_subplots = PyList_Size(all_image_expanded_filenames);
+
+    for (j = 0; j < nb_subplots; j++) {
+        if (use_matplotlib) {
+            image = PyObject_CallMethod(
+                matplotlib_image_module, "imread", "O",
+                PyList_GetItem(all_image_expanded_filenames, j));
+            if (!image) {
+                return image;
+            }
+            display_result =
+                PyObject_CallMethod(matplotlib_pyplot_module, "subplot", "iii",
+                                    nb_subplots, 1, matplotlib_subplot_id++);
+            if (!display_result) {
+                return display_result;
+            }
+
+            display_result = PyObject_CallMethod(matplotlib_pyplot_module,
+                                                 "imshow", "O", image);
+            if (!display_result) {
+                return display_result;
+            }
+        }
+        else if (use_ipython) {
             image = PyObject_CallMethod(
                 ipython_display_module, "Image", "O",
-                PyList_GetItem(image_expanded_filenames, j));
+                PyList_GetItem(all_image_expanded_filenames, j));
+            if (image == NULL) {
+                return image;
+            }
             display_result = PyObject_CallMethod(ipython_display_module,
                                                  "display", "O", image);
             if (display_result == NULL) {
                 return display_result;
             }
         }
+        else {
+            PyErr_Format(GmicException,
+                         "Logic error: matplotlib or ipython should have "
+                         "been imported at this point.");
+            return NULL;
+        }
+    }
+    // Matplolib requires only one single image display call, for multiple
+    // images
+    if (use_matplotlib) {
+        display_result =
+            PyObject_CallMethod(matplotlib_pyplot_module, "show", NULL);
+        if (!display_result) {
+            return display_result;
+        }
+
+        Py_XDECREF(all_image_expanded_filenames);
+        Py_XDECREF(image_expanded_filenames);
+        Py_XDECREF(image_glob_str);
         Py_XDECREF(image);
     }
 
     Py_XDECREF(ipython_display_module);
+    Py_XDECREF(matplotlib_pyplot_module);
     Py_XDECREF(glob_module);
 
     return display_result;
@@ -568,7 +642,7 @@ run_impl(PyObject *self, PyObject *args, PyObject *kwargs)
         // arguments) The idea is to replace all occurences of "display" by
         // "output someprefix.png
         // display in ipython
-        gmic_py_display_with_ipython(
+        gmic_py_display_with_matplotlib_or_ipython(
             PyList_GetItem(commands_line_display_to_ouput_result, 1));
     }
 #endif
