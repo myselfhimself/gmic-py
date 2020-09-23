@@ -40,6 +40,10 @@ function 00_all_steps () {
     find .
 }
 
+function 01_reload_gmic_env () {
+    4_build_wheel && pip uninstall -y gmic && pip install dist/gmic-*.whl
+}
+
 function 11_send_to_pypi () {
     set -x
     pip install twine
