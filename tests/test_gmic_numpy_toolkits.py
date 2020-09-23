@@ -14,7 +14,8 @@ from test_gmic_py import (
 def test_toolkit_gmic_from_scikit():
     from skimage import data, io, filters
     from skimage.data import download_all
-    download_all() # grabbing more data for proper 3d conversion testing
+
+    download_all()  # grabbing more data for proper 3d conversion testing
 
     image = data.lfw_subset()
     print(image.shape)
