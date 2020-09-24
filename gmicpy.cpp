@@ -358,12 +358,11 @@ run_impl(PyObject *self, PyObject *args, PyObject *kwargs)
     PyObject *current_image_name = NULL;
     PyObject *iter = NULL;
 #ifdef gmic_py_jupyter_ipython_display
-    int arg_nodisplay = 0;
     PyObject *commands_line_display_to_ouput_result = NULL;
 #endif
-    if (!PyArg_ParseTupleAndKeywords(
-            args, kwargs, "s|OOp", (char **)keywords, &commands_line,
-            &input_gmic_images, &input_gmic_image_names, &arg_nodisplay)) {
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "s|OO", (char **)keywords,
+                                     &commands_line, &input_gmic_images,
+                                     &input_gmic_image_names)) {
         return NULL;
     }
 
@@ -372,17 +371,38 @@ run_impl(PyObject *self, PyObject *args, PyObject *kwargs)
         Py_XINCREF(input_gmic_image_names);
 
 #ifdef gmic_py_jupyter_ipython_display
-        // Use a special way of displaying only if the OS's display is not
-        // available
-        if (arg_nodisplay == 1) {
-            //  getenv("DISPLAY") == NULL
+        // Use a special way of displaying images only if the OS's display is
+        // not available
+        if (getenv("DISPLAY") == NULL) {
+            PySys_WriteStdout("Working in display-less mode.\n");
+            if (cimg_OS == 1) {  // UNIX OSes
+                PySys_WriteStdout(
+                    "If you do not see any text for G'MIC 'print' or "
+                    "'display' commands, you could 'pip install wurlitzer' "
+                    "and if under an IPython environment, run the '%%load_ext "
+                    "wurlitzer' macro. See "
+                    "https://github.com/myselfhimself/gmic-py/issues/64\n");
+            }
+            else {  // Non-UNIX OSes
+                PySys_WriteStdout(
+                    "You are not on a UNIX-like OS and unless you do have a "
+                    "side-window console, you shall not see any text for "
+                    "G'MIC 'print' or 'display' commands output. Hope you can "
+                    "accept it so. See "
+                    "https://github.com/myselfhimself/gmic-py/issues/64\n");
+            }
             // Provide a fallback for gmic "display" command (without
             // supporting arguments) The idea is to replace all occurences of
             // "display" by "output someprefix.png
             commands_line_display_to_ouput_result =
                 gmic_py_str_replace_display_to_output(
                     commands_line, (char *)" display", (char *)".png");
-            // TODO catch exception
+            if (commands_line_display_to_ouput_result == NULL) {
+                Py_XDECREF(input_gmic_images);
+                Py_XDECREF(input_gmic_image_names);
+                // Pass exception upwards
+                return NULL;
+            }
             commands_line = (char *)PyUnicode_AsUTF8(
                 PyList_GetItem(commands_line_display_to_ouput_result, 0));
         }
@@ -636,8 +656,7 @@ run_impl(PyObject *self, PyObject *args, PyObject *kwargs)
 #ifdef gmic_py_jupyter_ipython_display
     // Use a special way of displaying only if the OS's display is not
     // available
-    if (arg_nodisplay == 1) {
-        //  getenv("DISPLAY") == NULL
+    if (getenv("DISPLAY") == NULL) {
         // Provide a fallback for gmic "display" command (without supporting
         // arguments) The idea is to replace all occurences of "display" by
         // "output someprefix.png
