@@ -379,6 +379,7 @@ autoload_wurlitzer_into_ipython()
             ipython_module = PyImport_ImportModule("IPython");
             if (ipython_module == NULL) {
                 PyErr_Clear();
+                Py_RETURN_NONE;
             }
             else {  // If IPython module found
                 ipython_handler =
@@ -386,6 +387,12 @@ autoload_wurlitzer_into_ipython()
                 if (ipython_handler == NULL) {
                     PyErr_Clear();
                     return NULL;
+                }
+                else if (ipython_handler == Py_None) {
+                    Py_XDECREF(ipython_handler);
+                    Py_XDECREF(wurlitzer_module);
+                    Py_XDECREF(ipython_module);
+                    Py_RETURN_NONE;
                 }
                 else {
                     ipython_loaded_extensions = PyObject_GetAttrString(
@@ -477,6 +484,7 @@ run_impl(PyObject *self, PyObject *args, PyObject *kwargs)
     static bool no_display_checked = false;
     static bool no_display_available = false;
     PyObject *commands_line_display_to_ouput_result = NULL;
+    PyObject *ipython_matplotlib_display_result = NULL;
 #endif
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "s|OO", (char **)keywords,
                                      &commands_line, &input_gmic_images,
@@ -774,10 +782,15 @@ run_impl(PyObject *self, PyObject *args, PyObject *kwargs)
         // Provide a fallback for gmic "display" command (without
         // supporting arguments) The idea is to replace all occurences
         // of "display" by "output someprefix.png display in ipython
-        gmic_py_display_with_matplotlib_or_ipython(
-            PyList_GetItem(commands_line_display_to_ouput_result, 1));
+        ipython_matplotlib_display_result =
+            gmic_py_display_with_matplotlib_or_ipython(
+                PyList_GetItem(commands_line_display_to_ouput_result, 1));
+        if (ipython_matplotlib_display_result == NULL) {
+            return NULL;
+        }
     }
     Py_XDECREF(commands_line_display_to_ouput_result);
+    Py_XDECREF(ipython_matplotlib_display_result);
 #endif
 
     Py_RETURN_NONE;
