@@ -231,6 +231,7 @@ setup(
     # do not support Python 2, you can simplify this to '>=3.5' or similar, see
     # https://packaging.python.org/guides/distributing-packages-using-setuptools/#python-requires
     python_requires=">=3.0, <4",
+    install_requires=["wurlitzer"],  # For Jupyter / IPython notebooks support
     # This field lists other packages that your project depends on to run.
     # Any package you put here will be installed by pip when your project is
     # installed, so they must be valid existing projects.
