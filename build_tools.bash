@@ -46,13 +46,25 @@ function 01_reload_gmic_env () {
     4_build_wheel && pip uninstall -y gmic && pip install dist/gmic-*.whl
 }
 
-function 10_make_tag () {
+function 10a_make_version_tag () {
     echo "This will create tag v$GMIC_PY_PACKAGE_VERSION"
     echo "Ctrl-C here to skip creation. Enter anything to continue and add a compulsory tag message."
     read ii
     git tag -a v$GMIC_PY_PACKAGE_VERSION
     git tag -l
-    echo "You can now push with git tag --push"
+    echo "Push tag now ? (Ctrl + C / Enter)"
+    read ii
+    git push origin v$GMIC_PY_PACKAGE_VERSION
+}
+
+function 10b_delete_version_tag () {
+    if ! [[ -z "$(git tag -l | grep -o v$GMIC_PY_PACKAGE_VERSION )" ]]; then
+        git tag -d v$GMIC_PY_PACKAGE_VERSION
+	echo Deleted tag v$GMIC_PY_PACKAGE_VERSION locally
+    fi
+    echo "Delete tag online too? (Ctrl+C / Enter)"
+    read ii
+    git push origin :v$GMIC_PY_PACKAGE_VERSION
 }
 
 function 11_send_to_pypi () {
