@@ -10,7 +10,7 @@ jobs:
     strategy:
       max-parallel: 4
       matrix:
-        python-version: [3.7]
+        pythonversion: [3.7]
 
     steps:
     - uses: actions/checkout@v1
@@ -27,10 +27,10 @@ jobs:
     - name: Detect G'MIC target version
       run: echo "::set-env name=GMIC_VERSION::$(cat VERSION)"
 
-    - name: Set up Python ${{ matrix.python-version }}
+    - name: Set up Python ${{ matrix.pythonversion }}
       uses: actions/setup-python@v1
       with:
-        python-version: ${{ matrix.python-version }}
+        pythonversion: ${{ matrix.pythonversion }}
 
     - name: Compile and run tests on .so, .whl and source distribution of gmic-py ${{ env.GMIC_VERSION }}
       working-directory: ./
@@ -48,7 +48,7 @@ jobs:
         bash build_tools.bash 1_clean_and_regrab_gmic_src
         bash build_tools.bash 2b_compile_debug
         ldd build/lib.linux-x86_64-3.*/gmic.cpython-3*-x86_64-linux-gnu.so
-        bash build_tools.bash 3_test_compiled_so toolkit
+        # bash build_tools.bash 3_test_compiled_so # TODO tests exceptionnally disabled for remote testing
         # && bash build_tools.bash 11_send_to_pypi #Note that most probably nothing will be sent to PyPI because of too modern linked libraries 
     - name: upload .so debug build dir as artifact
       uses: actions/upload-artifact@v2
