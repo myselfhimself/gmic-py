@@ -2,7 +2,7 @@
 wheel
 pkgconfig
 scikit-image
-#numpy==1.16.1 # fixes https://github.com/scikit-image/scikit-image/issues/3655
+numpy #==1.16.1 # fixes https://github.com/scikit-image/scikit-image/issues/3655
 Pillow
 pytest
 setuptools
