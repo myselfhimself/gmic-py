@@ -46,6 +46,15 @@ function 01_reload_gmic_env () {
     4_build_wheel && pip uninstall -y gmic && pip install dist/gmic-*.whl
 }
 
+function 10_make_tag () {
+    echo "This will create tag v$GMIC_PY_PACKAGE_VERSION"
+    echo "Ctrl-C here to skip creation. Enter anything to continue and add a compulsory tag message."
+    read ii
+    git tag -a v$GMIC_PY_PACKAGE_VERSION
+    git tag -l
+    echo "You can now push with git tag --push"
+}
+
 function 11_send_to_pypi () {
     set -x
     pip install twine
