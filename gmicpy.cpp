@@ -17,7 +17,7 @@ using namespace std;
 #ifndef GMIC_PY_LOG
 #define GMIC_PY_LOG(msg)           \
     if (getenv("GMIC_PY_DEBUG")) { \
-        cout << msg;               \
+        fprintf(stdout, msg);      \
     }
 #endif
 
@@ -348,9 +348,6 @@ gmic_py_display_with_matplotlib_or_ipython(PyObject *image_files_glob_strings)
     return display_result;
 }
 
-// end gmic_py_jupyter_ipython_display
-#endif
-
 PyObject *
 autoload_wurlitzer_into_ipython()
 {
@@ -462,6 +459,9 @@ autoload_wurlitzer_into_ipython()
     Py_XDECREF(ipython_run_line_magic_result);
     return ipython_run_line_magic_result;
 }
+
+// end gmic_py_jupyter_ipython_display
+#endif
 
 static PyObject *
 run_impl(PyObject *self, PyObject *args, PyObject *kwargs)
@@ -1891,7 +1891,9 @@ PyInit_gmic()
         return NULL;
     }
     else {
+#ifdef gmic_py_jupyter_ipython_display
         autoload_wurlitzer_into_ipython();
+#endif
     }
 
     Py_INCREF(&PyGmicImageType);
