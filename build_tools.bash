@@ -23,13 +23,15 @@ fi
 # Guess target G'MIC version from VERSION file's contents
 if [ -f "VERSION" ]; then
     FILE_BASED_GMIC_VERSION=$(cat VERSION)
+    GMIC_SRC_VERSION=$(cat VERSION | grep -oE "[0-9]\.[0-9]\.[0-9][a-z]?(_pre(release)?(0-9+)?)?")
 fi
-GMIC_VERSION=${GMIC_VERSION:-$FILE_BASED_GMIC_VERSION}
+GMIC_VERSION=${GMIC_VERSION:-$GMIC_SRC_VERSION}
+GMIC_PY_PACKAGE_VERSION=${FILE_BASED_GMIC_VERSION:-$GMIC_VERSION}
 if [ -z "$GMIC_VERSION" ]; then
     echo "You must set some target G'MIC version in the VERSION file or by setting the GMIC_VERSION environment variable."
     exit 1
 fi
-echo "🐯 Targeting G'MIC $GMIC_VERSION.🐯"
+echo "🐯 Targeting G'MIC $GMIC_VERSION (gmic.eu) as package $GMIC_PY_PACKAGE_VERSION🐯"
 
 export OMP_NUM_THREADS=16  # Fix for https://github.com/myselfhimself/gmic-py/issues/47
 
