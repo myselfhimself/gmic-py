@@ -1523,12 +1523,16 @@ PyGmicImage_to_numpy_array(PyGmicImage *self, PyObject *args, PyObject *kwargs)
     float *ndarray_bytes_buffer_ptr = NULL;
     int buffer_size = 0;
     PyObject *arg_astype = NULL;
-    int arg_interleave = 1;     // Will interleave the final matrix by default
-    int arg_squeeze_shape = 0;  // Will squeeze the final shape if asked,
-                                // for easier python-matplotlib display
+    int arg_interleave = -1;
+    int arg_interleave_default =
+        0;  // Will interleave the final matrix by default
+    int arg_squeeze_shape = -1;
+    int arg_squeeze_shape_default = 0;  // Will not squeeze shape by default
     char *arg_permute = NULL;
+    char arg_permute_default[] =
+        "xyz";  // Will have non-potent axes permuting by default
     char *arg_preset = NULL;
-    char const default_arg_preset[] = "i_xyz";
+    char *arg_preset_default = NULL;  // Will have no preset on by default
     PyObject *bool_arg_preset_validated = NULL;
 
     if (!PyArg_ParseTupleAndKeywords(
@@ -1536,32 +1540,59 @@ PyGmicImage_to_numpy_array(PyGmicImage *self, PyObject *args, PyObject *kwargs)
             &arg_interleave, &arg_permute, &arg_squeeze_shape, &arg_preset)) {
         return NULL;
     }
-    ndarray_shape_tuple = PyList_New(0);
-    ndarray_transpose_tuple = PyList_New(0);
 
-    if (arg_preset == NULL) {
-        arg_preset = (char *)default_arg_preset;  // ie. "NUMPY_FORMAT_DEFAULT"
-    }
-    bool_arg_preset_validated =
-        PyObject_CallMethod((PyObject *)self, "validate_numpy_preset",
-                            (const char *)"s", arg_preset);
-    if (bool_arg_preset_validated == Py_True) {
-        // Skip the non-potent preset
-        if (strcmp(arg_preset, "d_xyz") == 0) {
-            // do nothing
-        }
-        else {
-            if (arg_preset[0] == 'i') {
-                arg_interleave = 1;
-            }
-            // arg_permute becomes 'xyz\0' in the eg. 'i_xyz\0' string
-            arg_permute = arg_preset + 2;
-        }
-    }
-    else {
-        // throw further upstream the preset validation error
+    // Do not allow caller to use a preset, if non-preset parameters are passed
+    // in And vice-versa (mutual exclusion)
+    if (arg_preset != NULL && (arg_interleave != -1 || arg_permute != NULL ||
+                               arg_squeeze_shape != -1)) {
+        // TODO pytest this
+        PyErr_Format(
+            GmicException,
+            "You must choose strictly between either setting a preset "
+            "or setting non-preset parameters.");
         return NULL;
     }
+
+    // Set default values for any unset parameter
+    arg_interleave =
+        arg_interleave == -1 ? arg_interleave_default : arg_interleave;
+    arg_permute = arg_permute == NULL ? arg_permute_default : arg_permute;
+    arg_squeeze_shape = arg_squeeze_shape == -1 ? arg_squeeze_shape_default
+                                                : arg_squeeze_shape;
+    arg_preset = arg_preset_default == NULL ? arg_preset_default : arg_preset;
+
+    if (arg_preset != NULL) {
+        bool_arg_preset_validated =
+            PyObject_CallMethod((PyObject *)self, "validate_numpy_preset",
+                                (const char *)"s", arg_preset);
+        if (bool_arg_preset_validated == Py_True) {
+            // Skip the non-potent preset
+            if (strcmp(arg_preset, "d_xyz") == 0) {
+                // do nothing
+            }
+            else {
+                if (arg_preset[0] == 'i') {
+                    arg_interleave = 1;
+                }
+                else {  // if arg_preset[0] == 'd'
+                    arg_interleave = 0;
+                }
+
+                // TODO have a squeeze shape flag in the preset string
+                arg_squeeze_shape = 0;
+
+                // arg_permute becomes 'xyz\0' in the eg. 'i_xyz\0' string
+                arg_permute = arg_preset + 2;
+            }
+        }
+        else {
+            // throw further upstream the preset validation error
+            return NULL;
+        }
+    }
+
+    ndarray_shape_tuple = PyList_New(0);
+    ndarray_transpose_tuple = PyList_New(0);
 
     // Build the .(re)shape (w,h,d,s) and .transpose (axes permutation)
     // tuples

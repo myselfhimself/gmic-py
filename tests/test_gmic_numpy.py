@@ -93,6 +93,41 @@ def gmic_image_to_numpy_array_default_dtype_param(d):
 
 
 @pytest.mark.parametrize(
+    "interleave,squeeze_shape,permute,preset,raises",
+    [
+        (None, None, None, None, False),
+        (None, None, None, gmic.NUMPY_FORMAT_DEFAULT, False),
+        (None, True, None, gmic.NUMPY_FORMAT_DEFAULT, gmic.GmicException),
+        (True, True, "xyz", gmic.NUMPY_FORMAT_DEFAULT, gmic.GmicException),
+        (True, None, None, gmic.NUMPY_FORMAT_DEFAULT, gmic.GmicException),
+        (None, None, "xyz", gmic.NUMPY_FORMAT_DEFAULT, gmic.GmicException),
+        (None, None, "xyz", None, False),
+    ],
+)
+def test_gmic_image_to_numpy_array_preset_vs_non_preset_parameters_mutual_exclusion(
+    interleave, permute, squeeze_shape, preset, raises
+):
+    l = []
+    gmic.run("sp leno", l)
+    params = {}
+    if interleave is not None:
+        params["interleave"] = interleave
+    if permute is not None:
+        params["permute"] = permute
+    if squeeze_shape is not None:
+        params["squeeze_shape"] = squeeze_shape
+    if preset is not None:
+        params["preset"] = preset
+
+    print(params)
+    if raises:
+        with pytest.raises(raises):
+            l[0].to_numpy_array(**params)
+    else:
+        l[0].to_numpy_array(**params)
+
+
+@pytest.mark.parametrize(
     "test_str,must_validate",
     [
         ("", False),
