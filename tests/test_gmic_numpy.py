@@ -93,19 +93,26 @@ def gmic_image_to_numpy_array_default_dtype_param(d):
 
 
 @pytest.mark.parametrize(
-    "interleave,squeeze_shape,permute,preset,raises",
+    "interleave,squeeze_shape,permute,astype,preset,raises",
     [
-        (None, None, None, None, False),
-        (None, None, None, gmic.NUMPY_FORMAT_DEFAULT, False),
-        (None, True, None, gmic.NUMPY_FORMAT_DEFAULT, gmic.GmicException),
-        (True, True, "xyz", gmic.NUMPY_FORMAT_DEFAULT, gmic.GmicException),
-        (True, None, None, gmic.NUMPY_FORMAT_DEFAULT, gmic.GmicException),
-        (None, None, "xyz", gmic.NUMPY_FORMAT_DEFAULT, gmic.GmicException),
-        (None, None, "xyz", None, False),
+        (None, None, None, None, None, False),
+        (None, None, None, None, gmic.NUMPY_FORMAT_DEFAULT, False),
+        (None, True, None, None, gmic.NUMPY_FORMAT_DEFAULT, gmic.GmicException),
+        (True, True, "xyz", None, gmic.NUMPY_FORMAT_DEFAULT, gmic.GmicException),
+        (
+            True,
+            None,
+            None,
+            numpy.float32,
+            gmic.NUMPY_FORMAT_DEFAULT,
+            gmic.GmicException,
+        ),
+        (None, None, "xyz", None, gmic.NUMPY_FORMAT_DEFAULT, gmic.GmicException),
+        (None, None, "xyz", None, None, False),
     ],
 )
 def test_gmic_image_to_numpy_array_preset_vs_non_preset_parameters_mutual_exclusion(
-    interleave, permute, squeeze_shape, preset, raises
+    interleave, squeeze_shape, permute, astype, preset, raises
 ):
     l = []
     gmic.run("sp leno", l)
@@ -118,13 +125,47 @@ def test_gmic_image_to_numpy_array_preset_vs_non_preset_parameters_mutual_exclus
         params["squeeze_shape"] = squeeze_shape
     if preset is not None:
         params["preset"] = preset
+    if astype is not None:
+        params["astype"] = astype
 
-    print(params)
     if raises:
         with pytest.raises(raises):
             l[0].to_numpy_array(**params)
     else:
         l[0].to_numpy_array(**params)
+
+
+@pytest.mark.parametrize(
+    "deinterleave,permute,preset,raises",
+    [
+        (None, None, None, False),
+        (None, None, gmic.NUMPY_FORMAT_DEFAULT, False),
+        (None, "xyz", gmic.NUMPY_FORMAT_DEFAULT, gmic.GmicException),
+        (True, "xyz", gmic.NUMPY_FORMAT_DEFAULT, gmic.GmicException),
+        (True, None, gmic.NUMPY_FORMAT_DEFAULT, gmic.GmicException),
+        (None, "xyz", gmic.NUMPY_FORMAT_DEFAULT, gmic.GmicException),
+        (None, "xyz", None, False),
+    ],
+)
+def test_gmic_image_from_numpy_array_preset_vs_non_preset_parameters_mutual_exclusion(
+    deinterleave, permute, preset, raises
+):
+    im = numpy.full((3, 3, 2, 4), 4, numpy.uint8)
+    params = {"numpy_array": im}
+    if deinterleave is not None:
+        params["deinterleave"] = deinterleave
+    if permute is not None:
+        params["permute"] = permute
+    if preset is not None:
+        params["preset"] = preset
+
+    if raises:
+        with pytest.raises(raises):
+            gi = gmic.GmicImage.from_numpy_array(**params)
+            assert type(gi) == gmic.GmicImage
+    else:
+        gi = gmic.GmicImage.from_numpy_array(**params)
+        assert (type(gi)) == gmic.GmicImage
 
 
 @pytest.mark.parametrize(

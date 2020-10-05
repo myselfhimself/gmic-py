@@ -878,8 +878,9 @@ PyGmicImage_validate_numpy_preset(PyObject *cls, PyObject *args,
 static PyObject *
 PyGmicImage_from_numpy_array(PyObject *cls, PyObject *args, PyObject *kwargs)
 {
-    PyObject *py_arg_deinterleave = Py_True;  // Will deinterleave the incoming
-                                              // numpy.ndarray by default
+    PyObject *py_arg_deinterleave = NULL;
+    PyObject *py_arg_deinterleave_default =
+        Py_True;  // Will deinterleave the incoming numpy.ndarray by default
     PyObject *py_arg_ndarray = NULL;
     PyObject *ndarray_type = NULL;
     unsigned int ndarray_ndim = 0;
@@ -893,8 +894,11 @@ PyGmicImage_from_numpy_array(PyObject *cls, PyObject *args, PyObject *kwargs)
     PyObject *numpy_module = NULL;
     PyObject *ndarray_data_bytesObj = NULL;
     T *ndarray_data_bytesObj_ptr = NULL;
-    char const *keywords[] = {"numpy_array", "deinterleave", NULL};
+    char const *keywords[] = {"numpy_array", "deinterleave", "permute",
+                              "preset", NULL};
     PyGmicImage *py_gmicimage_to_fill = NULL;
+    char *arg_permute = NULL;
+    char *arg_preset = NULL;
 
     numpy_module = import_numpy_module();
     if (!numpy_module)
@@ -903,10 +907,26 @@ PyGmicImage_from_numpy_array(PyObject *cls, PyObject *args, PyObject *kwargs)
     ndarray_type = PyObject_GetAttrString(numpy_module, "ndarray");
 
     if (!PyArg_ParseTupleAndKeywords(
-            args, kwargs, (const char *)"O!|O!", (char **)keywords,
+            args, kwargs, (const char *)"O!|O!ss", (char **)keywords,
             (PyTypeObject *)ndarray_type, &py_arg_ndarray, &PyBool_Type,
-            &py_arg_deinterleave))
+            &py_arg_deinterleave, &arg_permute, &arg_preset))
         return NULL;
+
+    // Do not allow caller to use a preset, if non-preset parameters are passed
+    // in And vice-versa (mutual exclusion)
+    if (arg_preset != NULL &&
+        (py_arg_deinterleave != NULL || arg_permute != NULL)) {
+        PyErr_Format(
+            GmicException,
+            "You must choose strictly between either setting a preset "
+            "or setting non-preset parameters (apart from compulsory "
+            "'numpy_array' first parameter).");
+        return NULL;
+    }
+
+    py_arg_deinterleave = py_arg_deinterleave == NULL
+                              ? py_arg_deinterleave_default
+                              : py_arg_deinterleave;
 
     Py_XINCREF(py_arg_ndarray);
     Py_XINCREF(py_arg_deinterleave);
@@ -1543,9 +1563,9 @@ PyGmicImage_to_numpy_array(PyGmicImage *self, PyObject *args, PyObject *kwargs)
 
     // Do not allow caller to use a preset, if non-preset parameters are passed
     // in And vice-versa (mutual exclusion)
-    if (arg_preset != NULL && (arg_interleave != -1 || arg_permute != NULL ||
-                               arg_squeeze_shape != -1)) {
-        // TODO pytest this
+    if (arg_preset != NULL &&
+        (arg_interleave != -1 || arg_permute != NULL ||
+         arg_squeeze_shape != -1 || arg_astype != NULL)) {
         PyErr_Format(
             GmicException,
             "You must choose strictly between either setting a preset "
@@ -1560,6 +1580,7 @@ PyGmicImage_to_numpy_array(PyGmicImage *self, PyObject *args, PyObject *kwargs)
     arg_squeeze_shape = arg_squeeze_shape == -1 ? arg_squeeze_shape_default
                                                 : arg_squeeze_shape;
     arg_preset = arg_preset_default == NULL ? arg_preset_default : arg_preset;
+    // arg_astype will be set to numpy.float32 by default a bit later on
 
     if (arg_preset != NULL) {
         bool_arg_preset_validated =
