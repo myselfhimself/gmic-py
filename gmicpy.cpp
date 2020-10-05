@@ -385,7 +385,12 @@ autoload_wurlitzer_into_ipython()
                     PyErr_Clear();
                     return NULL;
                 }
-                else if (ipython_handler == Py_None) {
+                // Skip any wurlitzer imported if not in an IPython context, or
+                // if an IPython terminal
+                else if (ipython_handler == Py_None ||
+                         !PyObject_HasAttrString(ipython_handler, "kernel")) {
+                    // See
+                    // https://github.com/myselfhimself/gmic-py/issues/63#issuecomment-703533397
                     Py_XDECREF(ipython_handler);
                     Py_XDECREF(wurlitzer_module);
                     Py_XDECREF(ipython_module);
@@ -426,13 +431,13 @@ autoload_wurlitzer_into_ipython()
                                 PyErr_Clear();
                             }
                             else {
-                                fprintf(stderr, "%s",
-                                        "gmic-py: wurlitzer found (for "
-                                        "G'MIC "
-                                        "stdout/stderr redirection) and "
-                                        "enabled "
-                                        "automatically through IPython "
-                                        "'%%load_ext wurlitzer'.\n");
+                                PySys_WriteStderr(
+                                    "gmic-py: wurlitzer found (for "
+                                    "G'MIC "
+                                    "stdout/stderr redirection) and "
+                                    "enabled "
+                                    "automatically through IPython "
+                                    "'%%load_ext wurlitzer'.\n");
                             }
                         }
                     }
