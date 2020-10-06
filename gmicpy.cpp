@@ -872,7 +872,7 @@ PyGmicImage_validate_numpy_preset(PyObject *cls, PyObject *args,
  * This factory class method generates a G'MIC Image from a
  * numpy.ndarray.
  *
- *  GmicImage.from_numpy_array(obj: numpy.ndarray, deinterleave=True:
+ *  GmicImage.from_numpy_array(obj: numpy.ndarray, deinterleave=True, permute="xyz":
  * bool) -> GmicImage
  */
 static PyObject *
@@ -1047,6 +1047,63 @@ PyGmicImage_from_numpy_array(PyObject *cls, PyObject *args, PyObject *kwargs)
     Py_XDECREF(numpy_module);
 
     return (PyObject *)py_gmicimage_to_fill;
+}
+
+static PyObject *
+PyGmicImage_from_PIL(PyObject *cls, PyObject *args, PyObject *kwargs)
+{
+    PyObject *py_arg_deinterleave = NULL;
+    PyObject *py_arg_deinterleave_default =
+        Py_True;  // Will deinterleave the incoming numpy.ndarray by default
+    PyObject *py_arg_ndarray = NULL;
+    PyObject *ndarray_type = NULL;
+    unsigned int ndarray_ndim = 0;
+    PyObject *ndarray_dtype = NULL;
+    PyObject *ndarray_dtype_kind = NULL;
+    PyObject *float32_ndarray = NULL;
+    PyObject *ndarray_as_3d_unsqueezed_view = NULL;
+    PyObject *ndarray_as_3d_unsqueezed_view_expanded_dims = NULL;
+    PyObject *ndarray_shape_tuple = NULL;
+    unsigned int _width = 1, _height = 1, _depth = 1, _spectrum = 1;
+    PyObject *ndarray_data_bytesObj = NULL;
+    T *ndarray_data_bytesObj_ptr = NULL;
+    char const *keywords[] = {"numpy_array", NULL};
+    PyGmicImage *py_gmicimage_to_fill = NULL;
+    char *arg_permute = NULL;
+    char *arg_preset = NULL;
+
+    // new
+    PyObject* from_numpy_array_callable = NULL;
+    PyObject* from_numpy_array_kwargs = NULL;
+    PyObject* from_numpy_array_args = NULL;
+    PyObject* numpy_module = NULL;
+    PyObject* py_result = NULL;
+    PyObject* _gmic_module = NULL;
+
+    numpy_module = import_numpy_module();
+    if (!numpy_module)
+        return NULL;
+
+    ndarray_type = PyObject_GetAttrString(numpy_module, "ndarray");
+
+    if (!PyArg_ParseTupleAndKeywords(
+            args, kwargs, (const char *)"O!", (char **)keywords,
+            (PyTypeObject *)ndarray_type, &py_arg_ndarray))
+        return NULL;
+
+    from_numpy_array_callable =  PyObject_GetAttrString(cls, "from_numpy_array");
+    from_numpy_array_kwargs = PyDict_New();
+    from_numpy_array_args = PyBuildValue(); // TODO continue
+    _gmic_module = PyState_FindModule(&gmic_module);
+    PyDict_SetItemString(from_numpy_array_kwargs, "preset", PyObject_GetAttrString(_gmic_module, "NUMPY_FORMAT_PIL"));
+    py_result = PyObject_Call(from_numpy_array_callable, py_arg_ndarray, from_numpy_array_kwargs);
+
+    Py_XDECREF(ndarray_type);
+    Py_XDECREF(numpy_module);
+    Py_XDECREF(from_numpy_array_callable);
+    Py_XDECREF(from_numpy_array_kwargs);
+
+    return py_result;
 }
 
 // End of ifdef gmic_py_numpy
@@ -1833,6 +1890,8 @@ PyGmicImage__copy__(PyGmicImage *self, PyObject *args)
 
 static PyMethodDef PyGmicImage_methods[] = {
 #ifdef gmic_py_numpy
+
+    // Numpy.ndarray generic Input / Output
     {"from_numpy_array", (PyCFunction)PyGmicImage_from_numpy_array,
      METH_CLASS | METH_VARARGS | METH_KEYWORDS,
      PyGmicImage_from_numpy_array_doc},
@@ -1841,6 +1900,13 @@ static PyMethodDef PyGmicImage_methods[] = {
     {"validate_numpy_preset", (PyCFunction)PyGmicImage_validate_numpy_preset,
      METH_CLASS | METH_VARARGS | METH_KEYWORDS,
      PyGmicImage_validate_numpy_preset_doc},
+
+     // PIL (Pillow) Input / Output
+     {"from_PIL", (PyCFunction)PyGmicImage_from_PIL,
+     METH_CLASS | METH_VARARGS | METH_KEYWORDS,
+     PyGmicImage_from_numpy_array_doc}, // TODO create and set proper from_PIL_doc variable
+     {"to_PIL", (PyCFunction)PyGmicImage_to_PIL,
+     METH_VARARGS | METH_KEYWORDS, PyGmicImage_to_numpy_array_doc}, // TODO create and set proper to_PIL_doc variable
 #endif
     {"__copy__", (PyCFunction)PyGmicImage__copy__, METH_VARARGS,
      "Copy method for copy.copy() support. Deepcopying and pickle-ing "
