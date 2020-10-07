@@ -846,10 +846,11 @@ PyGmicImage_validate_numpy_preset(PyObject *cls, PyObject *args,
         return NULL;
     }
 
-    if (preset[0] != 'i' && preset[0] != 'd') {
+    if (preset[0] != 'i' && preset[0] != 'd' && preset[0] != '*') {
         PyErr_Format(GmicException,
                      "Numpy conversion preset string must start with either "
-                     "'i' or 'd', for interleaved / deinterleaved.");
+                     "'a', for any/agnostic, 'i' or 'd', for interleaved / "
+                     "deinterleaved.");
         return NULL;
     }
 
@@ -2062,9 +2063,9 @@ PyInit_gmic()
     // Default: width, depth, height, channels interleaved - same as
     // NUMPY_FORMAT_PIL
     PyModule_AddStringConstant(m, "NUMPY_FORMAT_DEFAULT", "i_xyz");
-    // depth, height, width (ie. no axis swapping); channels NOT
-    // interleaved
-    PyModule_AddStringConstant(m, "NUMPY_FORMAT_GMIC", "d_xyz");
+    // depth, height, width (ie. no axis swapping); channels are left in place
+    // and are NOT (de)interleaved
+    PyModule_AddStringConstant(m, "NUMPY_FORMAT_GMIC", "a_xyz");
     // depth-plane, width-rows, height-cols, channels interleaved
     PyModule_AddStringConstant(m, "NUMPY_FORMAT_SCIKIT_IMAGE", "i_zxy");
     // depth, height, width, channels interleaved
