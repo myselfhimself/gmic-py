@@ -1547,9 +1547,10 @@ PyGmicImage_to_numpy_array(PyGmicImage *self, PyObject *args, PyObject *kwargs)
     PyObject *numpy_module = NULL;
     PyObject *ndarray_type = NULL;
     PyObject *return_ndarray = NULL;
+    PyObject *_tmp_return_ndarray = NULL;
     PyObject *ndarray_shape_tuple = NULL;
     PyObject *ndarray_shape_list = NULL;
-    PyObject *ndarray_transpose_tuple = NULL;
+    PyObject *ndarray_transpose_list = NULL;
     PyObject *float32_dtype = NULL;
     PyObject *numpy_bytes_buffer = NULL;
     float *numpy_buffer = NULL;
@@ -1567,6 +1568,7 @@ PyGmicImage_to_numpy_array(PyGmicImage *self, PyObject *args, PyObject *kwargs)
     char *arg_preset = NULL;
     char *arg_preset_default = NULL;  // Will have no preset ON by default
     PyObject *bool_arg_preset_validated = NULL;
+    size_t permute_axis = 0;  // iterator
 
     if (!PyArg_ParseTupleAndKeywords(
             args, kwargs, "|Opsps", (char **)keywords, &arg_astype,
@@ -1625,44 +1627,53 @@ PyGmicImage_to_numpy_array(PyGmicImage *self, PyObject *args, PyObject *kwargs)
         }
     }
 
-    ndarray_shape_tuple = PyList_New(0);
-    ndarray_transpose_tuple = PyList_New(0);
+    ndarray_shape_list = PyList_New(0);
+    PyList_Append(ndarray_shape_list,
+                  PyLong_FromLong(self->_gmic_image->_width));
+    PyList_Append(ndarray_shape_list,
+                  PyLong_FromLong(self->_gmic_image->_height));
+    PyList_Append(ndarray_shape_list,
+                  PyLong_FromLong(self->_gmic_image->_depth));
+    PyList_Append(ndarray_shape_list,
+                  PyLong_FromLong(self->_gmic_image->_spectrum));
+
+    ndarray_transpose_list = PyList_New(0);
 
     // Build the .(re)shape (w,h,d,s) and .transpose (axes permutation)
     // tuples
     if (arg_permute) {
-        for (int permute_axis = 0; permute_axis < 3; permute_axis++) {
+        if (strlen(arg_permute) != 4) {
+            PyErr_Format(
+                GmicException,
+                "'permute' parameter should be 4-characters long, '%d' found.",
+                strlen(arg_permute));
+            return NULL;
+        }
+        for (permute_axis = 0; permute_axis < strlen(arg_permute);
+             permute_axis++) {
             switch (arg_permute[permute_axis]) {
                 case 'x':
-                    PyList_Append(
-                        ndarray_shape_tuple,
-                        PyLong_FromSize_t((size_t)self->_gmic_image->_width));
-                    PyList_Append(ndarray_transpose_tuple,
-                                  PyLong_FromLong(0L));
+                    PyList_Append(ndarray_transpose_list, PyLong_FromLong(0L));
                     break;
                 case 'y':
-                    PyList_Append(
-                        ndarray_shape_tuple,
-                        PyLong_FromSize_t((size_t)self->_gmic_image->_height));
-                    PyList_Append(ndarray_transpose_tuple,
-                                  PyLong_FromLong(1L));
+                    PyList_Append(ndarray_transpose_list, PyLong_FromLong(1L));
                     break;
                 case 'z':
-                    PyList_Append(
-                        ndarray_shape_tuple,
-                        PyLong_FromSize_t((size_t)self->_gmic_image->_depth));
-                    PyList_Append(ndarray_transpose_tuple,
-                                  PyLong_FromLong(2L));
+                    PyList_Append(ndarray_transpose_list, PyLong_FromLong(2L));
                     break;
+                case 'c':
+                    PyList_Append(ndarray_transpose_list, PyLong_FromLong(3L));
+                    break;
+                default:
+                    PyErr_Format(GmicException,
+                                 "'permute' parameter should be made up of "
+                                 "x,y,z and c characters, '%s' found.",
+                                 arg_permute);
+                    return NULL;
             }
         }
-        PyList_Append(ndarray_shape_tuple,
-                      PyLong_FromSize_t((size_t)self->_gmic_image->_spectrum));
-        PyList_Append(ndarray_transpose_tuple, PyLong_FromLong(3L));
     }
-    ndarray_shape_list = PyList_AsTuple(ndarray_shape_tuple);
-    PyObject_Print(ndarray_shape_tuple, stdout, 0);
-    PyObject_Print(ndarray_transpose_tuple, stdout, 0);
+    ndarray_shape_tuple = PyList_AsTuple(ndarray_shape_list);
 
     numpy_module = import_numpy_module();
     if (!numpy_module)
@@ -1702,7 +1713,7 @@ PyGmicImage_to_numpy_array(PyGmicImage *self, PyObject *args, PyObject *kwargs)
     // class numpy.ndarray(<our shape>, dtype=<float32>, buffer=<our
     // bytes>, offset=0, strides=None, order=None)
     return_ndarray = PyObject_CallFunction(ndarray_type, (const char *)"OOS",
-                                           ndarray_shape_list, float32_dtype,
+                                           ndarray_shape_tuple, float32_dtype,
                                            numpy_bytes_buffer);
 
     // arg_astype should be according to ndarray.astype's
@@ -1721,10 +1732,13 @@ PyGmicImage_to_numpy_array(PyGmicImage *self, PyObject *args, PyObject *kwargs)
     }
 
     if (arg_permute != NULL) {
-        printf("permutting");
-        PyObject_Print(return_ndarray, stdout, 0);
+        GMIC_PY_LOG("permutting within to_numpy_array");
+        // Store the untransposed array aside
+        _tmp_return_ndarray = return_ndarray;
+
         return_ndarray = PyObject_CallMethod(return_ndarray, "transpose", "O",
-                                             ndarray_transpose_tuple);
+                                             ndarray_transpose_list);
+
         if (!return_ndarray) {
             PyErr_Format(GmicException,
                          "'%.50s' failed to run numpy.ndarray.transpose "
@@ -1732,6 +1746,10 @@ PyGmicImage_to_numpy_array(PyGmicImage *self, PyObject *args, PyObject *kwargs)
                          ((PyTypeObject *)Py_TYPE(ndarray_type))->tp_name);
 
             return NULL;
+        }
+        else {
+            // Get rid of the untransposed ndarray
+            Py_DECREF(_tmp_return_ndarray);
         }
     }
 
@@ -1747,7 +1765,7 @@ PyGmicImage_to_numpy_array(PyGmicImage *self, PyObject *args, PyObject *kwargs)
     Py_XDECREF(ndarray_type);
     Py_XDECREF(ndarray_shape_list);
     Py_XDECREF(ndarray_shape_tuple);
-    Py_XDECREF(ndarray_transpose_tuple);
+    Py_XDECREF(ndarray_transpose_list);
     Py_XDECREF(float32_dtype);
     Py_XDECREF(numpy_bytes_buffer);
     Py_XDECREF(numpy_module);
