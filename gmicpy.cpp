@@ -1563,8 +1563,7 @@ PyGmicImage_to_numpy_array(PyGmicImage *self, PyObject *args, PyObject *kwargs)
     int arg_squeeze_shape = -1;
     int arg_squeeze_shape_default = 0;  // Will not squeeze shape by default
     char *arg_permute = NULL;
-    char arg_permute_default[] =
-        "xyz";  // Will have non-potent axes permuting by default
+    char *arg_permute_default = NULL;
     char *arg_preset = NULL;
     char *arg_preset_default = NULL;  // Will have no preset ON by default
     PyObject *bool_arg_preset_validated = NULL;
@@ -1645,7 +1644,7 @@ PyGmicImage_to_numpy_array(PyGmicImage *self, PyObject *args, PyObject *kwargs)
         if (strlen(arg_permute) != 4) {
             PyErr_Format(
                 GmicException,
-                "'permute' parameter should be 4-characters long, '%d' found.",
+                "'permute' parameter should be 4-characters long, %d found.",
                 strlen(arg_permute));
             return NULL;
         }
@@ -1720,6 +1719,7 @@ PyGmicImage_to_numpy_array(PyGmicImage *self, PyObject *args, PyObject *kwargs)
     // documentation, a string, python type or numpy.dtype delegating
     // this type check to the astype() method
     if (return_ndarray != NULL && arg_astype != NULL) {
+        _tmp_return_ndarray = return_ndarray;
         return_ndarray =
             PyObject_CallMethod(return_ndarray, "astype", "O", arg_astype);
         if (!return_ndarray) {
@@ -1728,6 +1728,10 @@ PyGmicImage_to_numpy_array(PyGmicImage *self, PyObject *args, PyObject *kwargs)
                          ((PyTypeObject *)Py_TYPE(ndarray_type))->tp_name);
 
             return NULL;
+        }
+        else {
+            // Get rid of the uncast ndarray
+            Py_DECREF(_tmp_return_ndarray);
         }
     }
 
@@ -1754,11 +1758,16 @@ PyGmicImage_to_numpy_array(PyGmicImage *self, PyObject *args, PyObject *kwargs)
     }
 
     if (arg_squeeze_shape) {
+        _tmp_return_ndarray = return_ndarray;
         return_ndarray =
             PyObject_CallMethod(numpy_module, "squeeze", "O", return_ndarray);
         if (!return_ndarray) {
             PyErr_Format(GmicException, "'%.50s' failed to run numpy.squeeze.",
                          ((PyTypeObject *)Py_TYPE(ndarray_type))->tp_name);
+        }
+        else {
+            // Get rid of the unsqueezed ndarray
+            Py_DECREF(_tmp_return_ndarray);
         }
     }
 
