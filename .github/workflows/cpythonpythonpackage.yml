@@ -25,7 +25,7 @@ jobs:
       if: env.HEAD_TAG != ''
 
     - name: Detect G'MIC target version
-      run: echo "::set-env name=GHA_GMIC_VERSION::$(bash build_tools.bash __get_py_package_version)"
+      run: echo "::set-env name=GHA_GMIC_VERSION::$(GHA_QUIET=1 bash build_tools.bash __get_py_package_version)"
 
     - name: Set up Python ${{ matrix.pythonversion }}
       uses: actions/setup-python@v1

@@ -31,7 +31,8 @@ if [ -z "$GMIC_VERSION" ]; then
     echo "You must set some target G'MIC version in the VERSION file or by setting the GMIC_VERSION environment variable."
     exit 1
 fi
-echo "🐯 Targeting G'MIC $GMIC_VERSION (gmic.eu) as package $GMIC_PY_PACKAGE_VERSION🐯"
+
+test $GHA_QUIET == "1" || echo "🐯 Targeting G'MIC $GMIC_VERSION (gmic.eu) as package $GMIC_PY_PACKAGE_VERSION🐯"
 
 export OMP_NUM_THREADS=16  # Fix for https://github.com/myselfhimself/gmic-py/issues/47
 
@@ -42,6 +43,7 @@ function __get_src_version () {
 function __get_py_package_version () {
     echo $GMIC_PY_PACKAGE_VERSION
 }
+
 
 function 00_all_steps () {
     # See related but defunct Dockerfile at https://github.com/myselfhimself/gmic-py/blob/fc12cb74f4b02fbfd83e9e9fba44ba7a4cee0d93/Dockerfile
