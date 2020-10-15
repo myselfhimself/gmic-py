@@ -25,14 +25,14 @@ jobs:
       if: env.HEAD_TAG != ''
 
     - name: Detect G'MIC target version
-      run: echo "::set-env name=GMIC_VERSION::$(cat VERSION)"
+      run: echo "::set-env name=GHA_GMIC_VERSION::$(bash build_tools.bash __get_py_package_version)"
 
     - name: Set up Python ${{ matrix.pythonversion }}
       uses: actions/setup-python@v1
       with:
         pythonversion: ${{ matrix.pythonversion }}
 
-    - name: Compile and run tests on .so, .whl and source distribution of gmic-py ${{ env.GMIC_VERSION }}
+    - name: Compile and run tests on .so, .whl and source distribution of gmic-py ${{ env.GHA_GMIC_VERSION }}
       working-directory: ./
       env:
         # TWINE_PASSWORD_GITHUB_SECRET: ${{ secrets.TWINE_PASSWORD_GITHUB_SECRET }} # For build_tools.bash 11_send_to_pypi

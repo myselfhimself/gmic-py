@@ -26,12 +26,12 @@ jobs:
       - uses: actions/checkout@v1
       # Detect G'MIC target version from VERSION file
       - name: Detect G'MIC target version
-        run: echo "::set-env name=GMIC_VERSION::$(cat VERSION)"
+        run: echo "::set-env name=GHA_GMIC_VERSION::$(bash build_tools.bash __get_py_package_version)"
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v1
         with:
           python-version: ${{ matrix.python-version }}
-      - name: build, test packages on ${{ matrix.plat }} architecture and publish them to PyPI
+      - name: build, test packages on ${{ matrix.plat }} architecture and publish them to PyPI as version ${{ env.GHA_GMIC_VERSION }}
         working-directory: ./
         env:
           TWINE_PASSWORD_GITHUB_SECRET: ${{ secrets.TWINE_PASSWORD_GITHUB_SECRET }} # For build_tools.bash 11_send_to_pypi
