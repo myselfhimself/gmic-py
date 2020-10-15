@@ -194,8 +194,8 @@ def test_toolkit_to_numpy_interleave_shape_conservation(
 def test_toolkit_to_numpy_no_preset_no_default_interleave(
     bicolor_non_interleaved_gmic_image,
 ):
-    untouched_interleaving_numpy_array = bicolor_non_interleaved_gmic_image.to_numpy_array(
-        interleave=False
+    untouched_interleaving_numpy_array = (
+        bicolor_non_interleaved_gmic_image.to_numpy_array(interleave=False)
     )
     w, h, d, s = (
         bicolor_non_interleaved_gmic_image._width,
