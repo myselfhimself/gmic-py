@@ -1051,6 +1051,42 @@ PyGmicImage_from_numpy_array(PyObject *cls, PyObject *args, PyObject *kwargs)
 }
 
 static PyObject *
+PyGmicImage_from_numpy(PyObject *cls, PyObject *args, PyObject *kwargs)
+{
+    Py_RETURN_NOTIMPLEMENTED;
+}
+
+static PyObject *
+PyGmicImage_to_numpy(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+    Py_RETURN_NOTIMPLEMENTED;
+}
+
+static PyObject *
+PyGmicImage_from_numpy_gmic(PyObject *cls, PyObject *args, PyObject *kwargs)
+{
+    Py_RETURN_NOTIMPLEMENTED;
+}
+
+static PyObject *
+PyGmicImage_to_numpy_gmic(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+    Py_RETURN_NOTIMPLEMENTED;
+}
+
+static PyObject *
+PyGmicImage_from_scikit(PyObject *cls, PyObject *args, PyObject *kwargs)
+{
+    Py_RETURN_NOTIMPLEMENTED;
+}
+
+static PyObject *
+PyGmicImage_to_scikit(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+    Py_RETURN_NOTIMPLEMENTED;
+}
+
+static PyObject *
 PyGmicImage_from_PIL(PyObject *cls, PyObject *args, PyObject *kwargs)
 {
     Py_RETURN_NOTIMPLEMENTED;
@@ -1059,7 +1095,13 @@ PyGmicImage_from_PIL(PyObject *cls, PyObject *args, PyObject *kwargs)
 static PyObject *
 PyGmicImage_to_PIL(PyObject *self, PyObject *args, PyObject *kwargs)
 {
-    Py_RETURN_NOTIMPLEMENTED;
+    PyObject *gmic_mod = PyImport_ImportModule("gmic");
+    PyObject *kw = PyDict_New();
+    PyDict_SetItemString(kw, "preset",
+                         PyObject_GetAttrString(gmic_mod, "NUMPY_FORMAT_PIL"));
+    Py_DECREF(gmic_mod);
+    return PyObject_Call(PyObject_GetAttrString(self, "to_numpy_helper"), NULL,
+                         kw);
 }
 
 // End of ifdef gmic_py_numpy
@@ -1603,7 +1645,7 @@ PyGmicImage_to_numpy_array(PyGmicImage *self, PyObject *args, PyObject *kwargs)
                                 (const char *)"s", arg_preset);
         if (bool_arg_preset_validated == Py_True) {
             // Skip the non-potent preset
-            if (strcmp(arg_preset, "d_xyz") == 0) {
+            if (strcmp(arg_preset, "d_xyzc") == 0) {
                 // do nothing
             }
             else {
@@ -1617,7 +1659,7 @@ PyGmicImage_to_numpy_array(PyGmicImage *self, PyObject *args, PyObject *kwargs)
                 // TODO have a squeeze shape flag in the preset string
                 arg_squeeze_shape = 0;
 
-                // arg_permute becomes 'xyz\0' in the eg. 'i_xyz\0' string
+                // arg_permute becomes 'xyzc\0' in the eg. 'i_xyz\0' string
                 arg_permute = arg_preset + 2;
             }
         }
@@ -1886,12 +1928,23 @@ PyGmicImage__copy__(PyGmicImage *self, PyObject *args)
 static PyMethodDef PyGmicImage_methods[] = {
 #ifdef gmic_py_numpy
 
-    // Numpy.ndarray generic Input / Output
-    {"from_numpy_array", (PyCFunction)PyGmicImage_from_numpy_array,
+    // Numpy.ndarray simplified deinterleaving Input / interleaving Output
+    {"from_numpy", (PyCFunction)PyGmicImage_from_numpy,
      METH_CLASS | METH_VARARGS | METH_KEYWORDS,
-     PyGmicImage_from_numpy_array_doc},
-    {"to_numpy_array", (PyCFunction)PyGmicImage_to_numpy_array,
-     METH_VARARGS | METH_KEYWORDS, PyGmicImage_to_numpy_array_doc},
+     PyGmicImage_from_numpy_array_doc},  // TODO create and set doc variable
+    {"to_numpy", (PyCFunction)PyGmicImage_to_numpy,
+     METH_VARARGS | METH_KEYWORDS,
+     PyGmicImage_to_numpy_array_doc},  // TODO create and set doc variable
+
+    // Numpy.ndarray full-blown function with many helper parameters
+    // Use this to build new converters
+    {"from_numpy_helper", (PyCFunction)PyGmicImage_from_numpy_array,
+     METH_CLASS | METH_VARARGS | METH_KEYWORDS,
+     PyGmicImage_from_numpy_array_doc},  // TODO create and set doc variable
+    {"to_numpy_helper", (PyCFunction)PyGmicImage_to_numpy_array,
+     METH_VARARGS | METH_KEYWORDS,
+     PyGmicImage_to_numpy_array_doc},  // TODO create and set doc variable
+
     {"validate_numpy_preset", (PyCFunction)PyGmicImage_validate_numpy_preset,
      METH_CLASS | METH_VARARGS | METH_KEYWORDS,
      PyGmicImage_validate_numpy_preset_doc},
@@ -1899,11 +1952,24 @@ static PyMethodDef PyGmicImage_methods[] = {
     // PIL (Pillow) Input / Output
     {"from_PIL", (PyCFunction)PyGmicImage_from_PIL,
      METH_CLASS | METH_VARARGS | METH_KEYWORDS,
-     PyGmicImage_from_numpy_array_doc},  // TODO create and set proper
-                                         // from_PIL_doc variable
+     PyGmicImage_from_numpy_array_doc},  // TODO create and set doc variable
     {"to_PIL", (PyCFunction)PyGmicImage_to_PIL, METH_VARARGS | METH_KEYWORDS,
-     PyGmicImage_to_numpy_array_doc},  // TODO create and set proper to_PIL_doc
-                                       // variable
+     PyGmicImage_to_numpy_array_doc},  // TODO create and set doc variable
+
+    // Scikit image
+    {"to_scikit", (PyCFunction)PyGmicImage_to_scikit,
+     METH_VARARGS | METH_KEYWORDS,
+     PyGmicImage_to_numpy_array_doc},  // TODO create and set doc variable
+    {"from_scikit", (PyCFunction)PyGmicImage_from_scikit,
+     METH_CLASS | METH_VARARGS | METH_KEYWORDS,
+     PyGmicImage_from_numpy_array_doc},  // TODO create and set doc variable
+    // Numpy with G'MIC shape, type and interleaving preservation
+    {"to_numpy_gmic", (PyCFunction)PyGmicImage_to_numpy_gmic,
+     METH_VARARGS | METH_KEYWORDS,
+     PyGmicImage_to_numpy_array_doc},  // TODO create and set doc variable
+    {"from_numpy_gmic", (PyCFunction)PyGmicImage_from_numpy_gmic,
+     METH_CLASS | METH_VARARGS | METH_KEYWORDS,
+     PyGmicImage_from_numpy_array_doc},  // TODO create and set doc variable
 #endif
     {"__copy__", (PyCFunction)PyGmicImage__copy__, METH_VARARGS,
      "Copy method for copy.copy() support. Deepcopying and pickle-ing "
@@ -2056,16 +2122,23 @@ PyInit_gmic()
     // end eg. d_xyz <=> 'permute xyzc' with the final shape leaving
     // channels(=spectrum) in the last position: w,h,d,S
 
-    // Default: width, depth, height, channels interleaved - same as
-    // NUMPY_FORMAT_PIL
-    PyModule_AddStringConstant(m, "NUMPY_FORMAT_DEFAULT", "i_xyz");
-    // depth, height, width (ie. no axis swapping); channels are left in place
+    // Default: width, depth, height, channels deinterleaved, float32
+    // ie. NUMPY_FORMAT_GMIC
+
+    // width, height, depth (ie. no axis swapping); channels are left in place
     // and are NOT (de)interleaved
     PyModule_AddStringConstant(m, "NUMPY_FORMAT_GMIC", "a_xyz");
+
+    // height, depth, width (ie. no axis swapping); channels are
+    // (de)interleaved
+    PyModule_AddStringConstant(m, "NUMPY_FORMAT_NUMPY", "i_xyz");
+
     // depth-plane, width-rows, height-cols, channels interleaved
     PyModule_AddStringConstant(m, "NUMPY_FORMAT_SCIKIT_IMAGE", "i_zxy");
-    // depth, height, width, channels interleaved
-    PyModule_AddStringConstant(m, "NUMPY_FORMAT_PIL", "i_zyx");
+    // depth, height, width, channels interleaved, squeezed, as uint8
+    PyModule_AddStringConstant(
+        m, "NUMPY_FORMAT_PIL",
+        "i_zyxc_s_i");  // TODO implement these new format letters
 
     return m;
 }
