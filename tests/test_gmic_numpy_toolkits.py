@@ -69,7 +69,7 @@ def bicolor_non_interleaved_gmic_image():
 @pytest.fixture
 def bicolor_squeezable_non_interleaved_gmic_image():
     """
-    Returns a (w,h,d,s) = (5,4,3,2) image of 5x4x3=60 pixels with 2 float values each, non-interleaved.
+    Returns a (w,h,d,s) = (5,4,3,2) image of 5x4x3=60 pixels with 2 float values per-pixel, non-interleaved.
     Ie. arranged in the buffer as: 60 float values for the 1st channel, 60 float values for the 2nd channel.
     Color1 is a float in range [0:126], color2 is a float in range [127:255].
 
@@ -191,7 +191,7 @@ def test_toolkit_to_numpy_interleave_shape_conservation(
     )
 
 
-def test_toolkit_to_numpy_no_preset_no_default_interleave(
+def test_toolkit_to_numpy_no_preset_no_default_interleaving(
     bicolor_non_interleaved_gmic_image,
 ):
     untouched_interleaving_numpy_array = (
@@ -217,9 +217,19 @@ def test_toolkit_to_numpy_no_preset_no_default_interleave(
     )
 
     # ensure GmicImage raw data buffer as the same floats order and values as the numpy.ndarray raw buffer
-    assert struct.unpack(
+    non_interleaved_numpy_buffer = struct.unpack(
         "120f", non_default_interleaved_numpy_array.tobytes()
-    ) == struct.unpack("120f", bicolor_non_interleaved_gmic_image._data)
+    )
+    assert non_interleaved_numpy_buffer == struct.unpack(
+        "120f", bicolor_non_interleaved_gmic_image._data
+    )
+
+    # check buffer float values proper non-interleaving
+    for pos, f in enumerate(non_interleaved_numpy_buffer):
+        if pos < 60:
+            assert 0 <= f < 128
+        else:
+            assert 127 <= f < 255
 
 
 def test_toolkit_to_numpy_no_preset_interleave_parameter(
@@ -243,7 +253,9 @@ def test_toolkit_to_numpy_no_preset_interleave_parameter(
     default_non_interleaved_numpy_array = (
         bicolor_non_interleaved_gmic_image.to_numpy_array()
     )
-    assert struct.unpack("120f", interleaved_numpy_array.tobytes()) != struct.unpack(
+
+    interleaved_numpy_buffer = struct.unpack("120f", interleaved_numpy_array.tobytes())
+    assert interleaved_numpy_buffer != struct.unpack(
         "120f", default_non_interleaved_numpy_array.tobytes()
     )
 
@@ -253,6 +265,13 @@ def test_toolkit_to_numpy_no_preset_interleave_parameter(
             for z in range(d):
                 assert 0 <= interleaved_numpy_array[x, y, z, 0] < 128
                 assert 127 <= interleaved_numpy_array[x, y, z, 1] < 255
+
+    # check buffer float values proper interleaving
+    for pos, f in enumerate(interleaved_numpy_buffer):
+        if pos % 2 == 0:
+            assert 0 <= f < 128
+        else:
+            assert 127 <= f < 255
 
 
 def test_toolkit_to_numpy_with_gmic_preset():
