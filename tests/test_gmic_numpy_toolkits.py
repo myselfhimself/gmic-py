@@ -166,6 +166,13 @@ def test_toolkit_to_numpy_no_preset_squeeze_shape_coherence(
     assert bicolor_squeezable_non_interleaved_gmic_image.to_numpy_array(
         squeeze_shape=True
     ).shape == (4, 2)
+    assert bicolor_squeezable_non_interleaved_gmic_image.to_numpy_array().shape == (
+        1,
+        4,
+        1,
+        2,
+    )
+    assert bicolor_non_interleaved_gmic_image.to_numpy_array().shape == (5, 4, 3, 2)
     assert bicolor_squeezable_non_interleaved_gmic_image.to_numpy_array(
         squeeze_shape=False
     ).shape == (1, 4, 1, 2)
@@ -175,9 +182,6 @@ def test_toolkit_to_numpy_no_preset_squeeze_shape_coherence(
     assert bicolor_non_interleaved_gmic_image.to_numpy_array(
         squeeze_shape=True
     ).shape == (5, 4, 3, 2)
-
-
-# TODO squeeze shape test with one more axes=1 value
 
 
 def test_toolkit_to_numpy_interleave_shape_conservation(
