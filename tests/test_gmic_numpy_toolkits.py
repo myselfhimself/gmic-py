@@ -278,6 +278,29 @@ def test_toolkit_to_numpy_no_preset_interleave_parameter(
             assert 127 <= f < 255
 
 
+def test_toolkit_to_numpy_no_preset_astype_coherence(
+    bicolor_non_interleaved_gmic_image,
+):
+    assert bicolor_non_interleaved_gmic_image.to_numpy_array().dtype == numpy.float32
+    assert (
+        bicolor_non_interleaved_gmic_image.to_numpy_array(astype=None).dtype
+        == numpy.float32
+    )
+
+    assert (
+        bicolor_non_interleaved_gmic_image.to_numpy_array(astype=numpy.float32).dtype
+        == numpy.float32
+    )
+    assert (
+        bicolor_non_interleaved_gmic_image.to_numpy_array(astype=numpy.uint8).dtype
+        == numpy.uint8
+    )
+    assert (
+        bicolor_non_interleaved_gmic_image.to_numpy_array(astype=numpy.float16).dtype
+        == numpy.float16
+    )
+
+
 def test_toolkit_to_numpy_with_gmic_preset():
     pass
 

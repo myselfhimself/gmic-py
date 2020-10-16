@@ -1556,6 +1556,7 @@ PyGmicImage_to_numpy_array(PyGmicImage *self, PyObject *args, PyObject *kwargs)
     float *numpy_buffer = NULL;
     float *ndarray_bytes_buffer_ptr = NULL;
     int buffer_size = 0;
+    // Defaults to numpy.float32
     PyObject *arg_astype = NULL;
     int arg_interleave = -1;
     int arg_interleave_default =
@@ -1720,6 +1721,13 @@ PyGmicImage_to_numpy_array(PyGmicImage *self, PyObject *args, PyObject *kwargs)
     // this type check to the astype() method
     if (return_ndarray != NULL && arg_astype != NULL) {
         _tmp_return_ndarray = return_ndarray;
+
+        // to_numpy_array(astype=None) will not result in
+        // numpy.ndarray.astype(None)==numpy.float64 but float32 instead!
+        if (arg_astype == Py_None) {
+            arg_astype = float32_dtype;
+        }
+
         return_ndarray =
             PyObject_CallMethod(return_ndarray, "astype", "O", arg_astype);
         if (!return_ndarray) {
