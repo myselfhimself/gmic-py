@@ -140,7 +140,7 @@ def test_toolkit_to_numpy_no_preset_shape_coherence(
             with pytest.raises(
                 expected_shape_if_different[0], match=expected_shape_if_different[1]
             ):
-                bicolor_non_interleaved_gmic_image.to_numpy_array(**kwargs).shape == (
+                bicolor_non_interleaved_gmic_image.to_numpy_helper(**kwargs).shape == (
                     5,
                     4,
                     3,
@@ -148,11 +148,11 @@ def test_toolkit_to_numpy_no_preset_shape_coherence(
                 )
         else:
             assert (
-                bicolor_non_interleaved_gmic_image.to_numpy_array(**kwargs).shape
+                bicolor_non_interleaved_gmic_image.to_numpy_helper(**kwargs).shape
                 == expected_shape_if_different
             )
     else:
-        assert bicolor_non_interleaved_gmic_image.to_numpy_array(**kwargs).shape == (
+        assert bicolor_non_interleaved_gmic_image.to_numpy_helper(**kwargs).shape == (
             bicolor_non_interleaved_gmic_image._width,
             bicolor_non_interleaved_gmic_image._height,
             bicolor_non_interleaved_gmic_image._depth,
@@ -163,23 +163,23 @@ def test_toolkit_to_numpy_no_preset_shape_coherence(
 def test_toolkit_to_numpy_no_preset_squeeze_shape_coherence(
     bicolor_squeezable_non_interleaved_gmic_image, bicolor_non_interleaved_gmic_image
 ):
-    assert bicolor_squeezable_non_interleaved_gmic_image.to_numpy_array(
+    assert bicolor_squeezable_non_interleaved_gmic_image.to_numpy_helper(
         squeeze_shape=True
     ).shape == (4, 2)
-    assert bicolor_squeezable_non_interleaved_gmic_image.to_numpy_array().shape == (
+    assert bicolor_squeezable_non_interleaved_gmic_image.to_numpy_helper().shape == (
         1,
         4,
         1,
         2,
     )
-    assert bicolor_non_interleaved_gmic_image.to_numpy_array().shape == (5, 4, 3, 2)
-    assert bicolor_squeezable_non_interleaved_gmic_image.to_numpy_array(
+    assert bicolor_non_interleaved_gmic_image.to_numpy_helper().shape == (5, 4, 3, 2)
+    assert bicolor_squeezable_non_interleaved_gmic_image.to_numpy_helper(
         squeeze_shape=False
     ).shape == (1, 4, 1, 2)
-    assert bicolor_non_interleaved_gmic_image.to_numpy_array(
+    assert bicolor_non_interleaved_gmic_image.to_numpy_helper(
         squeeze_shape=False
     ).shape == (5, 4, 3, 2)
-    assert bicolor_non_interleaved_gmic_image.to_numpy_array(
+    assert bicolor_non_interleaved_gmic_image.to_numpy_helper(
         squeeze_shape=True
     ).shape == (5, 4, 3, 2)
 
@@ -187,7 +187,9 @@ def test_toolkit_to_numpy_no_preset_squeeze_shape_coherence(
 def test_toolkit_to_numpy_interleave_shape_conservation(
     bicolor_non_interleaved_gmic_image,
 ):
-    assert bicolor_non_interleaved_gmic_image.to_numpy_array(interleave=True).shape == (
+    assert bicolor_non_interleaved_gmic_image.to_numpy_helper(
+        interleave=True
+    ).shape == (
         bicolor_non_interleaved_gmic_image._width,
         bicolor_non_interleaved_gmic_image._height,
         bicolor_non_interleaved_gmic_image._depth,
@@ -199,7 +201,7 @@ def test_toolkit_to_numpy_no_preset_no_default_interleaving(
     bicolor_non_interleaved_gmic_image,
 ):
     untouched_interleaving_numpy_array = (
-        bicolor_non_interleaved_gmic_image.to_numpy_array(interleave=False)
+        bicolor_non_interleaved_gmic_image.to_numpy_helper(interleave=False)
     )
     w, h, d, s = (
         bicolor_non_interleaved_gmic_image._width,
@@ -212,9 +214,9 @@ def test_toolkit_to_numpy_no_preset_no_default_interleaving(
     assert untouched_interleaving_numpy_array.shape == (w, h, d, s)
     assert untouched_interleaving_numpy_array.dtype == numpy.float32
 
-    # ensure interleave=False is the default value parameter of to_numpy_array()
+    # ensure interleave=False is the default value parameter of to_numpy_helper()
     non_default_interleaved_numpy_array = (
-        bicolor_non_interleaved_gmic_image.to_numpy_array()
+        bicolor_non_interleaved_gmic_image.to_numpy_helper()
     )
     assert numpy.array_equal(
         non_default_interleaved_numpy_array, untouched_interleaving_numpy_array
@@ -240,7 +242,7 @@ def test_toolkit_to_numpy_no_preset_interleave_parameter(
     bicolor_non_interleaved_gmic_image,
 ):
     # ensure that shape and dtype are maintained through interleaving
-    interleaved_numpy_array = bicolor_non_interleaved_gmic_image.to_numpy_array(
+    interleaved_numpy_array = bicolor_non_interleaved_gmic_image.to_numpy_helper(
         interleave=True
     )
     w, h, d, s = (
@@ -252,10 +254,10 @@ def test_toolkit_to_numpy_no_preset_interleave_parameter(
     assert interleaved_numpy_array.shape == (w, h, d, s)
     assert interleaved_numpy_array.dtype == numpy.float32
 
-    # Ensure that GmicImage.to_numpy_array() does not interleave by default
+    # Ensure that GmicImage.to_numpy_helper() does not interleave by default
     # This is a slightly different test than in test_toolkit_to_numpy_no_preset_no_default_interleave()
     default_non_interleaved_numpy_array = (
-        bicolor_non_interleaved_gmic_image.to_numpy_array()
+        bicolor_non_interleaved_gmic_image.to_numpy_helper()
     )
 
     interleaved_numpy_buffer = struct.unpack("120f", interleaved_numpy_array.tobytes())
@@ -281,22 +283,22 @@ def test_toolkit_to_numpy_no_preset_interleave_parameter(
 def test_toolkit_to_numpy_no_preset_astype_coherence(
     bicolor_non_interleaved_gmic_image,
 ):
-    assert bicolor_non_interleaved_gmic_image.to_numpy_array().dtype == numpy.float32
+    assert bicolor_non_interleaved_gmic_image.to_numpy_helper().dtype == numpy.float32
     assert (
-        bicolor_non_interleaved_gmic_image.to_numpy_array(astype=None).dtype
+        bicolor_non_interleaved_gmic_image.to_numpy_helper(astype=None).dtype
         == numpy.float32
     )
 
     assert (
-        bicolor_non_interleaved_gmic_image.to_numpy_array(astype=numpy.float32).dtype
+        bicolor_non_interleaved_gmic_image.to_numpy_helper(astype=numpy.float32).dtype
         == numpy.float32
     )
     assert (
-        bicolor_non_interleaved_gmic_image.to_numpy_array(astype=numpy.uint8).dtype
+        bicolor_non_interleaved_gmic_image.to_numpy_helper(astype=numpy.uint8).dtype
         == numpy.uint8
     )
     assert (
-        bicolor_non_interleaved_gmic_image.to_numpy_array(astype=numpy.float16).dtype
+        bicolor_non_interleaved_gmic_image.to_numpy_helper(astype=numpy.float16).dtype
         == numpy.float16
     )
 

@@ -1095,12 +1095,36 @@ PyGmicImage_from_PIL(PyObject *cls, PyObject *args, PyObject *kwargs)
 static PyObject *
 PyGmicImage_to_PIL(PyObject *self, PyObject *args, PyObject *kwargs)
 {
-    PyObject *gmic_mod = PyImport_ImportModule("gmic");
-    PyObject *kw = PyDict_New();
-    PyDict_SetItemString(kw, "preset",
-                         PyObject_GetAttrString(gmic_mod, "NUMPY_FORMAT_PIL"));
+    // we are just running gmicimageobject.to_numpy_array(interleave=True,
+    // astype=numpy.uint8, squeeze_shape=True, permute="zyxc)
+
+    PyObject *gmic_mod = NULL;
+    PyObject *numpy_mod = NULL;
+    PyObject *a = NULL;
+    PyObject *kw = NULL;
+    PyObject *py_permute_str = NULL;
+
+    if (!(gmic_mod = PyImport_ImportModule("gmic"))) {
+        return NULL;
+    }
+
+    if (!(numpy_mod = import_numpy_module())) {
+        return NULL;
+    }
+
+    a = PyTuple_New(0);
+    kw = PyDict_New();
+    PyDict_SetItemString(kw, "interleave", Py_True);
+    PyDict_SetItemString(kw, "astype",
+                         PyObject_GetAttrString(numpy_mod, "uint8"));
+    PyDict_SetItemString(kw, "squeeze_shape", Py_True);
+    py_permute_str = PyUnicode_FromString("zyxc");
+    PyDict_SetItemString(kw, "permute", py_permute_str);
+
     Py_DECREF(gmic_mod);
-    return PyObject_Call(PyObject_GetAttrString(self, "to_numpy_helper"), NULL,
+    Py_DECREF(numpy_mod);
+    Py_DECREF(py_permute_str);
+    return PyObject_Call(PyObject_GetAttrString(self, "to_numpy_helper"), a,
                          kw);
 }
 
@@ -1730,9 +1754,9 @@ PyGmicImage_to_numpy_array(PyGmicImage *self, PyObject *args, PyObject *kwargs)
     // If interleaving is needed, copy the gmic_image buffer towards
     // numpy by interleaving RRR,GGG,BBB into RGB,RGB,RGB
     if (arg_interleave) {
-        for (unsigned int z = 0; z < self->_gmic_image->_depth; z++) {
+        for (unsigned int x = 0; x < self->_gmic_image->_width; x++) {
             for (unsigned int y = 0; y < self->_gmic_image->_height; y++) {
-                for (unsigned int x = 0; x < self->_gmic_image->_width; x++) {
+                for (unsigned int z = 0; z < self->_gmic_image->_depth; z++) {
                     for (unsigned int c = 0; c < self->_gmic_image->_spectrum;
                          c++) {
                         (*ndarray_bytes_buffer_ptr++) =
@@ -2101,6 +2125,10 @@ PyInit_gmic()
     PyModule_AddObject(m, "__build__", gmicpy_build_info);
     // For more debugging, the user can look at __spec__ automatically
     // set by setup.py
+
+    // TODO remove these old-school numpy format systems in favor of on-the-fly
+    // params dict generation for *numpy_helper()
+    // TODO related module-level attributes C docstrings
 
     // Numpy input-output matrix conversion presets
     // see from_numpy_array() and to_numpy_array(), as well as their

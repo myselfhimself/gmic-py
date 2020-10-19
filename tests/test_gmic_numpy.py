@@ -78,94 +78,18 @@ def test_gmic_image_to_numpy_ndarray_exception_on_unimportable_numpy_module(
     with pytest.raises(
         gmic.GmicException, match=r".*'numpy' module cannot be imported.*"
     ):
-        images[0].to_numpy_array()
+        images[0].to_numpy_helper()
 
     # Repair our breaking of the numpy import
     sys.modules["numpy"] = old_numpy_sys_value
 
 
-def gmic_image_to_numpy_array_default_interleave_param(i):
+def gmic_image_to_numpy_helper_default_interleave_param(i):
     return i if i is not None else True
 
 
-def gmic_image_to_numpy_array_default_dtype_param(d):
+def gmic_image_to_numpy_helper_default_dtype_param(d):
     return d if d is not None else numpy.float32
-
-
-@pytest.mark.parametrize(
-    "interleave,squeeze_shape,permute,astype,preset,raises",
-    [
-        (None, None, None, None, None, False),
-        (None, None, None, None, gmic.NUMPY_FORMAT_DEFAULT, False),
-        (None, True, None, None, gmic.NUMPY_FORMAT_DEFAULT, gmic.GmicException),
-        (True, True, "xyz", None, gmic.NUMPY_FORMAT_DEFAULT, gmic.GmicException),
-        (
-            True,
-            None,
-            None,
-            numpy.float32,
-            gmic.NUMPY_FORMAT_DEFAULT,
-            gmic.GmicException,
-        ),
-        (None, None, "xyz", None, gmic.NUMPY_FORMAT_DEFAULT, gmic.GmicException),
-        (None, None, "xyz", None, None, False),
-    ],
-)
-def test_gmic_image_to_numpy_array_preset_vs_non_preset_parameters_mutual_exclusion(
-    interleave, squeeze_shape, permute, astype, preset, raises
-):
-    l = []
-    gmic.run("sp leno", l)
-    params = {}
-    if interleave is not None:
-        params["interleave"] = interleave
-    if permute is not None:
-        params["permute"] = permute
-    if squeeze_shape is not None:
-        params["squeeze_shape"] = squeeze_shape
-    if preset is not None:
-        params["preset"] = preset
-    if astype is not None:
-        params["astype"] = astype
-
-    if raises:
-        with pytest.raises(raises):
-            l[0].to_numpy_array(**params)
-    else:
-        l[0].to_numpy_array(**params)
-
-
-@pytest.mark.parametrize(
-    "deinterleave,permute,preset,raises",
-    [
-        (None, None, None, False),
-        (None, None, gmic.NUMPY_FORMAT_DEFAULT, False),
-        (None, "xyz", gmic.NUMPY_FORMAT_DEFAULT, gmic.GmicException),
-        (True, "xyz", gmic.NUMPY_FORMAT_DEFAULT, gmic.GmicException),
-        (True, None, gmic.NUMPY_FORMAT_DEFAULT, gmic.GmicException),
-        (None, "xyz", gmic.NUMPY_FORMAT_DEFAULT, gmic.GmicException),
-        (None, "xyz", None, False),
-    ],
-)
-def test_gmic_image_from_numpy_array_preset_vs_non_preset_parameters_mutual_exclusion(
-    deinterleave, permute, preset, raises
-):
-    im = numpy.full((3, 3, 2, 4), 4, numpy.uint8)
-    params = {"numpy_array": im}
-    if deinterleave is not None:
-        params["deinterleave"] = deinterleave
-    if permute is not None:
-        params["permute"] = permute
-    if preset is not None:
-        params["preset"] = preset
-
-    if raises:
-        with pytest.raises(raises):
-            gi = gmic.GmicImage.from_numpy_array(**params)
-            assert type(gi) == gmic.GmicImage
-    else:
-        gi = gmic.GmicImage.from_numpy_array(**params)
-        assert (type(gi)) == gmic.GmicImage
 
 
 @pytest.mark.parametrize(
@@ -185,10 +109,6 @@ def test_gmic_image_from_numpy_array_preset_vs_non_preset_parameters_mutual_excl
         ("a_xzy", True),
         ("q_xzy", False),
         ("i_xyc", False),
-        (gmic.NUMPY_FORMAT_DEFAULT, True),
-        (gmic.NUMPY_FORMAT_GMIC, True),
-        (gmic.NUMPY_FORMAT_PIL, True),
-        (gmic.NUMPY_FORMAT_SCIKIT_IMAGE, True),
     ],
 )
 def test_gmic_image_validate_numpy_preset(test_str, must_validate):
@@ -199,7 +119,7 @@ def test_gmic_image_validate_numpy_preset(test_str, must_validate):
         assert True == gmic.GmicImage.validate_numpy_preset(test_str)
 
 
-def test_gmic_image_to_numpy_array_presets_simple(preset_str):
+def test_gmic_image_to_numpy_helper_presets_simple(preset_str):
     # TODO
     pass
 
@@ -214,12 +134,12 @@ def test_gmic_image_to_numpy_array_presets_simple(preset_str):
     ["sp apples", """3,5,7,2,'x*cos(0.5236)+y*sin(0.8)' -normalize 0,255"""],
     ids=["2dsample", "3dsample"],
 )
-def test_gmic_image_to_numpy_array_fuzzying(
+def test_gmic_image_to_numpy_helper_fuzzying(
     dtype1, dtype2, interleave1, interleave2, squeeze, gmic_command
 ):
-    expected_interleave_check = gmic_image_to_numpy_array_default_interleave_param(
+    expected_interleave_check = gmic_image_to_numpy_helper_default_interleave_param(
         interleave1
-    ) == gmic_image_to_numpy_array_default_interleave_param(interleave2)
+    ) == gmic_image_to_numpy_helper_default_interleave_param(interleave2)
     params1 = {}
     params2 = {}
     if dtype1 is not None:
@@ -236,8 +156,8 @@ def test_gmic_image_to_numpy_array_fuzzying(
     gmic.run(images=single_image_list, command=gmic_command)
     gmic_image = single_image_list[0]
     # Test default dtype parameter is numpy.float32
-    numpy_image1 = gmic_image.to_numpy_array(**params1)
-    numpy_image2 = gmic_image.to_numpy_array(**params2)
+    numpy_image1 = gmic_image.to_numpy_helper(**params1)
+    numpy_image2 = gmic_image.to_numpy_helper(**params2)
     assert numpy_image1.shape == numpy_image2.shape
     if gmic_image._depth > 1:  # 3d image shape checking
         assert numpy_image1.shape == (
@@ -285,7 +205,7 @@ def test_gmic_image_to_numpy_ndarray_basic_attributes(gmic_instance_run):
     gmic_instance_run(images=single_image_list, command="sp apples")
     gmic_image = single_image_list[0]
     # we do not interleave to keep the same data structure for later comparison
-    numpy_image = gmic_image.to_numpy_array(interleave=False)
+    numpy_image = gmic_image.to_numpy_helper(interleave=False)
     assert numpy_image.dtype == numpy.float32
     assert numpy_image.shape == (
         gmic_image._depth,
@@ -410,11 +330,11 @@ def test_numpy_PIL_modes_to_gmic(gmic_instance_run):
     assert_non_empty_file_exists(origin_image_name).unlink()
 
 
-def test_basic_from_numpy_array_to_numpy_array():
+def test_basic_from_numpy_array_to_numpy_helper():
     duck = []
     gmic.run("sp duck", duck)
     original_duck_gmic_image = duck[0]
-    duck_numpy_image = original_duck_gmic_image.to_numpy_array(squeeze_shape=True)
+    duck_numpy_image = original_duck_gmic_image.to_numpy_helper(squeeze_shape=True)
     duck_io_gmic_image = gmic.GmicImage.from_numpy_array(duck_numpy_image)
 
     assert_gmic_images_are_identical(original_duck_gmic_image, duck_io_gmic_image)
@@ -435,14 +355,14 @@ def test_from_numpy_array_proper_dimensions_number():
         gmic.GmicImage.from_numpy_array(five_dimensions_array)
 
 
-def test_basic_to_numpy_array_from_numpy_array():
+def test_basic_to_numpy_helper_from_numpy_array():
     gmic.run("sp duck output duck.png")
     import PIL.Image
 
     pil_image = numpy.array(PIL.Image.open("duck.png"))
 
     pil_gmic_image = gmic.GmicImage.from_numpy_array(pil_image)
-    duck_io_numpy_image = pil_gmic_image.to_numpy_array(squeeze_shape=True)
+    duck_io_numpy_image = pil_gmic_image.to_numpy_helper(squeeze_shape=True)
 
     assert numpy.array_equal(duck_io_numpy_image, pil_image)
 
@@ -454,17 +374,10 @@ def test_from_numpy_array_class_method_existence():
     getattr(gmic.GmicImage, "from_numpy_array")
 
 
-def test_to_numpy_array_instance_method_existence():
+def test_to_numpy_helper_instance_method_existence():
     a = gmic.GmicImage()
     # should not raise any AttributeError
-    getattr(a, "to_numpy_array")
-
-
-def test_numpy_format_attributes_existence():
-    getattr(gmic, "NUMPY_FORMAT_DEFAULT")
-    getattr(gmic, "NUMPY_FORMAT_GMIC")
-    getattr(gmic, "NUMPY_FORMAT_SCIKIT_IMAGE")
-    getattr(gmic, "NUMPY_FORMAT_PIL")
+    getattr(a, "to_numpy_helper")
 
 
 @pytest.mark.parametrize("size_1d", [1, 5])
@@ -483,8 +396,8 @@ def test_fuzzy_1d_4d_random_gmic_matrices(
     gmic.run(gmic_command, gmic_image_list)
     gmic_image = gmic_image_list[-1]
     # Using the default astype dkind: float32
-    # Using default output formatter: gmic.NUMPY_FORMAT_DEFAULT which has interleave=True, permute='zyxc'
-    numpy_image = gmic_image.to_numpy_array()
+    # Using default output formatter: interleave=False, permute='xyzc'
+    numpy_image = gmic_image.to_numpy_helper()
 
     assert numpy_image.shape == (size_3d, size_2d, size_1d, size_4d)
     assert numpy_image.dtype == numpy.float32
