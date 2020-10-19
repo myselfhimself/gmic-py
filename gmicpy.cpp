@@ -1095,20 +1095,31 @@ PyGmicImage_from_PIL(PyObject *cls, PyObject *args, PyObject *kwargs)
 static PyObject *
 PyGmicImage_to_PIL(PyObject *self, PyObject *args, PyObject *kwargs)
 {
-    // we are just running gmicimageobject.to_numpy_array(interleave=True,
-    // astype=numpy.uint8, squeeze_shape=True, permute="zyxc)
+    // This equates to running:
+    // PIL.Image.fromarray(gmicimageobject.to_numpy_helper(interleave=True,
+    // astype=numpy.uint8, squeeze_shape=True, permute="yxzc"), 'RGB')
+    // if this implementation seems irrelevant to you please file an Issue or
+    // Pull Request to the gmic-py project. You can create in pure Python your
+    // variants of this function, inspired by the above expression
+    // TODO make proper docstring for this
 
     PyObject *gmic_mod = NULL;
     PyObject *numpy_mod = NULL;
+    PyObject *PIL_Image_mod = NULL;
     PyObject *a = NULL;
     PyObject *kw = NULL;
     PyObject *py_permute_str = NULL;
+    PyObject *prePIL_np_array = NULL;
 
     if (!(gmic_mod = PyImport_ImportModule("gmic"))) {
         return NULL;
     }
 
     if (!(numpy_mod = import_numpy_module())) {
+        return NULL;
+    }
+
+    if (!(PIL_Image_mod = PyImport_ImportModule("PIL.Image"))) {
         return NULL;
     }
 
@@ -1121,11 +1132,22 @@ PyGmicImage_to_PIL(PyObject *self, PyObject *args, PyObject *kwargs)
     py_permute_str = PyUnicode_FromString("zyxc");
     PyDict_SetItemString(kw, "permute", py_permute_str);
 
+    prePIL_np_array =
+        PyObject_Call(PyObject_GetAttrString(self, "to_numpy_helper"), a, kw);
+
+    if (!prePIL_np_array) {
+        return NULL;
+    }
+
     Py_DECREF(gmic_mod);
     Py_DECREF(numpy_mod);
+    Py_DECREF(PIL_Image_mod);
     Py_DECREF(py_permute_str);
-    return PyObject_Call(PyObject_GetAttrString(self, "to_numpy_helper"), a,
-                         kw);
+    Py_DECREF(kw);
+    Py_DECREF(a);
+
+    return PyObject_CallFunction(PyObject_GetAttrString(
+        PIL_Image_mod, "fromarray"), "Os", prePIL_np_array, "RGB");
 }
 
 // End of ifdef gmic_py_numpy
