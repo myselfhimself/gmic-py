@@ -303,6 +303,23 @@ def test_toolkit_to_numpy_no_preset_astype_coherence(
     )
 
 
+def test_toolkit_to_PIL():
+    # Compares G'MIC and PIL PNG losless output with both square and non-square images
+    l = []
+    PIL_leno_filename = "PIL_leno.png"
+    PIL_apples_filename = "PIL_apples.png"
+    gmic.run("sp leno sp apples", l)
+    PIL_leno, PIL_apples = l[0].to_PIL(), l[1].to_PIL()
+    PIL_leno.save(PIL_leno_filename, compress_level=0)
+    PIL_apples.save(PIL_apples_filename, compress_level=0)
+    PIL_reloaded_imgs = []
+    gmic.run(PIL_leno_filename + " " + PIL_apples_filename, PIL_reloaded_imgs)
+    assert_non_empty_file_exists(PIL_leno_filename).unlink()
+    assert_non_empty_file_exists(PIL_apples_filename).unlink()
+    assert_gmic_images_are_identical(l[0], PIL_reloaded_imgs[0])
+    assert_gmic_images_are_identical(l[1], PIL_reloaded_imgs[1])
+
+
 def test_toolkit_to_numpy_with_gmic_preset():
     pass
 

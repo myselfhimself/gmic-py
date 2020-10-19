@@ -1146,8 +1146,9 @@ PyGmicImage_to_PIL(PyObject *self, PyObject *args, PyObject *kwargs)
     Py_DECREF(kw);
     Py_DECREF(a);
 
-    return PyObject_CallFunction(PyObject_GetAttrString(
-        PIL_Image_mod, "fromarray"), "Os", prePIL_np_array, "RGB");
+    return PyObject_CallFunction(
+        PyObject_GetAttrString(PIL_Image_mod, "fromarray"), "Os",
+        prePIL_np_array, "RGB");
 }
 
 // End of ifdef gmic_py_numpy
