@@ -32,7 +32,7 @@ def test_toolkit_gmic_from_scikit():
 #     # skimage shape is (height, width, spectrum)
 #     # gmic will flip them
 #
-#     gi = gmic.GmicImage.from_numpy_array(image, deinterleave=True)
+#     gi = gmic.GmicImage.from_numpy_helper(image, deinterleave=True)
 #     gmic.run("display", gi)
 
 
@@ -330,7 +330,7 @@ def test_toolkit_to_PIL_advanced():
     assert PIL_leno.mode == "HSV"
     assert PIL_leno.width == l[0]._width
     assert PIL_leno.height == l[0]._height
-    with pytest.raises(ValueError, r".*Too many dimensions.*"):
+    with pytest.raises(ValueError, match=r".*Too many dimensions.*"):
         l[1].to_PIL(squeeze_shape=False)
     # non-erroring commands
     l[1].to_PIL(astype=float)

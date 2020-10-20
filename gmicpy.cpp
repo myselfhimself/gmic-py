@@ -869,15 +869,15 @@ PyGmicImage_validate_numpy_preset(PyObject *cls, PyObject *args,
 }
 
 /*
- * GmicImage class method from_numpy_array().
+ * GmicImage class method from_numpy_helper().
  * This factory class method generates a G'MIC Image from a
  * numpy.ndarray.
  *
- *  GmicImage.from_numpy_array(obj: numpy.ndarray, deinterleave=True,
+ *  GmicImage.from_numpy_helper(obj: numpy.ndarray, deinterleave=True,
  * permute="xyz": bool) -> GmicImage
  */
 static PyObject *
-PyGmicImage_from_numpy_array(PyObject *cls, PyObject *args, PyObject *kwargs)
+PyGmicImage_from_numpy_helper(PyObject *cls, PyObject *args, PyObject *kwargs)
 {
     PyObject *py_arg_deinterleave = NULL;
     PyObject *py_arg_deinterleave_default =
@@ -1499,7 +1499,7 @@ static PyMethodDef gmic_methods[] = {
 PyDoc_STRVAR(gmic_module_doc,
              "G'MIC image processing library Python binary module.\n\n\
 Use ``gmic.run`` or ``gmic.Gmic`` to run G'MIC commands inside the G'MIC C++ interpreter, manipulate ``gmic.GmicImage`` especially with ``numpy``.\n\n\
-Below are constants to be used by ``GmicImage.from_numpy_array`` and ``GmicImage.to_numpy_array`` conversion methods.\n\n"
+Below are constants to be used by ``GmicImage.from_numpy_helper`` and ``GmicImage.to_numpy_helper`` conversion methods.\n\n"
 #ifdef gmic_py_numpy
              "\nAttributes:\n\n\
     NUMPY_FORMAT_DEFAULT:\n\
@@ -1634,14 +1634,15 @@ PyGetSetDef PyGmicImage_getsets[] = {
 #ifdef gmic_py_numpy
 
 /*
- * GmicImage object method to_numpy_array().
+ * GmicImage object method to_numpy_helper().
  *
- * GmicImage().to_numpy_array(astype=numpy.float32: numpy.dtype,
+ * GmicImage().to_numpy_helper(astype=numpy.float32: numpy.dtype,
  * interleave=False: bool, squeeze_shape=False: bool) -> numpy.ndarray
  *
  */
 static PyObject *
-PyGmicImage_to_numpy_array(PyGmicImage *self, PyObject *args, PyObject *kwargs)
+PyGmicImage_to_numpy_helper(PyGmicImage *self, PyObject *args,
+                            PyObject *kwargs)
 {
     char const *keywords[] = {"astype",        "interleave", "permute",
                               "squeeze_shape", "preset",     NULL};
@@ -1823,7 +1824,7 @@ PyGmicImage_to_numpy_array(PyGmicImage *self, PyObject *args, PyObject *kwargs)
     if (return_ndarray != NULL && arg_astype != NULL) {
         _tmp_return_ndarray = return_ndarray;
 
-        // to_numpy_array(astype=None) will not result in
+        // to_numpy_helper(astype=None) will not result in
         // numpy.ndarray.astype(None)==numpy.float64 but float32 instead!
         if (arg_astype == Py_None) {
             arg_astype = float32_dtype;
@@ -1845,7 +1846,7 @@ PyGmicImage_to_numpy_array(PyGmicImage *self, PyObject *args, PyObject *kwargs)
     }
 
     if (arg_permute != NULL) {
-        GMIC_PY_LOG("permutting within to_numpy_array");
+        GMIC_PY_LOG("permutting within to_numpy_helper");
         // Store the untransposed array aside
         _tmp_return_ndarray = return_ndarray;
 
@@ -1895,8 +1896,8 @@ PyGmicImage_to_numpy_array(PyGmicImage *self, PyObject *args, PyObject *kwargs)
 
 #ifdef gmic_py_numpy
 PyDoc_STRVAR(
-    PyGmicImage_from_numpy_array_doc,
-    "GmicImage.from_numpy_array(numpy_array, input_format=gmic.NUMPY_FORMAT_DEFAULT, deinterleave=False, permute='')\n\n\
+    PyGmicImage_from_numpy_helper_doc,
+    "GmicImage.from_numpy_helper(numpy_array, input_format=gmic.NUMPY_FORMAT_DEFAULT, deinterleave=False, permute='')\n\n\
 Make a GmicImage from a 1-4 dimensions numpy.ndarray.\n\n\
 G'MIC works with (width, height, depth, spectrum/channels) matrix layout, with 32bit-float pixel values deinterleaved (ie. RRR,GGG,BBB).\n\
 If your input matrix does not have that G'MIC data layout, you may select a reformatter using the ``input_format`` parameter;\n\
@@ -1937,8 +1938,8 @@ Raises:\n\
     GmicException, TypeError: Look at the exception message for details. Matrices with dimensions <1D or >4D will be rejected.");
 
 PyDoc_STRVAR(
-    PyGmicImage_to_numpy_array_doc,
-    "GmicImage.to_numpy_array(astype=numpy.float32, output_format=gmic.NUMPY_FORMAT_DEFAULT, interleave=False, permute='', squeeze_shape=False)\n\n\
+    PyGmicImage_to_numpy_helper_doc,
+    "GmicImage.to_numpy_helper(astype=numpy.float32, output_format=gmic.NUMPY_FORMAT_DEFAULT, interleave=False, permute='', squeeze_shape=False)\n\n\
 Make a numpy.ndarray from a GmicImage.\n\
 G'MIC does not squeeze dimensions internally, so unless you use the ``squeeze_shape`` flag calling ``numpy.squeeze`` for you, the output matrix will be 4D.\n\n\
 Args:\n\
@@ -1975,7 +1976,7 @@ Returns:\n\
 
 PyDoc_STRVAR(PyGmicImage_validate_numpy_preset_doc,
              "GmicImage.validate_numpy_preset(numpy_conversion_preset)\n\n\
-Validate a preset encoded string for ``GmicImage.to_numpy_array`` and ``GmicImage.from_numpy_array``.\n\
+Validate a preset encoded string for ``GmicImage.to_numpy_helper`` and ``GmicImage.from_numpy_helper``.\n\
 G'MIC defines its own ``gmic.NUMPY_FORMAT_*`` validation presets, but you can define your own as a string in the form of ``d`` (deinterleaved pixel channels) or ``i`` (interleaved pixel channels) followed by '_' and a 3-letters axes-permutation string.\n\n\
 Example: ``i_xyz``.\n\n\
 Args:\n\
@@ -2004,19 +2005,19 @@ static PyMethodDef PyGmicImage_methods[] = {
     // Numpy.ndarray simplified deinterleaving Input / interleaving Output
     {"from_numpy", (PyCFunction)PyGmicImage_from_numpy,
      METH_CLASS | METH_VARARGS | METH_KEYWORDS,
-     PyGmicImage_from_numpy_array_doc},  // TODO create and set doc variable
+     PyGmicImage_from_numpy_helper_doc},  // TODO create and set doc variable
     {"to_numpy", (PyCFunction)PyGmicImage_to_numpy,
      METH_VARARGS | METH_KEYWORDS,
-     PyGmicImage_to_numpy_array_doc},  // TODO create and set doc variable
+     PyGmicImage_to_numpy_helper_doc},  // TODO create and set doc variable
 
     // Numpy.ndarray full-blown function with many helper parameters
     // Use this to build new converters
-    {"from_numpy_helper", (PyCFunction)PyGmicImage_from_numpy_array,
+    {"from_numpy_helper", (PyCFunction)PyGmicImage_from_numpy_helper,
      METH_CLASS | METH_VARARGS | METH_KEYWORDS,
-     PyGmicImage_from_numpy_array_doc},  // TODO create and set doc variable
-    {"to_numpy_helper", (PyCFunction)PyGmicImage_to_numpy_array,
+     PyGmicImage_from_numpy_helper_doc},  // TODO create and set doc variable
+    {"to_numpy_helper", (PyCFunction)PyGmicImage_to_numpy_helper,
      METH_VARARGS | METH_KEYWORDS,
-     PyGmicImage_to_numpy_array_doc},  // TODO create and set doc variable
+     PyGmicImage_to_numpy_helper_doc},  // TODO create and set doc variable
 
     {"validate_numpy_preset", (PyCFunction)PyGmicImage_validate_numpy_preset,
      METH_CLASS | METH_VARARGS | METH_KEYWORDS,
@@ -2025,24 +2026,24 @@ static PyMethodDef PyGmicImage_methods[] = {
     // PIL (Pillow) Input / Output
     {"from_PIL", (PyCFunction)PyGmicImage_from_PIL,
      METH_CLASS | METH_VARARGS | METH_KEYWORDS,
-     PyGmicImage_from_numpy_array_doc},  // TODO create and set doc variable
+     PyGmicImage_from_numpy_helper_doc},  // TODO create and set doc variable
     {"to_PIL", (PyCFunction)PyGmicImage_to_PIL, METH_VARARGS | METH_KEYWORDS,
      PyGmicImage_to_PIL_doc},
 
     // Scikit image
     {"to_scikit", (PyCFunction)PyGmicImage_to_scikit,
      METH_VARARGS | METH_KEYWORDS,
-     PyGmicImage_to_numpy_array_doc},  // TODO create and set doc variable
+     PyGmicImage_to_numpy_helper_doc},  // TODO create and set doc variable
     {"from_scikit", (PyCFunction)PyGmicImage_from_scikit,
      METH_CLASS | METH_VARARGS | METH_KEYWORDS,
-     PyGmicImage_from_numpy_array_doc},  // TODO create and set doc variable
+     PyGmicImage_from_numpy_helper_doc},  // TODO create and set doc variable
     // Numpy with G'MIC shape, type and interleaving preservation
     {"to_numpy_gmic", (PyCFunction)PyGmicImage_to_numpy_gmic,
      METH_VARARGS | METH_KEYWORDS,
-     PyGmicImage_to_numpy_array_doc},  // TODO create and set doc variable
+     PyGmicImage_to_numpy_helper_doc},  // TODO create and set doc variable
     {"from_numpy_gmic", (PyCFunction)PyGmicImage_from_numpy_gmic,
      METH_CLASS | METH_VARARGS | METH_KEYWORDS,
-     PyGmicImage_from_numpy_array_doc},  // TODO create and set doc variable
+     PyGmicImage_from_numpy_helper_doc},  // TODO create and set doc variable
 #endif
     {"__copy__", (PyCFunction)PyGmicImage__copy__, METH_VARARGS,
      "Copy method for copy.copy() support. Deepcopying and pickle-ing "
@@ -2180,7 +2181,7 @@ PyInit_gmic()
     // TODO related module-level attributes C docstrings
 
     // Numpy input-output matrix conversion presets
-    // see from_numpy_array() and to_numpy_array(), as well as their
+    // see from_numpy_helper() and to_numpy_helper(), as well as their
     // resepective C doc strings. Each preset constant format value is
     // as follows:
     // -'i'(interleaved pixel channels) or 'd'(interleaved pixel

@@ -2,20 +2,20 @@ Numpy support
 =============
 Since gmic-py 2.9.1, you can convert a ``GmicImage`` from and to a ``numpy.ndarray``.
 
-Related ``from_numpy_array`` and ``to_numpy_array`` conversion methods are fully documented in the :doc:`gmic`.
+Related ``from_numpy_helper`` and ``to_numpy_helper`` conversion methods are fully documented in the :doc:`gmic`.
 
 1. G'MIC from/to Numpy & PIL must-knows
 ########################################
 * G'MIC works in 1D, 2D, 3D, or 4D. Numpy can work from 0D (scalar) to N dimensions (>4D).
 * G'MIC has the following array shapes' dimension order: ``(width, height, depth, spectrum)`` (each shape dimension is >= 1). The ``spectrum`` dimension represents the number of values per pixel (eg. for RGB images, ``spectrum=3``).
-* G'MIC works in float32 (ie. 4-bytes floats), which can store signed integers and floats. It is agnostic on the range of value (eg. not just 0-255). Casts from and to numpy.ndarray will be done for you. Use `numpy.ndarray.astype <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.astype.html>`_ or ``GmicImage().to_numpy_array(astype=...)`` if needed.
+* G'MIC works in float32 (ie. 4-bytes floats), which can store signed integers and floats. It is agnostic on the range of value (eg. not just 0-255). Casts from and to numpy.ndarray will be done for you. Use `numpy.ndarray.astype <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.astype.html>`_ or ``GmicImage().to_numpy_helper(astype=...)`` if needed.
 * G'MIC can store a few billions of values per pixel (eg. not just R,G,B,A).
 * G'MIC is not made for real-time image processing but is quite fast though :).
 * G'MIC stores pixel values internally in a non-interleaved format, eg. ``R,R,R,G,G,G,B,B,B`` for ``(3,1,3)`` image shape.
-* The G'MIC => numpy.ndarray conversion (ie. ``GmicImage.to_numpy_array()``) will flip G'MIC's shape to look like a algebrae-culture-one, ie. (depth, height, width, spectrum), with all dimensions present and >= 1.
+* The G'MIC => numpy.ndarray conversion (ie. ``GmicImage.to_numpy_helper()``) will flip G'MIC's shape to look like a algebrae-culture-one, ie. (depth, height, width, spectrum), with all dimensions present and >= 1.
 
 * ``numpy`` is not a requirement for the G'MIC's Python binding to install, start and work
-* Though, ``numpy`` needs to be installed within your Python environment (but will be imported by G'MIC if you do not import it yourself) for the ``GmicImage.from_numpy_array()`` and ``GmicImage.to_numpy_array()`` to work.
+* Though, ``numpy`` needs to be installed within your Python environment (but will be imported by G'MIC if you do not import it yourself) for the ``GmicImage.from_numpy_helper()`` and ``GmicImage.to_numpy_helper()`` to work.
 
 .. code-block:: sh
 
@@ -44,10 +44,10 @@ Related ``from_numpy_array`` and ``to_numpy_array`` conversion methods are fully
     image_from_numpy = numpy.array(PIL.Image.open("myfile.png"))
     image_from_numpy.shape # eg. (480, 640, 3) for a 640x480 RGB image
 
-2. Using GmicImage.from_numpy_array()
+2. Using GmicImage.from_numpy_helper()
 #####################################
 TODO
 
-3. Using GmicImage.to_numpy_array()
+3. Using GmicImage.to_numpy_helper()
 #########################################
 TODO

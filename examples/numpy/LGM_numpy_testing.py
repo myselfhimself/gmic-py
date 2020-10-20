@@ -9,7 +9,7 @@ l = []
 gmic.run("sp duck", l)
 gmic.run("display", l)
 
-ll = l[0].to_numpy_array(interleave=True, astype=numpy.uint8, squeeze_shape=True)
+ll = l[0].to_numpy_helper(interleave=True, astype=numpy.uint8, squeeze_shape=True)
 print(ll.shape)
 print(ll.dtype)
 

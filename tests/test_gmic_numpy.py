@@ -266,7 +266,7 @@ def test_numpy_ndarray_RGB_2D_image_integrity_through_numpyPIL_or_gmicimage_from
     assert image_from_numpy.shape == (480, 640, 3)
     assert image_from_numpy.dtype == "uint8"
     assert image_from_numpy.dtype.kind == "u"
-    gmicimage_from_numpy = gmic.GmicImage.from_numpy_array(image_from_numpy)
+    gmicimage_from_numpy = gmic.GmicImage.from_numpy_helper(image_from_numpy)
 
     gmic_instance_run(images=gmicimage_from_numpy, command=("output[0] " + im2_name))
 
@@ -308,7 +308,7 @@ def test_numpy_PIL_modes_to_gmic(gmic_instance_run):
         PILConvertedImage = PILimage.convert(mode=mode)
         NPArrayImages = [numpy.array(PILConvertedImage)]
         print(PILConvertedImage, NPArrayImages[0].shape, NPArrayImages[0].dtype)
-        gmicimages = [gmic.GmicImage.from_numpy_array(nd) for nd in NPArrayImages]
+        gmicimages = [gmic.GmicImage.from_numpy_helper(nd) for nd in NPArrayImages]
         gmic_instance_run(images=gmicimages, command="print")
 
     # TODO this test seems uncomplete..
@@ -330,38 +330,38 @@ def test_numpy_PIL_modes_to_gmic(gmic_instance_run):
     assert_non_empty_file_exists(origin_image_name).unlink()
 
 
-def test_basic_from_numpy_array_to_numpy_helper():
+def test_basic_from_numpy_helper_to_numpy_helper():
     duck = []
     gmic.run("sp duck", duck)
     original_duck_gmic_image = duck[0]
     duck_numpy_image = original_duck_gmic_image.to_numpy_helper(squeeze_shape=True)
-    duck_io_gmic_image = gmic.GmicImage.from_numpy_array(duck_numpy_image)
+    duck_io_gmic_image = gmic.GmicImage.from_numpy_helper(duck_numpy_image)
 
     assert_gmic_images_are_identical(original_duck_gmic_image, duck_io_gmic_image)
 
 
-def test_from_numpy_array_proper_dimensions_number():
+def test_from_numpy_helper_proper_dimensions_number():
     zero_dimensions_array = numpy.ndarray([])
 
     with pytest.raises(
         gmic.GmicException, match=r".*'data'.*'numpy.ndarray'.*1D and 4D.*=0.*"
     ):
-        gmic.GmicImage.from_numpy_array(zero_dimensions_array)
+        gmic.GmicImage.from_numpy_helper(zero_dimensions_array)
 
     five_dimensions_array = numpy.zeros((1, 2, 3, 4, 5))
     with pytest.raises(
         gmic.GmicException, match=r".*'data'.*'numpy.ndarray'.*1D and 4D.*=5.*"
     ):
-        gmic.GmicImage.from_numpy_array(five_dimensions_array)
+        gmic.GmicImage.from_numpy_helper(five_dimensions_array)
 
 
-def test_basic_to_numpy_helper_from_numpy_array():
+def test_basic_to_numpy_helper_from_numpy_helper():
     gmic.run("sp duck output duck.png")
     import PIL.Image
 
     pil_image = numpy.array(PIL.Image.open("duck.png"))
 
-    pil_gmic_image = gmic.GmicImage.from_numpy_array(pil_image)
+    pil_gmic_image = gmic.GmicImage.from_numpy_helper(pil_image)
     duck_io_numpy_image = pil_gmic_image.to_numpy_helper(squeeze_shape=True)
 
     assert numpy.array_equal(duck_io_numpy_image, pil_image)
@@ -369,9 +369,9 @@ def test_basic_to_numpy_helper_from_numpy_array():
     assert_non_empty_file_exists("duck.png").unlink()
 
 
-def test_from_numpy_array_class_method_existence():
+def test_from_numpy_helper_class_method_existence():
     # should not raise any AttributeError
-    getattr(gmic.GmicImage, "from_numpy_array")
+    getattr(gmic.GmicImage, "from_numpy_helper")
 
 
 def test_to_numpy_helper_instance_method_existence():

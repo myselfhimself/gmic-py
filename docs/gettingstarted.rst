@@ -118,7 +118,7 @@ G'MIC will not rewrite GmicImage data in place, instead it replaces GmicImage by
 
 A chapter of this documentation is dedicated to the Numpy support of the G'MIC Python version. Head over to :doc:`numpy` for details.
 
-You can input and output 1D to 4D matrices between G'MIC and Numpy. Here is an overview of ``GmicImage`` ``from_numpy_array`` and ``to_numpy_array`` conversion methods.
+You can input and output 1D to 4D matrices between G'MIC and Numpy. Here is an overview of ``GmicImage`` ``from_numpy_helper`` and ``to_numpy_helper`` conversion methods.
 
 You must install the ``numpy`` module yourself, G'MIC will detect and import it from there, leveraging some of its functions.
 Data-scientists should keep in mind that G'MIC works internally with ``float32`` pixel values, arranged in a non-interleaved way (eg. RRR,GGG,BBB), with matrices whose shape is always 4D and prints as ``(width, height, depth, spectrum)`` where ``spectrum`` is the number of channels (ie. per-pixel values).
@@ -139,14 +139,14 @@ To help in converting matrices between ``PIL`` and ``scikit-image``, ``gmic.NUMP
     numpy_im = numpy.asarray(im)
 
     # Numpy/PIL to G'MIC
-    gmic_im = gmic.GmicImage.from_numpy_array(numpy_im, input_format=gmic.NUMPY_FORMAT_GMIC)
+    gmic_im = gmic.GmicImage.from_numpy_helper(numpy_im, input_format=gmic.NUMPY_FORMAT_GMIC)
     gmic.run("print", gmic_im)
 
     gmic_images = [gmic_im] # using an image list to allow gmic interpreter to write
     gmic.run("blur 4", gmic_images) # applies blur and replaces GmicImage in list
 
     # G'MIC to Numpy/PIL
-    numpy_im_out = gmic_images[0].to_numpy_array(astype=numpy.uint8, output_format=gmic.NUMPY_FORMAT_PIL)
+    numpy_im_out = gmic_images[0].to_numpy_helper(astype=numpy.uint8, output_format=gmic.NUMPY_FORMAT_PIL)
 
     im_out = PIL.Image.fromarray(numpy_im_out)
     im_out.show()

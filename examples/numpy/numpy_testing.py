@@ -16,7 +16,7 @@ print(ii.dtype)  # uint8
 
 l = []
 gmic.run("sp duck", l)
-ll = l[0].to_numpy_array(interleave=True, astype=numpy.uint8, squeeze_shape=True)
+ll = l[0].to_numpy_helper(interleave=True, astype=numpy.uint8, squeeze_shape=True)
 array_equal(ll, ii)  # True
 print(ll.shape)  # (512, 512, 3)
 print(ll.dtype)  # uint8
@@ -27,7 +27,7 @@ pyplot.show()  # Good colors, dimensions and orientation
 pyplot.imshow(ii)
 pyplot.show()  # Good colors, dimensions and orientation
 
-j = gmic.GmicImage.from_numpy_array(ll, deinterleave=True)
+j = gmic.GmicImage.from_numpy_helper(ll, deinterleave=True)
 gmic.run("display", j)  # Good colors, dimensions and orientation
 """
 [gmic]-1./ Display image [0] = '[unnamed]', from point (256,256,0).
@@ -37,7 +37,7 @@ gmic.run("display", j)  # Good colors, dimensions and orientation
   min = 8, max = 251, mean = 128.241, std = 58.9512, coords_min = (457,60,0,1), coords_max = (425,20,0,0).
 """
 
-jj = gmic.GmicImage.from_numpy_array(ii, deinterleave=True)
+jj = gmic.GmicImage.from_numpy_helper(ii, deinterleave=True)
 gmic.run("display", jj)  # Good colors, dimensions and orientation
 """
 [gmic]-1./ Display image [0] = '[unnamed]', from point (256,256,0).
