@@ -1114,11 +1114,6 @@ PyGmicImage_from_PIL(PyObject *cls, PyObject *args, PyObject *kwargs)
                                      &arg_PIL_image)) {
         return NULL;
     }
-    /*
-     * def from_PIL(PILimage):
-          gmicimage = gmic.GmicImage.from_numpy_helper(numpy.array(PILimage),
-     deinterleave=True) return gmicimage
-     */
     numpy_intermediate_array = PyObject_CallFunction(
         PyObject_GetAttrString(numpy_mod, "array"), "O", arg_PIL_image);
     if (!numpy_intermediate_array) {
@@ -2023,6 +2018,17 @@ Args:\n\
 Returns:\n\
     PIL.Image: A new ``PIL.Image`` based on the instance ``GmicImage`` data from which you call this method.");
 
+PyDoc_STRVAR(PyGmicImage_from_PIL_doc,
+             "GmicImage.from_PIL(pil_image)\n\n\
+Make a ``GmicImage`` from a 2D ``PIL.Image.Image`` object.\n\
+Equates to ``gmic.GmicImage.from_numpy_helper(numpy.array(pil_image), deinterleave=True)``. Will import ``PIL.Image`` and ``numpy`` for conversion.\n\n\
+\n\
+Args:\n\
+    pil_image (PIL.Image.Image): An image to convert into ``GmicImage``.\n\
+\n\
+Returns:\n\
+    gmic.GmicImage: A new ``gmic.GmicImage`` based on the input ``PIL.Image.Image`` data.");
+
 PyDoc_STRVAR(PyGmicImage_validate_numpy_preset_doc,
              "GmicImage.validate_numpy_preset(numpy_conversion_preset)\n\n\
 Validate a preset encoded string for ``GmicImage.to_numpy_helper`` and ``GmicImage.from_numpy_helper``.\n\
@@ -2074,8 +2080,7 @@ static PyMethodDef PyGmicImage_methods[] = {
 
     // PIL (Pillow) Input / Output
     {"from_PIL", (PyCFunction)PyGmicImage_from_PIL,
-     METH_CLASS | METH_VARARGS | METH_KEYWORDS,
-     PyGmicImage_from_numpy_helper_doc},  // TODO create and set doc variable
+     METH_CLASS | METH_VARARGS | METH_KEYWORDS, PyGmicImage_from_PIL_doc},
     {"to_PIL", (PyCFunction)PyGmicImage_to_PIL, METH_VARARGS | METH_KEYWORDS,
      PyGmicImage_to_PIL_doc},
 
