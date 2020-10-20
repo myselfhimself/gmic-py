@@ -1089,7 +1089,56 @@ PyGmicImage_to_scikit(PyObject *self, PyObject *args, PyObject *kwargs)
 static PyObject *
 PyGmicImage_from_PIL(PyObject *cls, PyObject *args, PyObject *kwargs)
 {
-    Py_RETURN_NOTIMPLEMENTED;
+    PyObject *numpy_mod = NULL;
+    PyObject *numpy_intermediate_array = NULL;
+    char const *keywords[] = {"pil_image", NULL};
+    PyObject *PIL_Image_mod = NULL;
+    PyObject *PIL_Image_Image_class = NULL;
+    PyObject *py_permute_str = NULL;
+    PyObject *arg_PIL_image = NULL;  // No defaults
+    PyObject *a = NULL;
+    PyObject *kw = NULL;
+
+    if (!(numpy_mod = import_numpy_module())) {
+        return NULL;
+    }
+
+    if (!(PIL_Image_mod = PyImport_ImportModule("PIL.Image"))) {
+        return NULL;
+    }
+
+    PIL_Image_Image_class = PyObject_GetAttrString(PIL_Image_mod, "Image");
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!", (char **)keywords,
+                                     (PyTypeObject *)PIL_Image_Image_class,
+                                     &arg_PIL_image)) {
+        return NULL;
+    }
+    /*
+     * def from_PIL(PILimage):
+          gmicimage = gmic.GmicImage.from_numpy_helper(numpy.array(PILimage),
+     deinterleave=True) return gmicimage
+     */
+    numpy_intermediate_array = PyObject_CallFunction(
+        PyObject_GetAttrString(numpy_mod, "array"), "O", arg_PIL_image);
+    if (!numpy_intermediate_array) {
+        return NULL;
+    }
+    a = PyTuple_New(0);
+    kw = PyDict_New();
+    PyDict_SetItemString(kw, "numpy_array", numpy_intermediate_array);
+    PyDict_SetItemString(kw, "deinterleave", Py_True);
+    py_permute_str = PyUnicode_FromString("zyxc");
+    PyDict_SetItemString(kw, "permute", py_permute_str);
+
+    Py_DECREF(PIL_Image_Image_class);
+    Py_DECREF(arg_PIL_image);
+    Py_DECREF(numpy_intermediate_array);
+    Py_DECREF(PIL_Image_mod);
+    Py_DECREF(numpy_mod);
+
+    return PyObject_Call(PyObject_GetAttrString(cls, "from_numpy_helper"), a,
+                         kw);
 }
 
 static PyObject *
@@ -1964,7 +2013,7 @@ PyDoc_STRVAR(
     PyGmicImage_to_PIL_doc,
     "GmicImage.to_PIL(astype=numpy.uint8, squeeze_shape=True, mode='RGB')\n\n\
 Make a 2D 8-bit per pixel RGB PIL.Image from any GmicImage.\n\
-Equates to ``PIL.Image.fromarray(self.to_numpy_helper(astype=astype, squeeze_shape=squeeze_shape), mode)``. Will import ``PIL.Image`` and ``numpy``.\n\n\
+Equates to ``PIL.Image.fromarray(self.to_numpy_helper(astype=astype, squeeze_shape=squeeze_shape, interleave=True, permute='zyxc'), mode)``. Will import ``PIL.Image`` and ``numpy``.\n\n\
 This method uses ``numpy`` for conversion. Thus ``astype`` is used in a ``numpy.ndarray.astype()` conversion pass and samewise for ``squeeze_shape``.\n\
 Args:\n\
     astype (type): Will be used for casting your image's pixel.\n\
