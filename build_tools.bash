@@ -32,7 +32,7 @@ if [ -z "$GMIC_VERSION" ]; then
     exit 1
 fi
 
-test $GHA_QUIET == "1" || echo "🐯 Targeting G'MIC $GMIC_VERSION (gmic.eu) as package $GMIC_PY_PACKAGE_VERSION🐯"
+[[ "$GHA_QUIET" == "1" ]] || echo "🐯 Targeting G'MIC $GMIC_VERSION (gmic.eu) as package $GMIC_PY_PACKAGE_VERSION🐯"
 
 export OMP_NUM_THREADS=16  # Fix for https://github.com/myselfhimself/gmic-py/issues/47
 
