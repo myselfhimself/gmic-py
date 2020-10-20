@@ -1095,14 +1095,6 @@ PyGmicImage_from_PIL(PyObject *cls, PyObject *args, PyObject *kwargs)
 static PyObject *
 PyGmicImage_to_PIL(PyObject *self, PyObject *args, PyObject *kwargs)
 {
-    // This equates to running:
-    // PIL.Image.fromarray(gmicimageobject.to_numpy_helper(interleave=True,
-    // astype=numpy.uint8, squeeze_shape=True, permute="yxzc"), 'RGB')
-    // if this implementation seems irrelevant to you please file an Issue or
-    // Pull Request to the gmic-py project. You can create in pure Python your
-    // variants of this function, inspired by the above expression
-    // TODO make proper docstring for this
-
     PyObject *gmic_mod = NULL;
     PyObject *numpy_mod = NULL;
     PyObject *PIL_Image_mod = NULL;
@@ -1967,6 +1959,20 @@ Args:\n\
 Returns:\n\
     numpy.ndarray: A new ``numpy.ndarray`` based the input ``GmicImage`` data.");
 
+PyDoc_STRVAR(
+    PyGmicImage_to_PIL_doc,
+    "GmicImage.to_PIL(astype=numpy.uint8, squeeze_shape=True, mode='RGB')\n\n\
+Make a 2D 8-bit per pixel RGB PIL.Image from any GmicImage.\n\
+Equates to ``PIL.Image.fromarray(self.to_numpy_helper(astype=astype, squeeze_shape=squeeze_shape), mode)``. Will import ``PIL.Image`` and ``numpy``.\n\n\
+This method uses ``numpy`` for conversion. Thus ``astype`` is used in a ``numpy.ndarray.astype()` conversion pass and samewise for ``squeeze_shape``.\n\
+Args:\n\
+    astype (type): Will be used for casting your image's pixel.\n\
+    squeeze_shape (bool): if True, your image shape has '1' components removed, is usually necessary to convert from G'MIC 3D to PIL.Image 2D only.\n\
+    mode (str): the PIL Image mode to use. see https://pillow.readthedocs.io/en/stable/handbook/concepts.html#concept-modes\n\
+\n\
+Returns:\n\
+    PIL.Image: A new ``PIL.Image`` based on the instance ``GmicImage`` data from which you call this method.");
+
 PyDoc_STRVAR(PyGmicImage_validate_numpy_preset_doc,
              "GmicImage.validate_numpy_preset(numpy_conversion_preset)\n\n\
 Validate a preset encoded string for ``GmicImage.to_numpy_array`` and ``GmicImage.from_numpy_array``.\n\
@@ -2021,7 +2027,7 @@ static PyMethodDef PyGmicImage_methods[] = {
      METH_CLASS | METH_VARARGS | METH_KEYWORDS,
      PyGmicImage_from_numpy_array_doc},  // TODO create and set doc variable
     {"to_PIL", (PyCFunction)PyGmicImage_to_PIL, METH_VARARGS | METH_KEYWORDS,
-     PyGmicImage_to_numpy_array_doc},  // TODO create and set doc variable
+     PyGmicImage_to_PIL_doc},
 
     // Scikit image
     {"to_scikit", (PyCFunction)PyGmicImage_to_scikit,
