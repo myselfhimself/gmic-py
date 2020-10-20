@@ -1110,6 +1110,10 @@ PyGmicImage_to_PIL(PyObject *self, PyObject *args, PyObject *kwargs)
     PyObject *kw = NULL;
     PyObject *py_permute_str = NULL;
     PyObject *prePIL_np_array = NULL;
+    char const *keywords[] = {"astype", "squeeze_shape", "mode", NULL};
+    PyObject *arg_astype = NULL;         // defaults to numpy.uint8
+    unsigned int arg_squeeze_shape = 1;  // Defaults to true
+    PyObject *arg_mode = NULL;           // Defaults to 'RGB'
 
     if (!(gmic_mod = PyImport_ImportModule("gmic"))) {
         return NULL;
@@ -1123,12 +1127,27 @@ PyGmicImage_to_PIL(PyObject *self, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|O!pO", (char **)keywords,
+                                     &PyType_Type, &arg_astype,
+                                     &arg_squeeze_shape, &arg_mode)) {
+        return NULL;
+    }
+
+    if (arg_astype == NULL) {
+        arg_astype = PyObject_GetAttrString(numpy_mod, "uint8");
+    }
+
+    if (arg_mode == NULL) {
+        arg_mode = PyUnicode_FromString("RGB");
+    }
+
     a = PyTuple_New(0);
     kw = PyDict_New();
     PyDict_SetItemString(kw, "interleave", Py_True);
-    PyDict_SetItemString(kw, "astype",
-                         PyObject_GetAttrString(numpy_mod, "uint8"));
-    PyDict_SetItemString(kw, "squeeze_shape", Py_True);
+    PyDict_SetItemString(kw, "astype", arg_astype);
+    if (arg_squeeze_shape) {
+        PyDict_SetItemString(kw, "squeeze_shape", Py_True);
+    }
     py_permute_str = PyUnicode_FromString("zyxc");
     PyDict_SetItemString(kw, "permute", py_permute_str);
 
@@ -1145,10 +1164,11 @@ PyGmicImage_to_PIL(PyObject *self, PyObject *args, PyObject *kwargs)
     Py_DECREF(py_permute_str);
     Py_DECREF(kw);
     Py_DECREF(a);
+    Py_XDECREF(arg_astype);
 
     return PyObject_CallFunction(
-        PyObject_GetAttrString(PIL_Image_mod, "fromarray"), "Os",
-        prePIL_np_array, "RGB");
+        PyObject_GetAttrString(PIL_Image_mod, "fromarray"), "OO",
+        prePIL_np_array, arg_mode);
 }
 
 // End of ifdef gmic_py_numpy

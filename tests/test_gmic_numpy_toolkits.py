@@ -320,6 +320,23 @@ def test_toolkit_to_PIL():
     assert_gmic_images_are_identical(l[1], PIL_reloaded_imgs[1])
 
 
+def test_toolkit_to_PIL_advanced():
+    # to_PIL fine-graining parameters testing
+    l = []
+    PIL_leno_filename = "PIL_leno.png"
+    PIL_apples_filename = "PIL_apples.png"
+    gmic.run("sp leno sp apples", l)
+    PIL_leno = l[0].to_PIL(mode="HSV")
+    assert PIL_leno.mode == "HSV"
+    assert PIL_leno.width == l[0]._width
+    assert PIL_leno.height == l[0]._height
+    with pytest.raises(ValueError, r".*Too many dimensions.*"):
+        l[1].to_PIL(squeeze_shape=False)
+    # non-erroring commands
+    l[1].to_PIL(astype=float)
+    l[1].to_PIL(astype=numpy.uint8)
+
+
 def test_toolkit_to_numpy_with_gmic_preset():
     pass
 
