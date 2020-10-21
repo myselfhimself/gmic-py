@@ -304,7 +304,7 @@ def test_toolkit_to_numpy_no_preset_astype_coherence(
 
 
 def test_toolkit_to_PIL():
-    # Compares G'MIC and PIL PNG losless output with both square and non-square images
+    # Compares G'MIC and PIL PNG lossless output with both square and non-square images
     l = []
     PIL_leno_filename = "PIL_leno.png"
     PIL_apples_filename = "PIL_apples.png"
@@ -323,8 +323,6 @@ def test_toolkit_to_PIL():
 def test_toolkit_to_PIL_advanced():
     # to_PIL fine-graining parameters testing
     l = []
-    PIL_leno_filename = "PIL_leno.png"
-    PIL_apples_filename = "PIL_apples.png"
     gmic.run("sp leno sp apples", l)
     PIL_leno = l[0].to_PIL(mode="HSV")
     assert PIL_leno.mode == "HSV"
@@ -335,6 +333,29 @@ def test_toolkit_to_PIL_advanced():
     # non-erroring commands
     l[1].to_PIL(astype=float)
     l[1].to_PIL(astype=numpy.uint8)
+
+
+def test_toolkit_from_PIL():
+    # Compares G'MIC and PIL PNG lossless output with both square and non-square images
+    import PIL.Image
+
+    l = []
+    gmic.run("sp leno sp apples", l)
+
+    PIL_apples_filename = "PIL_apples.png"
+    PIL_leno_filename = "PIL_leno.png"
+
+    gmic.run("sp leno output " + PIL_leno_filename)
+    PIL_leno = PIL.Image.open(PIL_leno_filename)
+    leno = gmic.GmicImage.from_PIL(PIL_leno)
+    assert_gmic_images_are_identical(l[0], leno)
+    assert_non_empty_file_exists(PIL_leno_filename).unlink()
+
+    gmic.run("sp apples output " + PIL_apples_filename)
+    PIL_apples = PIL.Image.open(PIL_apples_filename)
+    apples = gmic.GmicImage.from_PIL(PIL_apples)
+    assert_gmic_images_are_identical(l[1], apples)
+    assert_non_empty_file_exists(PIL_apples_filename).unlink()
 
 
 def test_toolkit_to_numpy_with_gmic_preset():

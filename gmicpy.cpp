@@ -1098,7 +1098,6 @@ PyGmicImage_from_PIL(PyObject *cls, PyObject *args, PyObject *kwargs)
     PyObject *arg_PIL_image = NULL;  // No defaults
     PyObject *a = NULL;
     PyObject *kw = NULL;
-    PyObject *result = NULL;
 
     if (!(numpy_mod = import_numpy_module())) {
         return NULL;
