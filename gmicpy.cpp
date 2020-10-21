@@ -476,12 +476,12 @@ run_impl(PyObject *self, PyObject *args, PyObject *kwargs)
     PyObject *input_gmic_images = NULL;
     PyObject *input_gmic_image_names = NULL;
     char *commands_line = NULL;
-    int image_position;
-    int image_name_position;
-    int image_names_count;
+    int image_position = 0;
+    int image_name_position = 0;
+    int image_names_count = 0;
     gmic_list<T> images;
     gmic_list<char> image_names;  // Empty image names
-    char *current_image_name_raw;
+    char *current_image_name_raw = NULL;
     PyObject *current_image = NULL;
     PyObject *current_image_name = NULL;
     PyObject *iter = NULL;
@@ -1098,6 +1098,7 @@ PyGmicImage_from_PIL(PyObject *cls, PyObject *args, PyObject *kwargs)
     PyObject *arg_PIL_image = NULL;  // No defaults
     PyObject *a = NULL;
     PyObject *kw = NULL;
+    PyObject *result = NULL;
 
     if (!(numpy_mod = import_numpy_module())) {
         return NULL;
@@ -1127,7 +1128,6 @@ PyGmicImage_from_PIL(PyObject *cls, PyObject *args, PyObject *kwargs)
     PyDict_SetItemString(kw, "permute", py_permute_str);
 
     Py_DECREF(PIL_Image_Image_class);
-    Py_DECREF(arg_PIL_image);
     Py_DECREF(numpy_intermediate_array);
     Py_DECREF(PIL_Image_mod);
     Py_DECREF(numpy_mod);
