@@ -1,6 +1,6 @@
+sphinx==2.2.0 # prevent readthedocs.io to use 1.8.5 which makes pyquickhelper fail
 gmic
 gmic-sphinx
 recommonmark
-sphinx
 pyquickhelper
 sphinxcontrib.imagesvg
