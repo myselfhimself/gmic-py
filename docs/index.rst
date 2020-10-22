@@ -34,6 +34,7 @@ Head over to the :doc:`gettingstarted` section for examples.
    gettingstarted
    compiling
    numpy
+   PIL
    gmic
 
 
