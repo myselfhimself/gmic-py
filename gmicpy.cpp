@@ -1938,6 +1938,26 @@ PyGmicImage_to_numpy_helper(PyGmicImage *self, PyObject *args,
 // end ifdef gmic_py_numpy
 
 #ifdef gmic_py_numpy
+PyDoc_STRVAR(PyGmicImage_from_numpy_doc,
+             "GmicImage.from_numpy(numpy_array)\n\n\
+Make a GmicImage from a 1-4 dimensions numpy.ndarray. Simplified version of ``GmicImage.from_numpy_helper`` with ``deinterleave=True``.\n\n\
+\n\
+Args:\n\
+    numpy_array (numpy.ndarray): A non-empty 1D-4D Numpy array.\n\
+\n\
+Returns:\n\
+    GmicImage: A new ``GmicImage`` based the input ``numpy.ndarray`` data.\n\
+\n\
+Raises:\n\
+    GmicException, TypeError: Look at the exception message for details. Matrices with dimensions <1D or >4D will be rejected.");
+
+PyDoc_STRVAR(PyGmicImage_to_numpy_doc,
+             "GmicImage.to_numpy()\n\n\
+Make a numpy.ndarray from a GmicImage. Simplified version of ``GmicImage.to_numpy_helper`` with ``interleave=True``.\n\
+\n\
+Returns:\n\
+    numpy.ndarray: A new ``numpy.ndarray`` based the input ``GmicImage`` data.");
+
 PyDoc_STRVAR(
     PyGmicImage_from_numpy_helper_doc,
     "GmicImage.from_numpy_helper(numpy_array, input_format=gmic.NUMPY_FORMAT_DEFAULT, deinterleave=False, permute='')\n\n\
@@ -2058,11 +2078,9 @@ static PyMethodDef PyGmicImage_methods[] = {
 
     // Numpy.ndarray simplified deinterleaving Input / interleaving Output
     {"from_numpy", (PyCFunction)PyGmicImage_from_numpy,
-     METH_CLASS | METH_VARARGS | METH_KEYWORDS,
-     PyGmicImage_from_numpy_helper_doc},  // TODO create and set doc variable
+     METH_CLASS | METH_VARARGS | METH_KEYWORDS, PyGmicImage_from_numpy_doc},
     {"to_numpy", (PyCFunction)PyGmicImage_to_numpy,
-     METH_VARARGS | METH_KEYWORDS,
-     PyGmicImage_to_numpy_helper_doc},  // TODO create and set doc variable
+     METH_VARARGS | METH_KEYWORDS, PyGmicImage_to_numpy_doc},
 
     // Numpy.ndarray full-blown function with many helper parameters
     // Use this to build new converters

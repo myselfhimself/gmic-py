@@ -1,3 +1,5 @@
 gmic
 gmic-sphinx
 recommonmark
+pyquickhelper
+sphinxcontrib.imagesvg
