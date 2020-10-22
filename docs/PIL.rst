@@ -7,7 +7,7 @@ This support is limited and does not intend to cover all types of image buffer f
 
 We have tested only 8-bit RGB 2D files in PIL, more or fewer channels and smaller or bigger pixel values should work. `Feel free to add an issue on our tracker for things you really need related to PIL or gmic-py! <https://github.com/myselfhimself/gmic-py/issues>`_
 
-G'MIC's PIL input/output conversion methods are simply:
+G'MIC Python's PIL input/output conversion methods are simply:
 
 - .. autosignature:: gmic.GmicImage.from_PIL
 
