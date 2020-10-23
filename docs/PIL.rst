@@ -25,20 +25,21 @@ You are encouraged to write your own version of `to_PIL()` and `from_PIL()` in p
 
 2. PIL <-> G'MIC how-to
 #####################################
-* The usual way to convert a PIL image to G'MIC as follows:
+* The usual way to convert a PIL image to G'MIC is as follows:
 
 .. code-block:: sh
 
     pip install Pillow
+    pip install gmic
 
 .. code-block:: python
 
     import gmic
     import PIL.Image
-	#have some myfile.png somewhere or anything that PIL can open
+    #have some myfile.png somewhere or anything that PIL can open
     gmic_image_from_PIL = gmic.GmicImage.from_PIL(PIL.Image.open("myfile.png"))
-	print(gmic_image_from_PIL)
-	gmic.run("display", gmic_image_from_PIL)
+    print(gmic_image_from_PIL)
+    gmic.run("display", gmic_image_from_PIL)
 
 * The usual way to convert a G'MIC Image to PIL is as follows:
 
@@ -50,8 +51,8 @@ You are encouraged to write your own version of `to_PIL()` and `from_PIL()` in p
 
     import gmic
     import PIL.Image
-	gmic_images = []
-	gmic.run("sp apples", gmic_images) # store apples image into our list
+    gmic_images = []
+    gmic.run("sp apples", gmic_images) # store apples image into our list
     PIL_image_from_gmic = gmic_images[0].to_PIL() # to_PIL can take 3 config parameters, see its documentation or run help(gmic.GmicImage.to_PIL)
-	print(PIL_image_from_gmic)
-	PIL_image_from_gmic.show()
+    print(PIL_image_from_gmic)
+    PIL_image_from_gmic.show()
