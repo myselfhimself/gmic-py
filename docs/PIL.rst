@@ -3,7 +3,7 @@ PIL support
 PIL is the Python Imaging Library and allows to load, save and modify files in many formats. Nowadays Python programmers install its `Pillow <https://pillow.readthedocs.io/en/stable/>`_ fork mostly.
 Since gmic-py 2.9.1 you can convert a `GmicImage` from and to a `PIL.Image.Image`.
 
-This support is limited and does not intend to cover all types of image buffer formats accepted by PIL. Because of PIL's `buffer conversion limitations highlighted here <https://github.com/python-pillow/Pillow/issues/4954>`_, an intermediate pass which will be invisible to you will leverage methods `GmicImage.to_numpy_helper` and `GmicImage.from_numpy_helper`.
+This support is limited and does not intend to cover all types of image buffer formats accepted by PIL. Because of PIL's `buffer codec limitations highlighted here <https://github.com/python-pillow/Pillow/issues/4954>`_, an intermediate pass which will be invisible to you will leverage methods `GmicImage.to_numpy_helper` and `GmicImage.from_numpy_helper`.
 
 We have tested only 8-bit RGB 2D files in PIL, more or fewer channels and smaller or bigger pixel values should work. `Feel free to add an issue on our tracker for things you really need related to PIL or gmic-py! <https://github.com/myselfhimself/gmic-py/issues>`_
 
