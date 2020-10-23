@@ -791,7 +791,10 @@ run_impl(PyObject *self, PyObject *args, PyObject *kwargs)
             gmic_py_display_with_matplotlib_or_ipython(
                 PyList_GetItem(commands_line_display_to_ouput_result, 1));
         if (ipython_matplotlib_display_result == NULL) {
-            return NULL;
+            // If we are not within a IPython environment, this is OK
+            // Let us just print the exception without throwing it further
+            // This case typically happens in readthedocs.org for gmic-sphinx
+            PyErr_Print();
         }
     }
     Py_XDECREF(commands_line_display_to_ouput_result);
