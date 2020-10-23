@@ -77,8 +77,8 @@ def numpy_PIL_duck():
     gmic.run("sp duck -output " + im1_name)
 
     # 2. Load disk duck through PIL/numpy, make it a GmicImage
-    return numpy.array(PIL.Image.open(im1_name))
-    # os.unlink(im1_name)
+    yield numpy.array(PIL.Image.open(im1_name))
+    os.unlink(im1_name)
 
 
 def test_bicolor_non_interleaved_gmic_pixel_values(bicolor_non_interleaved_gmic_image):
