@@ -1056,37 +1056,79 @@ PyGmicImage_from_numpy_helper(PyObject *cls, PyObject *args, PyObject *kwargs)
 static PyObject *
 PyGmicImage_from_numpy(PyObject *cls, PyObject *args, PyObject *kwargs)
 {
-    Py_RETURN_NOTIMPLEMENTED;
+    char const *keywords[] = {"numpy_array", NULL};
+    PyObject *arg_np_array = NULL;  // No defaults
+    PyObject *a = NULL;
+    PyObject *kw = NULL;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O", (char **)keywords,
+                                     &arg_np_array)) {
+        return NULL;
+    }
+    a = PyTuple_New(0);
+    kw = PyDict_New();
+    PyDict_SetItemString(kw, "numpy_array", arg_np_array);
+    PyDict_SetItemString(kw, "deinterleave", Py_True);
+
+    Py_DECREF(arg_np_array);
+
+    return PyObject_Call(PyObject_GetAttrString(cls, "from_numpy_helper"), a,
+                         kw);
 }
 
 static PyObject *
 PyGmicImage_to_numpy(PyObject *self, PyObject *args, PyObject *kwargs)
 {
-    Py_RETURN_NOTIMPLEMENTED;
+    PyObject *a = NULL;
+    PyObject *kw = NULL;
+
+    a = PyTuple_New(0);
+    kw = PyDict_New();
+    PyDict_SetItemString(kw, "interleave", Py_True);
+
+    return PyObject_Call(PyObject_GetAttrString(self, "to_numpy_helper"), a,
+                         kw);
 }
 
 static PyObject *
-PyGmicImage_from_numpy_gmic(PyObject *cls, PyObject *args, PyObject *kwargs)
+PyGmicImage_from_skimage(PyObject *cls, PyObject *args, PyObject *kwargs)
 {
-    Py_RETURN_NOTIMPLEMENTED;
+    char const *keywords[] = {"scikit_image", NULL};
+    PyObject *py_permute_str = NULL;
+    PyObject *arg_scikit_image = NULL;  // No defaults
+    PyObject *a = NULL;
+    PyObject *kw = NULL;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O", (char **)keywords,
+                                     &arg_scikit_image)) {
+        return NULL;
+    }
+    a = PyTuple_New(0);
+    kw = PyDict_New();
+    PyDict_SetItemString(kw, "numpy_array", arg_scikit_image);
+    PyDict_SetItemString(kw, "deinterleave", Py_True);
+    py_permute_str = PyUnicode_FromString("zyxc");
+    PyDict_SetItemString(kw, "permute", py_permute_str);
+
+    return PyObject_Call(PyObject_GetAttrString(cls, "from_numpy_helper"), a,
+                         kw);
 }
 
 static PyObject *
-PyGmicImage_to_numpy_gmic(PyObject *self, PyObject *args, PyObject *kwargs)
+PyGmicImage_to_skimage(PyObject *self, PyObject *args, PyObject *kwargs)
 {
-    Py_RETURN_NOTIMPLEMENTED;
-}
+    PyObject *a = NULL;
+    PyObject *kw = NULL;
+    PyObject *py_permute_str = NULL;
 
-static PyObject *
-PyGmicImage_from_scikit(PyObject *cls, PyObject *args, PyObject *kwargs)
-{
-    Py_RETURN_NOTIMPLEMENTED;
-}
+    a = PyTuple_New(0);
+    kw = PyDict_New();
+    PyDict_SetItemString(kw, "interleave", Py_True);
+    py_permute_str = PyUnicode_FromString("zyxc");
+    PyDict_SetItemString(kw, "permute", py_permute_str);
 
-static PyObject *
-PyGmicImage_to_scikit(PyObject *self, PyObject *args, PyObject *kwargs)
-{
-    Py_RETURN_NOTIMPLEMENTED;
+    return PyObject_Call(PyObject_GetAttrString(self, "to_numpy_helper"), a,
+                         kw);
 }
 
 static PyObject *
@@ -2105,17 +2147,10 @@ static PyMethodDef PyGmicImage_methods[] = {
      PyGmicImage_to_PIL_doc},
 
     // Scikit image
-    {"to_scikit", (PyCFunction)PyGmicImage_to_scikit,
+    {"to_skimage", (PyCFunction)PyGmicImage_to_skimage,
      METH_VARARGS | METH_KEYWORDS,
      PyGmicImage_to_numpy_helper_doc},  // TODO create and set doc variable
-    {"from_scikit", (PyCFunction)PyGmicImage_from_scikit,
-     METH_CLASS | METH_VARARGS | METH_KEYWORDS,
-     PyGmicImage_from_numpy_helper_doc},  // TODO create and set doc variable
-    // Numpy with G'MIC shape, type and interleaving preservation
-    {"to_numpy_gmic", (PyCFunction)PyGmicImage_to_numpy_gmic,
-     METH_VARARGS | METH_KEYWORDS,
-     PyGmicImage_to_numpy_helper_doc},  // TODO create and set doc variable
-    {"from_numpy_gmic", (PyCFunction)PyGmicImage_from_numpy_gmic,
+    {"from_skimage", (PyCFunction)PyGmicImage_from_skimage,
      METH_CLASS | METH_VARARGS | METH_KEYWORDS,
      PyGmicImage_from_numpy_helper_doc},  // TODO create and set doc variable
 #endif

@@ -84,46 +84,6 @@ def test_gmic_image_to_numpy_ndarray_exception_on_unimportable_numpy_module(
     sys.modules["numpy"] = old_numpy_sys_value
 
 
-def gmic_image_to_numpy_helper_default_interleave_param(i):
-    return i if i is not None else True
-
-
-def gmic_image_to_numpy_helper_default_dtype_param(d):
-    return d if d is not None else numpy.float32
-
-
-@pytest.mark.parametrize(
-    "test_str,must_validate",
-    [
-        ("", False),
-        ("i", False),
-        ("i_", False),
-        ("_xyz", False),
-        ("ixyzc", False),
-        ("axyzc", False),
-        ("d", False),
-        ("z", False),
-        ("a", False),
-        ("d_xzy", True),
-        ("i_xzy", True),
-        ("a_xzy", True),
-        ("q_xzy", False),
-        ("i_xyc", False),
-    ],
-)
-def test_gmic_image_validate_numpy_preset(test_str, must_validate):
-    if not must_validate:
-        with pytest.raises(gmic.GmicException):
-            gmic.GmicImage.validate_numpy_preset(test_str)
-    else:
-        assert True == gmic.GmicImage.validate_numpy_preset(test_str)
-
-
-def test_gmic_image_to_numpy_helper_presets_simple(preset_str):
-    # TODO
-    pass
-
-
 @pytest.mark.parametrize(**numpy_dtypes1)
 @pytest.mark.parametrize(**numpy_dtypes2)
 @pytest.mark.parametrize(**interleave_toggles1)

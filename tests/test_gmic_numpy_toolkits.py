@@ -1,4 +1,6 @@
+import copy
 import inspect
+import os
 import struct
 
 import pytest
@@ -10,34 +12,6 @@ from test_gmic_py import (
     assert_gmic_images_are_identical,
     assert_non_empty_file_exists,
 )
-
-
-#
-#
-def test_toolkit_gmic_from_scikit():
-    pass
-
-
-#     from skimage import data, io, filters
-#     from skimage.data import download_all
-#
-#     download_all()  # grabbing more data for proper 3d conversion testing
-#
-#     image = data.lfw_subset()
-#     print(image.shape)
-#     print(image)
-#     io.imshow(image)
-#     io.show()
-#
-#     # skimage shape is (height, width, spectrum)
-#     # gmic will flip them
-#
-#     gi = gmic.GmicImage.from_numpy_helper(image, deinterleave=True)
-#     gmic.run("display", gi)
-
-
-def test_toolkit_gmic_to_scikit():
-    pass
 
 
 @pytest.fixture
@@ -92,6 +66,21 @@ def bicolor_squeezable_non_interleaved_gmic_image():
     return non_interleaved_gmicimage
 
 
+@pytest.fixture
+def numpy_PIL_duck():
+    import PIL.Image
+    import numpy
+
+    im1_name = "image.bmp"
+
+    # 1. Generate duck bitmap, save it to disk
+    gmic.run("sp duck -output " + im1_name)
+
+    # 2. Load disk duck through PIL/numpy, make it a GmicImage
+    return numpy.array(PIL.Image.open(im1_name))
+    # os.unlink(im1_name)
+
+
 def test_bicolor_non_interleaved_gmic_pixel_values(bicolor_non_interleaved_gmic_image):
     # ensure we have built a properly deinterleaved G'MIC image
     for x in range(bicolor_non_interleaved_gmic_image._width):
@@ -126,7 +115,7 @@ def test_bicolor_non_interleaved_gmic_pixel_values(bicolor_non_interleaved_gmic_
         ({"permute": "zyxc", "interleave": True}, (3, 4, 5, 2)),
     ],
 )
-def test_toolkit_to_numpy_no_preset_shape_coherence(
+def test_toolkit_to_numpy_helper_fuzzying_shape_coherence(
     bicolor_non_interleaved_gmic_image, kwargs, expected_shape_if_different
 ):
     """
@@ -160,7 +149,7 @@ def test_toolkit_to_numpy_no_preset_shape_coherence(
         )
 
 
-def test_toolkit_to_numpy_no_preset_squeeze_shape_coherence(
+def test_toolkit_to_numpy_helper_fuzzying_squeeze_shape_coherence(
     bicolor_squeezable_non_interleaved_gmic_image, bicolor_non_interleaved_gmic_image
 ):
     assert bicolor_squeezable_non_interleaved_gmic_image.to_numpy_helper(
@@ -184,7 +173,7 @@ def test_toolkit_to_numpy_no_preset_squeeze_shape_coherence(
     ).shape == (5, 4, 3, 2)
 
 
-def test_toolkit_to_numpy_interleave_shape_conservation(
+def test_toolkit_to_numpy_helper_fuzzying_interleave_shape_conservation(
     bicolor_non_interleaved_gmic_image,
 ):
     assert bicolor_non_interleaved_gmic_image.to_numpy_helper(
@@ -197,7 +186,7 @@ def test_toolkit_to_numpy_interleave_shape_conservation(
     )
 
 
-def test_toolkit_to_numpy_no_preset_no_default_interleaving(
+def test_toolkit_to_numpy_helper_no_default_interleaving(
     bicolor_non_interleaved_gmic_image,
 ):
     untouched_interleaving_numpy_array = (
@@ -238,7 +227,7 @@ def test_toolkit_to_numpy_no_preset_no_default_interleaving(
             assert 127 <= f < 255
 
 
-def test_toolkit_to_numpy_no_preset_interleave_parameter(
+def test_toolkit_to_numpy_helper_interleave_parameter(
     bicolor_non_interleaved_gmic_image,
 ):
     # ensure that shape and dtype are maintained through interleaving
@@ -280,7 +269,7 @@ def test_toolkit_to_numpy_no_preset_interleave_parameter(
             assert 127 <= f < 255
 
 
-def test_toolkit_to_numpy_no_preset_astype_coherence(
+def test_toolkit_to_numpy_helper_astype_coherence(
     bicolor_non_interleaved_gmic_image,
 ):
     assert bicolor_non_interleaved_gmic_image.to_numpy_helper().dtype == numpy.float32
@@ -358,14 +347,37 @@ def test_toolkit_from_PIL():
     assert_non_empty_file_exists(PIL_apples_filename).unlink()
 
 
-def test_toolkit_to_numpy_with_gmic_preset():
-    pass
+def test_toolkit_to_numpy(bicolor_non_interleaved_gmic_image):
+    assert numpy.array_equal(
+        bicolor_non_interleaved_gmic_image.to_numpy(),
+        bicolor_non_interleaved_gmic_image.to_numpy_helper(
+            interleave=True, squeeze_shape=False
+        ),
+    )
 
 
-def test_toolkit_from_numpy_with_gmic_preset():
-    pass
+def test_toolkit_from_numpy(numpy_PIL_duck):
+    assert_gmic_images_are_identical(
+        gmic.GmicImage.from_numpy(numpy_PIL_duck),
+        gmic.GmicImage.from_numpy_helper(numpy_PIL_duck, deinterleave=True),
+    )
 
 
-# TODO remove this
-if __name__ == "__main__":
-    test_toolkit_gmic_from_scikit()
+def test_toolkit_to_skimage(bicolor_non_interleaved_gmic_image):
+    # TODO real testing using the skimage module!
+    assert numpy.array_equal(
+        bicolor_non_interleaved_gmic_image.to_skimage(),
+        bicolor_non_interleaved_gmic_image.to_numpy_helper(
+            interleave=True, permute="zyxc", squeeze_shape=False
+        ),
+    )
+
+
+def test_toolkit_from_skimage(numpy_PIL_duck):
+    # TODO real testing using the skimage module!
+    assert_gmic_images_are_identical(
+        gmic.GmicImage.from_skimage(numpy_PIL_duck),
+        gmic.GmicImage.from_numpy_helper(
+            numpy_PIL_duck, deinterleave=True, permute="zyxc"
+        ),
+    )
