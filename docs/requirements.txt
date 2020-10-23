@@ -1,5 +1,5 @@
 sphinx==2.2.0 # prevent readthedocs.io to use 1.8.5 which makes pyquickhelper fail
-gmic==2.9.1-a4
+gmic==2.9.1-a5
 gmic-sphinx
 recommonmark
 pyquickhelper
