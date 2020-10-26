@@ -53,7 +53,7 @@ function 00_all_steps () {
 }
 
 function 01_reload_gmic_env () {
-    4_build_wheel && pip uninstall -y gmic && pip install $(ls -r dist/*.whl | tail -1)
+    4_build_wheel && pip uninstall -y gmic && pip install $(ls -rt dist/*.whl | tail -1)
 }
 
 function 10a_make_version_tag () {
