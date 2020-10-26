@@ -19,8 +19,8 @@ Numpy input/output support for `gmic-py` is broken down into 4 methods:
 All those methods are fully documented in the :doc:`gmic`.
 If you want to implement new `gmic-py` conversion methods for some library that uses `numpy.ndarray`s a lot, you might just want to import and call the `*_numpy_helper` methods with your own very parameters.
 
-1. G'MIC x Numpy must-know
-########################################
+Must-know
+##########
 * G'MIC works in 1D, 2D, 3D, or 4D. Numpy can work from 0D (scalar) to N dimensions (>4D).
 * G'MIC has the following array shapes' dimension order: ``(width, height, depth, spectrum)``. The ``spectrum`` (or channels) dimension represents the number of values per pixel (eg. for RGB images, ``spectrum=3``). Numpy is shape-agnostic.
 * G'MIC works in float32 (ie. 4-bytes float pixel values). Casts from and to `numpy.ndarray` will be done for you using `numpy.ndarray.astype() <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.astype.html>`_. This can be tuned by parameter ``GmicImage().to_numpy_helper(astype=...)``.
@@ -38,8 +38,8 @@ If you want to implement new `gmic-py` conversion methods for some library that 
 * Use `numpy.expand_dims <https://numpy.org/doc/stable/reference/generated/numpy.expand_dims.html>`_ and `numpy.atleast_2d <https://numpy.org/doc/stable/reference/generated/numpy.atleast_2d.html>`_, `numpy.atleast_3d <https://numpy.org/doc/stable/reference/generated/numpy.atleast_3d.html>`_, `numpy.squeeze <https://numpy.org/doc/stable/reference/generated/numpy.squeeze.html>`_ to fix your numpy arrays's dimensions.
 * Advanced note: the compile flag for enabling or disabling numpy support in gmic-py is `gmic_py_numpy` (see `setup.py <https://github.com/myselfhimself/gmic-py/blob/master/setup.py>`_).
 
-2. Numpy <-> G'MIC how-to
-#######################################
+How-to
+#######
 * The usual way to convert a Numpy array to G'MIC is as follows:
 
 .. code-block:: sh

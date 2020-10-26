@@ -16,13 +16,13 @@ Those are fully documented in the :doc:`gmic`.
 You are encouraged to write your own version of `to_skimage()` and `from_skimage()` in pure Python by copy-pasting the expressions listed in those API definitions documentation, and tinkering with them.
 You can also help improve the converters upstream with suggestions or patches `on the project repository <https://github.com/myselfhimself/gmic-py/issues>`_.
 
-1. G'MIC x Scikit-Image must-know
-###################################
+Must-know
+#############
 * G'MIC's images are 3D (volumetric) non-interleaved with an almost unlimited number of 32-bit float pixel values. Their shape axes order is x,y,z,c (or width, height, depth, channels).
 * Scikit images are the same, with pixel-type agnosticity and different shape: z,y,x,c (depth or layers, height, width, channels (or spectrum)).
 
-2. PIL <-> G'MIC how-to
-#####################################
+How-to
+###########
 * The usual way to convert a Scikit image to G'MIC is as follows:
 
 .. code-block:: sh

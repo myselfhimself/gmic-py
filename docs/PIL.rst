@@ -17,14 +17,14 @@ Those are fully documented in the :doc:`gmic`.
 
 You are encouraged to write your own version of `to_PIL()` and `from_PIL()` in pure Python by copy-pasting the expressions listed in those API definitions documentation, and tinkering with them.
 
-1. G'MIC x PIL must-know
-###############################
+Must-know
+###########
 * G'MIC's images are 3D (volumetric) non-interleaved with an almost unlimited number of 32-bit float pixel values. Their shape axes order is x,y,z,c (or width, height, depth, channels).
 * PIL works mostly in 2D interleaved, assuming here only 8-bit float pixel values (because of our limited support). PIL Images shape are assumed to be y,x,c (or height, width, channels), which may equate to a `squeezed 3D array down to 2D. <https://numpy.org/doc/stable/reference/generated/numpy.ndarray.squeeze.html?highlight=squeeze#numpy.ndarray.squeeze>`_. Shape squeezing and axes flipping is what the `to_PIL()` will do for you.
 * G'MIC PIL Image input and output methods will import `numpy` on the fly for you, so that module must be installed too in addition to eg. `Pillow`.
 
-2. PIL <-> G'MIC how-to
-#####################################
+How-to
+########
 * The usual way to convert a PIL image to G'MIC is as follows:
 
 .. code-block:: sh
