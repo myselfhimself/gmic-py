@@ -36,6 +36,7 @@ Head over to the :doc:`gettingstarted` section for examples.
    numpy
    PIL
    skimage
+   jupyter
    gmic
 
 
