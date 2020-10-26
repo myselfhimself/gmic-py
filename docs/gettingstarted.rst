@@ -113,40 +113,72 @@ G'MIC will not rewrite GmicImage data in place, instead it replaces GmicImage by
 
 .. gmicpic:: sp earth blur 4 fx_bokeh 3,8,0,30,8,4,0.3,0.2,210,210,80,160,0.7,30,20,20,1,2,170,130,20,110,0.15,0
 
-5. Working with the numpy input/output support
+5. Working with the Numpy support
 ##############################################
 
-A chapter of this documentation is dedicated to the Numpy support of the G'MIC Python version. Head over to :doc:`numpy` for details.
+A chapter of this documentation is dedicated to the Numpy support of the G'MIC Python version. Head over to the :doc:`numpy` page for details.
+For now here is a foretaste of it showcasing one-direction conversion from G'MIC to Numpy.
 
-You can input and output 1D to 4D matrices between G'MIC and Numpy. Here is an overview of ``GmicImage`` ``from_numpy_helper`` and ``to_numpy_helper`` conversion methods.
+You can input and output 1D to 3D matrices between G'MIC and Numpy. Note that `gmic-py` supports data input/output with not only :doc:`numpy`, but also :doc:`PIL` and :doc:`skimage`.
 
 You must install the ``numpy`` module yourself, G'MIC will detect and import it from there, leveraging some of its functions.
 Data-scientists should keep in mind that G'MIC works internally with ``float32`` pixel values, arranged in a non-interleaved way (eg. RRR,GGG,BBB), with matrices whose shape is always 4D and prints as ``(width, height, depth, spectrum)`` where ``spectrum`` is the number of channels (ie. per-pixel values).
 
-To help in converting matrices between ``PIL`` and ``scikit-image``, ``gmic.NUMPY_FORMAT_*`` input and ouput format flags can be used. Otherwise ``GmicImage`` numpy conversion functions provide ``interleave``/``deinterleave`` and ``permute`` options to ease your work.
+.. code-block:: python
+
+    import numpy
+    from matplotlib import pyplot as plt
+    import gmic
+
+    images = []
+    gmic.run("sp apples blur_x 30", images) # Handy way to generate an image into file
+
+.. gmicpic:: sp apples blur_x 30
+
+Now let us try a display from Numpy using Matplotlib
 
 .. code-block:: python
 
-    # Input and output through PIL.Image
-    import PIL.Image # may require "pip install Pillow"
+    numpy_im = images[0].to_numpy() # deinterleaves, keeps G'MIC w,h,d,s shape
+    print(numpy_im).shape # (400, 640, 1, 3)
+
+    # prepare a Matplotlib display with the dimensions=1 hidden to have a proper 2D image
+    # by default, Matplotlib does not like float with a range in 0-1, so we normalize values by dividing by 255
+    numpy_for_plt = numpy_im.squeeze()/255
+
+    # time for displaying
+    plt.imshow(numpy_for_plt)
+    plt.show() # See rotated apples
+
+.. image:: _static/images/apples_matplotlib.png
+
+Now let us fix those apples orientation and use numpy for greyscale filtering
+
+.. code-block:: python
+
+    # Pure-numpy greyscaling per https://stackoverflow.com/a/51571053/420684
+    numpy_for_plt = numpy.dot(numpy_for_plt[... , :3] , [0.299 , 0.587, 0.114])
+    numpy_for_plt.transpose((1,0,2)) # flipping x and y axes
+
+    # Time for redisplaying
+    plt.imshow(numpy_for_plt, plt.get_cmap('gray'))
+    plt.show()
+
+.. image:: _static/images/apples_matplotlib_grey.png
+
+To sum up, here was different fast way to work from G'MIC, with more work on the G'MIC side
+
+.. code-block:: python
+
     import numpy
+    from matplotlib import pyplot as plt
     import gmic
 
-    gmic.run("sp apples output myapples.png") # Handy way to generate an image into file
+    images = []
+    # The gmic.eu website shows various types of B&W: https://gmic.eu/gallery/blackandwhite.shtml
+    gmic.run("sp apples blur_x 30 fx_freaky_bw 90,20,0,0,0,0", images) # horizontal blur+special black&white
+    numpy_im = images[0].to_numpy_helper(interleave=True,permute="yxzc", squeeze_shape=True, astype=numpy.uint8)
+    plt.imshow(numpy_im, plt.get_cmap('gray'))
+    plt.show()
 
-    im = PIL.Image.open("myapples.png")
-    im.show()
-    numpy_im = numpy.asarray(im)
-
-    # Numpy/PIL to G'MIC
-    gmic_im = gmic.GmicImage.from_numpy_helper(numpy_im, input_format=gmic.NUMPY_FORMAT_GMIC)
-    gmic.run("print", gmic_im)
-
-    gmic_images = [gmic_im] # using an image list to allow gmic interpreter to write
-    gmic.run("blur 4", gmic_images) # applies blur and replaces GmicImage in list
-
-    # G'MIC to Numpy/PIL
-    numpy_im_out = gmic_images[0].to_numpy_helper(astype=numpy.uint8, output_format=gmic.NUMPY_FORMAT_PIL)
-
-    im_out = PIL.Image.fromarray(numpy_im_out)
-    im_out.show()
+.. image:: _static/images/gmic_apples_gray.png
