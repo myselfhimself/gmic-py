@@ -22,7 +22,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Detect G'MIC target version
-        run: echo "::set-env name=GMIC_VERSION::$(cat VERSION)"
+        run: echo "GMIC_VERSION=$(cat VERSION)" >> $GITHUB_ENV
 
       - name: Build and test gmic-py ${{ env.GMIC_VERSION }} on MacOS
         working-directory: ./
