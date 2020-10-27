@@ -830,7 +830,7 @@ import_numpy_module()
  * numpy.ndarray.
  *
  *  GmicImage.from_numpy_helper(obj: numpy.ndarray, deinterleave=True,
- * permute="xyz": bool) -> GmicImage
+ * permute="xyzc": bool) -> GmicImage
  */
 static PyObject *
 PyGmicImage_from_numpy_helper(PyObject *cls, PyObject *args, PyObject *kwargs)
@@ -1677,7 +1677,7 @@ PyGmicImage_to_numpy_helper(PyGmicImage *self, PyObject *args,
     int arg_squeeze_shape = -1;
     int arg_squeeze_shape_default = 0;  // Will not squeeze shape by default
     char *arg_permute = NULL;
-    char *arg_permute_default = NULL;
+    char arg_permute_default = "xyzc";
     size_t permute_axis = 0;  // iterator
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|Opsp", (char **)keywords,
