@@ -1677,7 +1677,7 @@ PyGmicImage_to_numpy_helper(PyGmicImage *self, PyObject *args,
     int arg_squeeze_shape = -1;
     int arg_squeeze_shape_default = 0;  // Will not squeeze shape by default
     char *arg_permute = NULL;
-    char arg_permute_default = "xyzc";
+    char arg_permute_default[] = "xyzc";
     size_t permute_axis = 0;  // iterator
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|Opsp", (char **)keywords,
