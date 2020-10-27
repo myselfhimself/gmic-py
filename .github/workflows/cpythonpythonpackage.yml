@@ -7,10 +7,6 @@ jobs:
   build-linux-debug-test-norelease:
 
     runs-on: ubuntu-latest
-    strategy:
-      max-parallel: 4
-      matrix:
-        pythonversion: [3.7]
 
     steps:
     - uses: actions/checkout@v1
@@ -27,10 +23,10 @@ jobs:
     - name: Detect G'MIC target version
       run: echo "GHA_GMIC_VERSION=$(GHA_QUIET=1 bash build_tools.bash __get_py_package_version)" >> $GITHUB_ENV
 
-    - name: Set up Python ${{ matrix.pythonversion }}
+    - name: Set up Python 3.7
       uses: actions/setup-python@v1
       with:
-        pythonversion: ${{ matrix.pythonversion }}
+        python-version: 3.7
 
     - name: Compile and run tests on .so, .whl and source distribution of gmic-py ${{ env.GHA_GMIC_VERSION }}
       working-directory: ./
