@@ -17,7 +17,7 @@ jobs:
 
     # Prevent running this job on tag-based releases
     - name: Check if Git tag exists
-      run: echo "::set-env name=HEAD_TAG::$(git tag --points-at HEAD)"
+      run: echo "HEAD_TAG=$(git tag --points-at HEAD)" >> $GITHUB_ENV
     - name: Runs only if Git tag does not exist
       run: |
         echo "This runs because Git tag points at HEAD ..."
@@ -25,7 +25,7 @@ jobs:
       if: env.HEAD_TAG != ''
 
     - name: Detect G'MIC target version
-      run: echo "::set-env name=GHA_GMIC_VERSION::$(GHA_QUIET=1 bash build_tools.bash __get_py_package_version)"
+      run: echo "GHA_GMIC_VERSION=$(GHA_QUIET=1 bash build_tools.bash __get_py_package_version)" >> $GITHUB_ENV
 
     - name: Set up Python ${{ matrix.pythonversion }}
       uses: actions/setup-python@v1
