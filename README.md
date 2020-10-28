@@ -29,6 +29,8 @@ This project lives under the CeCILL license (similar to GNU Public License).
 
 You can use the `gmic` Python module for projects related to desktop or server-side graphics software, numpy, video-games, image procesing.
 
+![gmic-py 2.9.2 release plan](docs/_static/images/292_plan.png)
+
 [gmic-blender](https://github.com/myselfhimself/gmic-blender) is a Blender3d add-on bundling `gmic-py` and allowing you use a new `gmic` module from there without installing anything more.
 
 ## Quickstart

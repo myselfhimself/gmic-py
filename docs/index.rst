@@ -5,6 +5,8 @@ Welcome to gmic-py's documentation!
 G'MIC provides image-processing commands for 1D to 4D images, as well as many graphical filters.
 It is thus targetted at both artists and data-scientists.
 
+.. image:: _static/images/292_plan.png
+
 This documentation showcases various uses of ``gmic-py``:
 
 * gmic-py alone in pure Python,
