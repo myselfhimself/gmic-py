@@ -291,12 +291,15 @@ def test_toolkit_to_numpy_helper_astype_coherence(
         == numpy.float16
     )
 
+
 def test_toolkit_from_numpy_helper():
     # args: numpy_array, deinterleave, permute
     pass
 
+
 def test_toolkit_from_numpy_helper_deinterleave_fuzzying():
     pass
+
 
 def test_toolkit_from_numpy_helper_permute_fuzzying():
     pass
