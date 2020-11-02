@@ -44,6 +44,16 @@ if pkgconfig.exists("libpng"):
     define_macros += [("cimg_use_png", None)]
     pkgconfig_list += ["libpng"]
 
+# Only require libtiff if found
+if pkgconfig.exists("libtiff-4"):
+    define_macros += [("cimg_use_tiff", None)]
+    pkgconfig_list += ["libtiff-4"]
+
+# Only require libjpeg if found
+if pkgconfig.exists("libjpeg"):
+    define_macros += [("cimg_use_jpeg", None)]
+    pkgconfig_list += ["libjpeg"]
+
 # Only require fftw3 if found (non-2^ size image processing fails without it)
 # We do not toggle cimg_use_fftw3, it is buggy
 if pkgconfig.exists("fftw3"):
