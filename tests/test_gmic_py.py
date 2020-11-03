@@ -8,7 +8,7 @@ from math import floor
 import gmic
 import pytest
 import PIL
-from PIL import Image, ImageDraw
+from PIL import Image
 
 # Tests parametrization: run calls to gmic.run(), gmic.Gmic() and gmic.Gmic().run() should have the same behaviour!
 gmic_instance_types = {
@@ -100,20 +100,11 @@ def test_run_gmic_instance_run_helloworld(capfd, gmic_instance_run):
     assert "hello world\n" == outerr.out
 
 
-def draw_cross(im):
-    draw = ImageDraw.Draw(im)
-    draw.line((0, 0) + im.size, fill=128)
-    draw.line((0, im.size[1], im.size[0], 0), fill=128)
-
-
 @contextlib.contextmanager
 def make_sample_format_file(extension):
     filename = "{}_format_io_test.{}".format(extension, extension)
 
-    with open(filename, "w+") as f:
-        im = Image.new(mode="RGB", size=(200, 200))
-        draw_cross(im)
-        im.save(f, quality=100)
+    gmic.run("sp apples output {}".format(filename))
 
     yield filename
 
@@ -124,10 +115,14 @@ def make_sample_format_file(extension):
 def test_file_format_io(extension):
     output_img = "aa." + extension
     with make_sample_format_file(extension) as input_img:
+        # output with 100% quality
         gmic.run("{} output {}".format(input_img, output_img))
         images = []
-        gmic.run("{} {} display".format(input_img, output_img), images)
-        assert get_images_difference_percent(input_img, output_img) < 0.25
+        difference = get_images_difference_percent(input_img, output_img)
+        if extension == "jpg":
+            assert difference < 0.32
+        else:
+            assert difference == 0
         os.unlink(output_img)
 
 
