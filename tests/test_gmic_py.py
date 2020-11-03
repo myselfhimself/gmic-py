@@ -7,6 +7,8 @@ from math import floor
 
 import gmic
 import pytest
+import PIL
+from PIL import Image, ImageDraw
 
 # Tests parametrization: run calls to gmic.run(), gmic.Gmic() and gmic.Gmic().run() should have the same behaviour!
 gmic_instance_types = {
@@ -29,6 +31,26 @@ def assert_non_empty_file_exists(filename):
     assert a_file.stat().st_size > 0
 
     return a_file
+
+
+def get_images_difference_percent(filename1, filename2):
+    # From https://rosettacode.org/wiki/Percentage_difference_between_images
+    # Return: value between 0 and 100
+    i1 = PIL.Image.open(filename1)
+    i2 = PIL.Image.open(filename2)
+    assert i1.mode == i2.mode, "Different kinds of images."
+    assert i1.size == i2.size, "Different sizes."
+
+    pairs = zip(i1.getdata(), i2.getdata())
+    if len(i1.getbands()) == 1:
+        # for gray-scale jpegs
+        dif = sum(abs(p1 - p2) for p1, p2 in pairs)
+    else:
+        dif = sum(abs(c1 - c2) for p1, p2 in pairs for c1, c2 in zip(p1, p2))
+
+    ncomponents = i1.size[0] * i1.size[1] * 3
+
+    return (dif / 255.0 * 100.0) / ncomponents
 
 
 def test_gmic_module_has_version_and_build_attributes():
@@ -76,6 +98,37 @@ def test_run_gmic_instance_run_helloworld(capfd, gmic_instance_run):
     gmic_instance_run('echo_stdout "hello world"')
     outerr = capfd.readouterr()
     assert "hello world\n" == outerr.out
+
+
+def draw_cross(im):
+    draw = ImageDraw.Draw(im)
+    draw.line((0, 0) + im.size, fill=128)
+    draw.line((0, im.size[1], im.size[0], 0), fill=128)
+
+
+@contextlib.contextmanager
+def make_sample_format_file(extension):
+    filename = "{}_format_io_test.{}".format(extension, extension)
+
+    with open(filename, "w+") as f:
+        im = Image.new(mode="RGB", size=(200, 200))
+        draw_cross(im)
+        im.save(f, quality=100)
+
+    yield filename
+
+    os.unlink(filename)
+
+
+@pytest.mark.parametrize("extension", ["jpg", "png", "tiff"])
+def test_file_format_io(extension):
+    output_img = "aa." + extension
+    with make_sample_format_file(extension) as input_img:
+        gmic.run("{} output {}".format(input_img, output_img))
+        images = []
+        gmic.run("{} {} display".format(input_img, output_img), images)
+        assert get_images_difference_percent(input_img, output_img) < 0.25
+        os.unlink(output_img)
 
 
 @pytest.mark.parametrize(**gmic_instance_types)

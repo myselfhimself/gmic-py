@@ -12,6 +12,8 @@ import gmic
 
 import PIL.Image
 
+from test_gmic_py import get_images_difference_percent
+
 """
 This big parameterized test suite helps to compare gmic-cli vs. gmic-py output idempotence of all gui filters for a fixed input.
 You should run it nightly or not often, as it is time-consuming.
@@ -138,26 +140,6 @@ GMIC_FILTERS_WITH_SPECIAL_INPUTS = {
 gmic_instance = gmic.Gmic()
 gmic_instance.run("update")  # allows more filter to work
 os.system("gmic update")  # same
-
-
-def get_images_difference_percent(filename1, filename2):
-    # From https://rosettacode.org/wiki/Percentage_difference_between_images
-    # Return: value between 0 and 100
-    i1 = PIL.Image.open(filename1)
-    i2 = PIL.Image.open(filename2)
-    assert i1.mode == i2.mode, "Different kinds of images."
-    assert i1.size == i2.size, "Different sizes."
-
-    pairs = zip(i1.getdata(), i2.getdata())
-    if len(i1.getbands()) == 1:
-        # for gray-scale jpegs
-        dif = sum(abs(p1 - p2) for p1, p2 in pairs)
-    else:
-        dif = sum(abs(c1 - c2) for p1, p2 in pairs for c1, c2 in zip(p1, p2))
-
-    ncomponents = i1.size[0] * i1.size[1] * 3
-
-    return (dif / 255.0 * 100.0) / ncomponents
 
 
 def get_gmic_filters_json_str():
