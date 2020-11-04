@@ -41,7 +41,7 @@ jobs:
         run: |
           pacman --version
           pacman --help
-          pacman --noconfirm -S gcc mingw-w64-x86_64-zlib mingw-w64-x86_64-libjpeg-turbo mingw-w64-x86_64-pkg-config mingw-w64-x86_64-libpng mingw-w64-x86_64-libtiff
+          pacman --noconfirm -S wget python-pip gcc mingw-w64-x86_64-zlib mingw-w64-x86_64-libjpeg-turbo mingw-w64-x86_64-pkg-config mingw-w64-x86_64-libpng mingw-w64-x86_64-libtiff
           pkg-config --list-all
           pkg-config libjpeg --libs --cflags
           pkg-config libpng --libs --cflags
@@ -54,4 +54,6 @@ jobs:
           gcc --help
           which pip
           pip --version
+          pip install -r dev-requirements.txt
           bash build_tools.bash
+          bash build_tools.bash 1_clean_and_regrab_gmic_src
