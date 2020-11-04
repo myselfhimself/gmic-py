@@ -24,7 +24,7 @@ jobs:
         uses: msys2/setup-msys2@v2
         with:
           update: true
-          install: base-devel git libjpeg
+          install: base-devel git
       - run: git describe --dirty
       - name: build on windows
         working-directory: ./
@@ -41,3 +41,4 @@ jobs:
         run: |
           pacman --version
           pacman --help
+          pacman -S libjpeg libpng libtiff
