@@ -41,4 +41,4 @@ jobs:
         run: |
           pacman --version
           pacman --help
-          pacman -S libjpeg libpng libtiff
+          pacman -S mingw-w64-x86_64-libjpeg-turbo mingw-w64-x86_64-pkg-config mingw-w64-x86_64-libpng mingw-w64-x86_64-libtiff
