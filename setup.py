@@ -59,7 +59,8 @@ if pkgconfig.exists("libjpeg"):
 if pkgconfig.exists("fftw3"):
     define_macros += [("cimg_use_fftw3", None)]
     pkgconfig_list += ["fftw3"]
-    extra_link_args += ["-lfftw3_threads"]
+    if sys.platform not in ("cygwin", "win32", "msys"):
+        extra_link_args += ["-lfftw3_threads"]
 
 # Only compile with OpenCV if exists (nice for the 'camera' G'MIC command :-D )
 if pkgconfig.exists("opencv"):
