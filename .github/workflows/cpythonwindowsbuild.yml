@@ -54,6 +54,7 @@ jobs:
           gcc --help
           which pip
           pip --version
-          pip install -r dev-requirements.txt
+          pip install wheel pkgconfig
           bash build_tools.bash
           bash build_tools.bash 1_clean_and_regrab_gmic_src
+          bash build_tools.bash 2b_compile_debug
