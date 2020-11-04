@@ -42,9 +42,12 @@ jobs:
           pacman --version
           pacman --help
           pacman --noconfirm -S mingw-w64-x86_64-zlib mingw-w64-x86_64-openmp mingw-w64-x86_64-libjpeg-turbo mingw-w64-x86_64-pkg-config mingw-w64-x86_64-libpng mingw-w64-x86_64-libtiff
+          pkg-config --list-all
           pkg-config libjpeg --libs --cflags
           pkg-config libpng --libs --cflags
-          pkg-config --list-all
           pkg-config libtiff-4 --libs --cflags
           pkg-config zlib --libs --cflags
-          pkg-config ompi --libs --cflags
+          pacman -Ql mingw-w64-x86_64-openmp
+          which python
+          python --version
+          ls
