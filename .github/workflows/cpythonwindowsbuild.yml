@@ -10,12 +10,22 @@ jobs:
     strategy:
       matrix:
         python-version: ['3.7']
+    defaults:
+      run:
+        shell: msys2 {0}
     steps:
       - uses: actions/checkout@v1
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v1
         with:
           python-version: ${{ matrix.python-version }}
+      # Using https://github.com/marketplace/actions/setup-msys2
+      - name: Using "Setup MSYS2" contrib
+        uses: msys2/setup-msys2@v2
+        with:
+          update: true
+          install: base-devel git libjpeg
+      - run: git describe --dirty
       - name: build on windows
         working-directory: ./
         env:
