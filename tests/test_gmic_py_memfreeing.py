@@ -1,6 +1,13 @@
 import pytest
 import numpy
-import psutil
+
+try:
+    import psutil
+except:
+    pytest.skip(
+        "psutil not found - this is OK for a mingw environment - see https://github.com/giampaolo/psutil/blob/master/INSTALL.rst#windows",
+        allow_module_level=True,
+    )
 
 import os
 import struct
