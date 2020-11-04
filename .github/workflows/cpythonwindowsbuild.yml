@@ -41,7 +41,7 @@ jobs:
         run: |
           pacman --version
           pacman --help
-          pacman --noconfirm -S wget python-pip python-devel mingw-w64-x86_64-gcc mingw-w64-x86_64-zlib mingw-w64-x86_64-libjpeg-turbo mingw-w64-x86_64-pkg-config mingw-w64-x86_64-libpng mingw-w64-x86_64-libtiff mingw-w64-x86_64-fftw
+          pacman --noconfirm -S wget mingw-w64-x86_64-python-pip python-devel mingw-w64-x86_64-gcc mingw-w64-x86_64-zlib mingw-w64-x86_64-libjpeg-turbo mingw-w64-x86_64-pkg-config mingw-w64-x86_64-libpng mingw-w64-x86_64-libtiff mingw-w64-x86_64-fftw
           pkg-config --list-all
           pkg-config libjpeg --libs --cflags
           pkg-config libpng --libs --cflags
