@@ -113,6 +113,10 @@ elif sys.platform in (
     extra_compile_args += ["-fopenmp"]
     extra_link_args += ["-lgomp"]
 
+# Force Windows and Windows posix'ed platforms as Windows-like for CImg/G'MIC
+if sys.platform in ("msys", "cygwin", "win32"):
+    define_macros.append(("cimg_OS", "2"))
+
 print("Define macros:")
 print(define_macros)
 
