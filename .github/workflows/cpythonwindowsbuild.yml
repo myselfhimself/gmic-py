@@ -43,7 +43,9 @@ jobs:
           bash build_tools.bash
           bash build_tools.bash 1_clean_and_regrab_gmic_src
           bash build_tools.bash 2b_compile_debug
-          #bash build_tools.bash 3_test_compiled_so format
+          ldd $(find -name *.dll)
+          pip install -r test-requirements.txt
+          bash build_tools.bash 3_test_compiled_so format
           bash build_tools.bash 4_build_wheel
       - name: upload .whl debug build dir as artifact
         uses: actions/upload-artifact@v2
