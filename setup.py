@@ -104,7 +104,12 @@ if sys.platform == "darwin":
         "-nodefaultlibs",
         "-lc++",
     ]  # options inspired by https://github.com/explosion/spaCy/blob/master/setup.py
-elif sys.platform == "linux":  # Enable openmp for 32bit & 64bit linuxes
+elif sys.platform in (
+    "linux",
+    "win32",
+    "msys",
+    "cygwin",
+):  # Enable openmp for 32bit & 64bit linuxes and posix'ed windows
     extra_compile_args += ["-fopenmp"]
     extra_link_args += ["-lgomp"]
 
