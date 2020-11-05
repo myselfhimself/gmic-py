@@ -299,6 +299,7 @@ function 4_build_wheel () {
     elif ! [ -z "$MSYSTEM" ]; then
 	4c_copy_windows_dlls_for_repair
     fi
+    rm -rf .egg-info # https://stackoverflow.com/questions/18085571/pip-install-error-setup-script-specifies-an-absolute-path#comment94579634_39198529
 
     $PIP3 install wheel || { echo "Fatal wheel package install error" ; exit 1 ; }
     $PYTHON3 setup.py bdist_wheel || { echo "Fatal wheel build error" ; exit 1 ; }
