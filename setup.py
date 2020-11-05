@@ -90,7 +90,7 @@ if sys.platform == "darwin":
 
 debug_enabled = "--debug" in sys.argv
 
-extra_compile_args = ["-std=c++11"]
+extra_compile_args = ["-std=c++11", "-I/a/_temp/msys64/usr/include"]
 if debug_enabled:
     extra_compile_args += ["-O0"]
     extra_compile_args += ["-g"]
