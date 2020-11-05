@@ -24,9 +24,6 @@ jobs:
         env:
           TWINE_PASSWORD_GITHUB_SECRET: ${{ secrets.TWINE_PASSWORD_GITHUB_SECRET }} # For build_tools.bash 11_send_to_pypi
         run: |
-          ldd --help
-          pacman --version
-          pacman --help
           pacman --noconfirm -S wget mingw-w64-x86_64-curl mingw-w64-x86_64-python-pip mingw-w64-x86_64-python python-devel mingw-w64-x86_64-gcc mingw-w64-x86_64-zlib mingw-w64-x86_64-libjpeg-turbo mingw64/mingw-w64-x86_64-pkgconf mingw-w64-x86_64-libpng mingw-w64-x86_64-libtiff mingw64/mingw-w64-x86_64-fftw mingw-w64-x86_64-toolchain
           pacman --noconfirm -S mingw-w64-x86_64-python-numpy
           # Add complementary pkg-config .pc lookup path
@@ -42,11 +39,9 @@ jobs:
           python --version
           gcc --version
           g++ --version
-          gcc --help
           which pip
           pip --version
-          pip install wheel pkgconfig
-          bash build_tools.bash
+          pip install dev-requirements.txt
           bash build_tools.bash 1_clean_and_regrab_gmic_src
           bash build_tools.bash 2b_compile_debug
           ldd $(find -name *.dll)
