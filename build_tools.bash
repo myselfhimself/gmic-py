@@ -217,6 +217,7 @@ function 33_build_manylinux () {
 }
 
 function 3_test_compiled_so () {
+    set -x
     # Example usage: <this_script.bash> 3_test_compiled_so my_pytest_expr ====> pytest <the pytest file> -k my_pytest_expr
     # Example usage: <this_script.bash> 3_test_compiled_so my_pytest_expr -x --pdb ====> pytest <the pytest file> -k my_pytest_expr -x --pdb
     PYTEST_EXPRESSION_PARAM=
@@ -257,6 +258,7 @@ function 3_test_compiled_so () {
     else
         return 0;
     fi
+    set +x
 }
 
 function 3b_test_compiled_so_no_numpy () {
@@ -293,9 +295,11 @@ function 4_build_wheel () {
 }
 
 function 5_test_wheel () {
+    set -x
     $PIP3 install `ls -Art dist/*.whl | tail -n 1` --no-cache-dir
     TEST_WHEEL=1 3_test_compiled_so ${@:1}
     $PIP3 uninstall gmic -y
+    set +x
 }
 
 function 6_make_full_doc () {
