@@ -28,16 +28,16 @@ jobs:
           pacman --help
           pacman --noconfirm -S wget libcurl-devel mingw-w64-x86_64-python-pip mingw-w64-x86_64-python python-devel mingw-w64-x86_64-gcc mingw-w64-x86_64-zlib mingw-w64-x86_64-libjpeg-turbo mingw-w64-x86_64-pkg-config mingw-w64-x86_64-libpng mingw-w64-x86_64-libtiff mingw64/mingw-w64-x86_64-fftw mingw-w64-x86_64-toolchain
           pacman --noconfirm -S mingw-w64-x86_64-python-numpy
-          pkg-config --debug
-          pkg-config --libs --cflags
           echo pkgconf now
-          pkgconf --debug
           pkgconf libcurl --libs --cflags
+          echo pkgconfig now
           pkg-config --list-all
           pkg-config libjpeg --libs --cflags
           pkg-config libpng --libs --cflags
           pkg-config libtiff-4 --libs --cflags
           pkg-config zlib --libs --cflags
+          pkg-config libcurl --libs --cflags
+          pkg-config libcurl --libs --cflags --debug
           which python
           python --version
           gcc --version
