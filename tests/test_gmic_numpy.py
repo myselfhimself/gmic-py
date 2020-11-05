@@ -74,7 +74,7 @@ def test_gmic_image_to_numpy_ndarray_exception_on_unimportable_numpy_module(
     import gmic
 
     images = []
-    gmic_instance_run(images=images, command="sp duck")
+    gmic_instance_run(images=images, command="tests/samples/duck.png")
     with pytest.raises(
         gmic.GmicException, match=r".*'numpy' module cannot be imported.*"
     ):
@@ -91,7 +91,7 @@ def test_gmic_image_to_numpy_ndarray_exception_on_unimportable_numpy_module(
 @pytest.mark.parametrize(**squeeze_toggles)
 @pytest.mark.parametrize(
     "gmic_command",
-    ["sp apples", """3,5,7,2,'x*cos(0.5236)+y*sin(0.8)' -normalize 0,255"""],
+    ["tests/samples/apples.png", """3,5,7,2,'x*cos(0.5236)+y*sin(0.8)' -normalize 0,255"""],
     ids=["2dsample", "3dsample"],
 )
 def test_gmic_image_to_numpy_helper_fuzzying(
@@ -162,7 +162,7 @@ def test_gmic_image_to_numpy_ndarray_basic_attributes(gmic_instance_run):
     import numpy
 
     single_image_list = []
-    gmic_instance_run(images=single_image_list, command="sp apples")
+    gmic_instance_run(images=single_image_list, command="tests/samples/apples.png")
     gmic_image = single_image_list[0]
     # we do not interleave to keep the same data structure for later comparison
     numpy_image = gmic_image.to_numpy_helper(interleave=False)
@@ -181,8 +181,8 @@ def test_gmic_image_to_numpy_ndarray_basic_attributes(gmic_instance_run):
 @pytest.mark.parametrize(**gmic_instance_types)
 def test_in_memory_gmic_image_to_numpy_nd_array_to_gmic_image(gmic_instance_run):
     single_image_list = []
-    gmic_instance_run(images=single_image_list, command="sp duck")
-    # TODO convert back and compare with original sp duck GmicImage
+    gmic_instance_run(images=single_image_list, command="tests/samples/duck.png")
+    # TODO convert back and compare with original tests/samples/duck.png GmicImage
 
 
 @pytest.mark.parametrize(**gmic_instance_types)
@@ -195,7 +195,7 @@ def test_numpy_ndarray_RGB_2D_image_gmic_run_without_gmicimage_wrapping(
 
     im1_name = "image.png"
     im2_name = "image.png"
-    gmic_instance_run("sp duck output " + im1_name)
+    gmic_instance_run("tests/samples/duck.png output " + im1_name)
     np_PIL_image = numpy.array(PIL.Image.open(im1_name))
     # TODO line below must fail because single numpy arrays rewrite is impossible for us
     with pytest.raises(
@@ -218,7 +218,7 @@ def test_numpy_ndarray_RGB_2D_image_integrity_through_numpyPIL_or_gmicimage_from
     im2_name = "image2.bmp"
 
     # 1. Generate duck bitmap, save it to disk
-    gmic_instance_run("sp duck -output " + im1_name)
+    gmic_instance_run("tests/samples/duck.png -output " + im1_name)
 
     # 2. Load disk duck through PIL/numpy, make it a GmicImage
     image_from_numpy = numpy.array(PIL.Image.open(im1_name))
@@ -232,7 +232,7 @@ def test_numpy_ndarray_RGB_2D_image_integrity_through_numpyPIL_or_gmicimage_from
 
     # 3. Load duck into a regular GmicImage through G'MIC without PIL/numpy
     imgs = []
-    gmic_instance_run(images=imgs, command="sp duck")
+    gmic_instance_run(images=imgs, command="tests/samples/duck.png")
     gmicimage_from_gmic = imgs[0]
 
     # 4. Use G'MIC to compare both duck GmicImages from numpy and gmic sources
@@ -248,7 +248,7 @@ def test_numpy_PIL_modes_to_gmic(gmic_instance_run):
 
     origin_image_name = "a.bmp"
     gmicimages = []
-    gmic_instance_run("sp duck output " + origin_image_name)
+    gmic_instance_run("tests/samples/duck.png output " + origin_image_name)
     PILimage = PIL.Image.open("a.bmp")
 
     modes = [
@@ -292,7 +292,7 @@ def test_numpy_PIL_modes_to_gmic(gmic_instance_run):
 
 def test_basic_from_numpy_helper_to_numpy_helper():
     duck = []
-    gmic.run("sp duck", duck)
+    gmic.run("tests/samples/duck.png", duck)
     original_duck_gmic_image = duck[0]
     duck_numpy_image = original_duck_gmic_image.to_numpy_helper(squeeze_shape=True)
     duck_io_gmic_image = gmic.GmicImage.from_numpy_helper(duck_numpy_image)
@@ -316,7 +316,7 @@ def test_from_numpy_helper_proper_dimensions_number():
 
 
 def test_basic_to_numpy_helper_from_numpy_helper():
-    gmic.run("sp duck output duck.png")
+    gmic.run("tests/samples/duck.png output duck.png")
     import PIL.Image
 
     pil_image = numpy.array(PIL.Image.open("duck.png"))
