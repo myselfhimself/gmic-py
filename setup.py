@@ -111,15 +111,18 @@ elif sys.platform in (
     "msys",
     "cygwin",
 ):  # Enable openmp for 32bit & 64bit linuxes and posix'ed windows
-    extra_compile_args += [
-        "-ID:/a/_temp/msys/msys64/usr/include"
-    ]  # MSYS2 / Github Action hack to fix libcurl
     extra_compile_args += ["-fopenmp"]
     extra_link_args += ["-lgomp"]
 
 # Force Windows and Windows posix'ed platforms as Windows-like for CImg/G'MIC
+# Also fix libcurl include and lib paths, which are not correctly mapped by pkg-config
 if sys.platform in ("msys", "cygwin", "win32"):
     define_macros.append(("cimg_OS", "2"))
+
+    # MSYS2 / Github Action hack to fix libcurl
+    extra_compile_args += ["-ID:/a/_temp/msys/msys64/usr/include"]
+    extra_link_args += ["-LD:/a/_temp/msys/msys64/usr/lib"]
+
 
 print("Define macros:")
 print(define_macros)
