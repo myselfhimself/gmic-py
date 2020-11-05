@@ -160,7 +160,7 @@ def get_package_data():
     """
     package_data = {}
     if sys.platform in ("msys", "cygwin", "win32") and path.exists(WIN_DLL_DIR):
-        libfiles = os.listdir(WIN_DLL_DIR)
+        libfiles = listdir(WIN_DLL_DIR)
         package_data["gmic"] = [path.abspath(l) for l in libfiles]
 
     # TODO remove me
