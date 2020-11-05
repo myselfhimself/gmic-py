@@ -119,9 +119,9 @@ elif sys.platform in (
 if sys.platform in ("msys", "cygwin", "win32"):
     define_macros.append(("cimg_OS", "2"))
 
-    # MSYS2 / Github Action hack to fix libcurl
-    extra_compile_args += ["-ID:/a/_temp/msys/msys64/usr/include"]
-    extra_link_args += ["-LD:/a/_temp/msys/msys64/usr/lib"]
+#    # MSYS2 / Github Action hack to fix libcurl
+#    extra_compile_args += ["-ID:/a/_temp/msys/msys64/usr/include"]
+#    extra_link_args += ["-LD:/a/_temp/msys/msys64/usr/lib"]
 
 
 print("Define macros:")
