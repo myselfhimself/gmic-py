@@ -237,6 +237,7 @@ function 3_test_compiled_so () {
     else
 	export PYTHONPATH=""
     fi
+    $PYTHON3 -c "import gmic; print(gmic.__spec__)"
     ls -l $PYTHONPATH
 
     TEST_FILES="${TEST_FILES:-tests/test_gmic_py.py tests/test_gmic_numpy.py tests/test_gmic_numpy_toolkits.py tests/test_gmic_py_memfreeing.py}"
@@ -259,6 +260,7 @@ function 3_test_compiled_so () {
     else
         return 0;
     fi
+    export PYTHONPATH=""
     set +x
 }
 
@@ -290,6 +292,7 @@ function 31_test_compiled_so_filters_io () {
 }    
 
 function 4_build_wheel () {
+    export PYTHONPATH=""
     $PIP3 install wheel || { echo "Fatal wheel package install error" ; exit 1 ; }
     $PYTHON3 setup.py bdist_wheel || { echo "Fatal wheel build error" ; exit 1 ; }
     echo "Not doing any auditwheel repair step here, development environment :)"
