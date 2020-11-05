@@ -28,8 +28,11 @@ jobs:
           pacman --help
           pacman --noconfirm -S wget libcurl-devel mingw-w64-x86_64-python-pip mingw-w64-x86_64-python python-devel mingw-w64-x86_64-gcc mingw-w64-x86_64-zlib mingw-w64-x86_64-libjpeg-turbo mingw64/mingw-w64-x86_64-pkgconf mingw-w64-x86_64-libpng mingw-w64-x86_64-libtiff mingw64/mingw-w64-x86_64-fftw mingw-w64-x86_64-toolchain
           pacman --noconfirm -S mingw-w64-x86_64-python-numpy
+          # Add complementary pkg-config
+          export PKG_CONFIG_PATH=/usr/lib/pkgconfig/:$PKG_CONFIG_PATH
           echo pkgconf now
-          pkgconf libcurl --libs --cflags
+          set -x
+          pkgconf libcurl --libs --cflags || echo "using pkg-config instead" && pkg-config libcurl --libs --cflags
           echo pkgconfig now
           pkg-config --list-all
           pkg-config libjpeg --libs --cflags
