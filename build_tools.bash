@@ -230,13 +230,14 @@ function 3_test_compiled_so () {
     if [ -z "$TEST_WHEEL" ]; then
 	pip uninstall gmic -y
         if ! [ -z "$PYTHON_DEBUG" ]; then
-            export PYTHONPATH=$(readlink -f ./build/lib*$PYTHON_VERSION*debug*/):$PYTHONPATH
+            export PYTHONPATH=$(readlink -f ./build/lib*$PYTHON_VERSION*debug*/)
         else
-            export PYTHONPATH=$(readlink -f ./build/lib*$PYTHON_VERSION/):$PYTHONPATH
+            export PYTHONPATH=$(readlink -f ./build/lib*$PYTHON_VERSION/)
         fi
     else
 	export PYTHONPATH=""
     fi
+    ls -l $PYTHONPATH
 
     TEST_FILES="${TEST_FILES:-tests/test_gmic_py.py tests/test_gmic_numpy.py tests/test_gmic_numpy_toolkits.py tests/test_gmic_py_memfreeing.py}"
 
@@ -284,7 +285,7 @@ function 31_test_compiled_so_filters_io () {
         PYTEST_NB_THREADS="-n 4"
     fi
     find ~/.config/gmic
-    $PIP3 uninstall gmic -y; cd ./build/lib*$PYTHON_VERSION*/ ; export PYTHONPATH=`pwd`:$PYTHONPATH ; $PIP3 install -r ../../{test,dev}-requirements.txt ; pwd; ls; $PYTHON3 -m pytest ../../tests/test_gmic_py_filters_io.py $PYTEST_EXPRESSION_PARAM $PYTEST_NB_THREADS -vvv -rxXs || { echo "Fatal error while running pytests" ; exit 1 ; } ; cd ../..
+    $PIP3 uninstall gmic -y; cd ./build/lib*$PYTHON_VERSION*/ ; export PYTHONPATH=`pwd` ; $PIP3 install -r ../../{test,dev}-requirements.txt ; pwd; ls; $PYTHON3 -m pytest ../../tests/test_gmic_py_filters_io.py $PYTEST_EXPRESSION_PARAM $PYTEST_NB_THREADS -vvv -rxXs || { echo "Fatal error while running pytests" ; exit 1 ; } ; cd ../..
     find ~/.config/gmic
 }    
 
