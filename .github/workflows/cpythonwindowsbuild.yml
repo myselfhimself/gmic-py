@@ -26,6 +26,7 @@ jobs:
         run: |
           pacman --version
           pacman --help
+          yes | pacman -R curl # avoid msys2-curl dll
           pacman --noconfirm -S wget libcurl-devel mingw-w64-x86_64-python-pip mingw-w64-x86_64-python python-devel mingw-w64-x86_64-gcc mingw-w64-x86_64-zlib mingw-w64-x86_64-libjpeg-turbo mingw64/mingw-w64-x86_64-pkgconf mingw-w64-x86_64-libpng mingw-w64-x86_64-libtiff mingw64/mingw-w64-x86_64-fftw mingw-w64-x86_64-toolchain
           pacman --noconfirm -S mingw-w64-x86_64-python-numpy
           # Add complementary pkg-config .pc lookup path
