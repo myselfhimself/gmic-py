@@ -161,7 +161,7 @@ def get_package_data():
     package_data = {}
     if sys.platform in ("msys", "cygwin", "win32") and path.exists(WIN_DLL_DIR):
         libfiles = listdir(WIN_DLL_DIR)
-        package_data["gmic"] = [path.abspath(l) for l in libfiles]
+        package_data["win_dll"] = libfiles
 
     # TODO remove me
     print("just built package_data:", package_data)
@@ -169,63 +169,14 @@ def get_package_data():
 
 
 setup(
-    # This is the name of your project. The first time you publish this
-    # package, this name will be registered for you. It will determine how
-    # users can install this project, e.g.:
-    #
-    # $ pip install sampleproject
-    #
-    # And where it will live on PyPI: https://pypi.org/project/sampleproject/
-    #
-    # There are some restrictions on what makes a valid project name
-    # specification here:
-    # https://packaging.python.org/specifications/core-metadata/#name
-    name="gmic",  # Required
-    # Versions should comply with PEP 440:
-    # https://www.python.org/dev/peps/pep-0440/
-    #
-    # For a discussion on single-sourcing the version across setup.py and the
-    # project code, see
-    # https://packaging.python.org/en/latest/single_source_version.html
+    name="gmic",
     version=version,
-    # This is a one-line description or tagline of what your project does. This
-    # corresponds to the "Summary" metadata field:
-    # https://packaging.python.org/specifications/core-metadata/#summary
     description="Binary Python3 bindings for the G'MIC C++ image processing library",  # Optional
-    # This is an optional longer description of your project that represents
-    # the body of text which users will see when they visit PyPI.
-    #
-    # Often, this is the same as your README, so you can just read it in from
-    # that file directly (as we have already done above)
-    #
-    # This field corresponds to the "Description" metadata field:
-    # https://packaging.python.org/specifications/core-metadata/#description-optional
-    long_description=long_description,  # Optional
-    # Denotes that our long_description is in Markdown; valid values are
-    # text/plain, text/x-rst, and text/markdown
-    #
-    # Optional if long_description is written in reStructuredText (rst) but
-    # required for plain-text or Markdown; if unspecified, "applications should
-    # attempt to render [the long_description] as text/x-rst; charset=UTF-8 and
-    # fall back to text/plain if it is not valid rst" (see link below)
-    #
-    # This field corresponds to the "Description-Content-Type" metadata field:
-    # https://packaging.python.org/specifications/core-metadata/#description-content-type-optional
+    long_description=long_description,
     long_description_content_type="text/markdown",  # Optional (see note above)
-    # This should be a valid link to your project's main homepage.
-    #
-    # This field corresponds to the "Home-Page" metadata field:
-    # https://packaging.python.org/specifications/core-metadata/#home-page-optional
     url="https://github.com/dtschump/gmic-py",  # Optional
-    # This should be your name or the name of the organization which owns the
-    # project.
     author="David Tschumperlé, Jonathan-David Schröder G'MIC GREYC IMAGE Team of CNRS, France",  # Optional
-    # This should be a valid email address corresponding to the author listed
-    # above.
     author_email="David.Tschumperle@ensicaen.fr, jonathan.schroder@gmail.com",  # Optional
-    # Classifiers help users find your project by categorizing it.
-    #
-    # For a list of valid classifiers, see https://pypi.org/classifiers/
     classifiers=[  # Optional
         # How mature is this project? Common values are
         #   3 - Alpha
@@ -300,6 +251,7 @@ setup(
     # If using Python 2.6 or earlier, then these have to be included in
     # MANIFEST.in as well.
     package_data=get_package_data(),
+    include_package_data=True,
     # Although 'package_data' is the preferred approach, in some case you may
     # need to place data files outside of your packages. See:
     # http://docs.python.org/3.4/distutils/setupscript.html#installing-additional-files
