@@ -111,7 +111,9 @@ elif sys.platform in (
     "msys",
     "cygwin",
 ):  # Enable openmp for 32bit & 64bit linuxes and posix'ed windows
-    extra_compile_args += ["-ID:/a/_temp/msys/msys64/usr/include"] #MSYS2 / Github Action hack to fix libcurl
+    extra_compile_args += [
+        "-ID:/a/_temp/msys/msys64/usr/include"
+    ]  # MSYS2 / Github Action hack to fix libcurl
     extra_compile_args += ["-fopenmp"]
     extra_link_args += ["-lgomp"]
 
