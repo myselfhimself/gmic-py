@@ -223,28 +223,31 @@ function 3_test_compiled_so () {
     if ! [ -z "$1" ]; then
         PYTEST_EXPRESSION_PARAM="-k ${@:1}"
     fi
-    # For wheel-based testing, allow function calling us to set a fake lib dir, so that no .so is loaded
-    # see 5_test_wheel
-    if ! [ -z "$GMIC_LIB_DIR" ]; then
+
+    # No python path must be set for the case 5_test_wheel
+    # Otherwise add the path of directory containing .so (debugging or optimized version)
+    if [ -z "$TEST_WHEEL" ]; then
+	pip uninstall gmic -y
         if ! [ -z "$PYTHON_DEBUG" ]; then
-            GMIC_LIB_DIR="./build/lib*$PYTHON_VERSION*debug*/"
+            export PYTHONPATH=$(readlink -f ./build/lib*$PYTHON_VERSION*debug*/):$PYTHONPATH
         else
-            GMIC_LIB_DIR="./build/lib*$PYTHON_VERSION/"
+            export PYTHONPATH=$(readlink -f ./build/lib*$PYTHON_VERSION/):$PYTHONPATH
         fi
+    else
+	export PYTHONPATH=""
     fi
 
-    TEST_FILES="${TEST_FILES:-../../tests/test_gmic_py.py ../../tests/test_gmic_numpy.py ../../tests/test_gmic_numpy_toolkits.py ../../tests/test_gmic_py_memfreeing.py}"
+    TEST_FILES="${TEST_FILES:-tests/test_gmic_py.py tests/test_gmic_numpy.py tests/test_gmic_numpy_toolkits.py tests/test_gmic_py_memfreeing.py}"
 
-    REQUIREMENTS="-r ../../dev-requirements.txt  -r ../../test-requirements.txt"
+    REQUIREMENTS="-r dev-requirements.txt  -r test-requirements.txt"
     if ! [ -z "$MSYSTEM" ]; then #windows / msys2 related
-        REQUIREMENTS="-r ../../dev-requirements.txt  -r ../../test-requirements-win.txt"
+        REQUIREMENTS="-r dev-requirements.txt  -r test-requirements-win.txt"
     fi
-    #TEST_FILES="${TEST_FILES:-../../tests/test_gmic_py_memfreeing.py}"
+    #TEST_FILES="${TEST_FILES:-tests/test_gmic_py_memfreeing.py}"
     FAILED_SUITES=0
-    $PIP3 uninstall gmic -y; cd $GMIC_LIB_DIR ; LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH ; $PIP3 install $REQUIREMENTS ; pwd; ls; 
+    $PIP3 install $REQUIREMENTS; pwd; ls; 
 
     for TEST_FILE in $TEST_FILES; do
-        # $PIP3 uninstall gmic -y; cd $GMIC_LIB_DIR ; LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH ; $PIP3 install -r ../../{test,dev}-requirements.txt ; pwd; ls; PYTHONMALLOC=malloc valgrind --show-leak-kinds=all --leak-check=full --log-file=/tmp/valgrind-output $PYTHON3 -m pytest $TEST_FILES $PYTEST_EXPRESSION_PARAM -vvv -rxXs || { echo "Fatal error while running pytests" ; exit 1 ; } ; cd ../..
         $PYTHON3 -m pytest $TEST_FILE $PYTEST_EXPRESSION_PARAM -vvv -rxX || { echo "Fatal error while running pytest suite $TEST_FILE" ; FAILED_SUITES=$((FAILED_SUITES+1)) ; }
     done
     cd ../..
@@ -257,7 +260,7 @@ function 3_test_compiled_so () {
 }
 
 function 3b_test_compiled_so_no_numpy () {
-    TEST_FILES="../../tests/test_gmic_py.py" 3_test_compiled_so
+    TEST_FILES="tests/test_gmic_py.py" 3_test_compiled_so
 }
 
 function 31_test_compiled_so_filters_io () {
@@ -279,7 +282,7 @@ function 31_test_compiled_so_filters_io () {
         PYTEST_NB_THREADS="-n 4"
     fi
     find ~/.config/gmic
-    $PIP3 uninstall gmic -y; cd ./build/lib*$PYTHON_VERSION*/ ; LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH ; $PIP3 install -r ../../{test,dev}-requirements.txt ; pwd; ls; $PYTHON3 -m pytest ../../tests/test_gmic_py_filters_io.py $PYTEST_EXPRESSION_PARAM $PYTEST_NB_THREADS -vvv -rxXs || { echo "Fatal error while running pytests" ; exit 1 ; } ; cd ../..
+    $PIP3 uninstall gmic -y; cd ./build/lib*$PYTHON_VERSION*/ ; export PYTHONPATH=`pwd`:$PYTHONPATH ; $PIP3 install -r ../../{test,dev}-requirements.txt ; pwd; ls; $PYTHON3 -m pytest ../../tests/test_gmic_py_filters_io.py $PYTEST_EXPRESSION_PARAM $PYTEST_NB_THREADS -vvv -rxXs || { echo "Fatal error while running pytests" ; exit 1 ; } ; cd ../..
     find ~/.config/gmic
 }    
 
@@ -291,7 +294,7 @@ function 4_build_wheel () {
 
 function 5_test_wheel () {
     $PIP3 install `ls -Art dist/*.whl | tail -n 1` --no-cache-dir
-    GMIC_LIB_DIR=. 3_test_compiled_so ${@:1}
+    TEST_WHEEL=1 3_test_compiled_so ${@:1}
     $PIP3 uninstall gmic -y
 }
 
