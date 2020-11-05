@@ -90,7 +90,7 @@ if sys.platform == "darwin":
 
 debug_enabled = "--debug" in sys.argv
 
-extra_compile_args = ["-std=c++11", "-I/a/_temp/msys64/usr/include"]
+extra_compile_args = ["-std=c++11"]
 if debug_enabled:
     extra_compile_args += ["-O0"]
     extra_compile_args += ["-g"]
@@ -111,6 +111,7 @@ elif sys.platform in (
     "msys",
     "cygwin",
 ):  # Enable openmp for 32bit & 64bit linuxes and posix'ed windows
+    extra_compile_args += ["-ID:/a/_temp/msys64/usr/include"]
     extra_compile_args += ["-fopenmp"]
     extra_link_args += ["-lgomp"]
 
