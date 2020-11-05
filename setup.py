@@ -3,7 +3,6 @@
 
 from os import path, listdir, environ
 import sys
-import platform
 
 from setuptools import setup, Extension, find_packages
 import pkgconfig
@@ -154,9 +153,9 @@ def get_package_data():
     Returns nothing quietly on other platforms
     """
     package_data = {}
-    if sys.platform in ("msys", "cygwin", "win32") and os.path.exists(WIN_DLL_DIR):
+    if sys.platform in ("msys", "cygwin", "win32") and path.exists(WIN_DLL_DIR):
         libfiles = os.listdir(WIN_DLL_DIR)
-        package_data["gmic"] = [os.path.abspath(l) for l in libfiles]
+        package_data["gmic"] = [path.abspath(l) for l in libfiles]
 
     # TODO remove me
     print("just built package_data:", package_data)
