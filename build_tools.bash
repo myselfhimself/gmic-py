@@ -5,6 +5,8 @@ PYTHON3=${PYTHON3:-python3}
 PIP3=${PIP3:-pip3}
 PYTHON_VERSION=$($PYTHON3 --version | cut -d' ' -f2 | cut -d'.' -f1,2)
 
+WIN_DLL_DIR="win_dll" # Directory where gmic-py dependents .dll files will be stored
+
 # Detect if Python is a debug build, per https://stackoverflow.com/a/647312/420684
 # Useful for testing leaks within the compiled .so library
 if python -c "import sys; sys.exit(int(hasattr(sys, 'gettotalrefcount')))"; then
@@ -292,14 +294,35 @@ function 31_test_compiled_so_filters_io () {
 }    
 
 function 4_build_wheel () {
-    export PYTHONPATH=""
+    if [ -z "WHEEL_REPAIR" ]; then
+        echo "Not doing any auditwheel repair step here, development environment :)"
+    elif ! [ -z "$MSYSTEM" ]; then
+	4c_copy_windows_dlls_for_repair
+    fi
+
     $PIP3 install wheel || { echo "Fatal wheel package install error" ; exit 1 ; }
     $PYTHON3 setup.py bdist_wheel || { echo "Fatal wheel build error" ; exit 1 ; }
-    echo "Not doing any auditwheel repair step here, development environment :)"
+}
+
+function 4b_build_windows_portable_wheel () {
+   WHEEL_REPAIR=1 4_build_wheel
+}
+
+
+function 4c_copy_windows_dlls_for_repair () {
+    set -x
+    # Inspired by gmic CLI Windows build instructions at https://gmic.eu/download.html#windows
+    mkdir -p $WIN_DLL_DIR
+    DLLS_TO_COPY=$(ldd -v build/lib.*/gmic-*.dll | grep -Ei "/mingw64/bin/lib.*.dll")
+    echo "DLLs to be copied into wheel are: $DLLS_TO_COPY"
+    cp $DLLS_TO_COPY $WIN_DLL_DIR || { echo "Could not copy dlls to $WIN_DLL_DIR" ; exit 1 ; }
+    cd -
+    set +x
 }
 
 function 5_test_wheel () {
     set -x
+    export PYTHONPATH=""
     $PIP3 install `ls -Art dist/*.whl | tail -n 1` --no-cache-dir
     TEST_WHEEL=1 3_test_compiled_so ${@:1}
     $PIP3 uninstall gmic -y

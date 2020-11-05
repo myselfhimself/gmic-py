@@ -10,6 +10,7 @@ import pkgconfig
 
 here = path.abspath(path.dirname(__file__))
 gmic_src_path = path.abspath("src/gmic/src")
+WIN_DLL_DIR = path.abspath("win_dll")
 
 
 # List of non-standard '-l*' compiler parameters
@@ -146,6 +147,22 @@ with open(path.join(".", "VERSION")) as version_file:
 # Arguments marked as "Required" below must be included for upload to PyPI.
 # Fields marked as "Optional" may be commented out.
 
+
+def get_package_data():
+    """Return a list of DLL dependencies paths if on Windows platforms and DLL dir was prepared
+    Needs build_tools.bash 4b_build_windows_portable_wheel to be run first on Windows OS
+    Returns nothing quietly on other platforms
+    """
+    package_data = {}
+    if sys.platform in ("msys", "cygwin", "win32") and os.path.exists(WIN_DLL_DIR):
+        libfiles = os.listdir(WIN_DLL_DIR)
+        package_data["gmic"] = [os.path.abspath(l) for l in libfiles]
+
+    # TODO remove me
+    print("just built package_data:", package_data)
+    return package_data
+
+
 setup(
     # This is the name of your project. The first time you publish this
     # package, this name will be registered for you. It will determine how
@@ -225,6 +242,7 @@ setup(
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
     ],
     # This field adds keywords for your project which will appear on the
     # project page. What does your project relate to?
@@ -276,9 +294,7 @@ setup(
     #
     # If using Python 2.6 or earlier, then these have to be included in
     # MANIFEST.in as well.
-    # package_data={  # Optional
-    #     'sample': ['package_data.dat'],
-    # },
+    package_data=get_package_data(),
     # Although 'package_data' is the preferred approach, in some case you may
     # need to place data files outside of your packages. See:
     # http://docs.python.org/3.4/distutils/setupscript.html#installing-additional-files

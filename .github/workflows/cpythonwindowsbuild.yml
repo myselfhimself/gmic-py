@@ -28,6 +28,11 @@ jobs:
           pacman --help
           pacman --noconfirm -S wget libcurl-devel mingw-w64-x86_64-python-pip mingw-w64-x86_64-python python-devel mingw-w64-x86_64-gcc mingw-w64-x86_64-zlib mingw-w64-x86_64-libjpeg-turbo mingw-w64-x86_64-pkg-config mingw-w64-x86_64-libpng mingw-w64-x86_64-libtiff mingw64/mingw-w64-x86_64-fftw mingw-w64-x86_64-toolchain
           pacman --noconfirm -S mingw-w64-x86_64-python-numpy
+          pkg-config --debug
+          pkg-config --libs --cflags
+          echo pkgconf now
+          pkgconf --debug
+          pkgconf libcurl --libs --cflags
           pkg-config --list-all
           pkg-config libjpeg --libs --cflags
           pkg-config libpng --libs --cflags
@@ -46,7 +51,7 @@ jobs:
           bash build_tools.bash 2b_compile_debug
           ldd $(find -name *.dll)
           bash build_tools.bash 3_test_compiled_so format
-          bash build_tools.bash 4_build_wheel
+          bash build_tools.bash 4b_build_windows_portable_wheel
           bash build_tools.bash 5_test_wheel format
       - name: upload .whl debug build dir as artifact
         uses: actions/upload-artifact@v2
