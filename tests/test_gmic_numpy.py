@@ -91,7 +91,10 @@ def test_gmic_image_to_numpy_ndarray_exception_on_unimportable_numpy_module(
 @pytest.mark.parametrize(**squeeze_toggles)
 @pytest.mark.parametrize(
     "gmic_command",
-    ["tests/samples/apples.png", """3,5,7,2,'x*cos(0.5236)+y*sin(0.8)' -normalize 0,255"""],
+    [
+        "tests/samples/apples.png",
+        """3,5,7,2,'x*cos(0.5236)+y*sin(0.8)' -normalize 0,255""",
+    ],
     ids=["2dsample", "3dsample"],
 )
 def test_gmic_image_to_numpy_helper_fuzzying(
