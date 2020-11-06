@@ -24,8 +24,8 @@ jobs:
         env:
           TWINE_PASSWORD_GITHUB_SECRET: ${{ secrets.TWINE_PASSWORD_GITHUB_SECRET }} # For build_tools.bash 11_send_to_pypi
         run: |
-          pacman --noconfirm -S wget mingw-w64-x86_64-curl mingw-w64-x86_64-python-pip mingw-w64-x86_64-python python-devel mingw-w64-x86_64-gcc mingw-w64-x86_64-zlib mingw-w64-x86_64-libjpeg-turbo mingw64/mingw-w64-x86_64-pkgconf mingw-w64-x86_64-libpng mingw-w64-x86_64-libtiff mingw64/mingw-w64-x86_64-fftw
-          pacman --noconfirm -S mingw-w64-x86_64-python-numpy
+          pacman --noconfirm -S unzip wget mingw-w64-x86_64-curl mingw-w64-x86_64-python-pip mingw-w64-x86_64-python python-devel mingw-w64-x86_64-gcc mingw-w64-x86_64-zlib mingw-w64-x86_64-libjpeg-turbo mingw64/mingw-w64-x86_64-pkgconf mingw-w64-x86_64-libpng mingw-w64-x86_64-libtiff mingw64/mingw-w64-x86_64-fftw
+          pacman --noconfirm -S mingw-w64-x86_64-python-numpy # used by unit tests, safer to install so than through pip on-the-fly source compilation
           # Add complementary pkg-config .pc lookup path
           export PKG_CONFIG_PATH=/usr/lib/pkgconfig/:$PKG_CONFIG_PATH
           pkg-config --list-all
