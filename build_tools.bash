@@ -329,6 +329,19 @@ function 5_test_wheel () {
     set +x
 }
 
+function 5b_test_wheel_dlls_repaired () {
+    set -x
+    LAST_WHEEL=`ls -Art dist/*.whl | tail -n 1`
+    unzip -l $LAST_WHEEL
+    PACKED_DLLS_FOUND=`unzip -l $LAST_WHEEL | grep -Eio "[a-z].*\.dll" | grep -v gmic | paste -s -d' '`
+    if [ -z "$PACKED_DLLS_FOUND" ]; then
+        echo "Error: non-gmic DLLs not found in wheel."; exit 1
+    else
+        echo "Found non-gmic DLLs in wheel: $PACKED_DLLS_FOUND"
+    fi
+    set +x
+}
+
 function 6_make_full_doc () {
     # Use this for generating doc when gmicpy.cpp has been changed
     20_reformat_all && 2b_compile_debug && 4_build_wheel && pip uninstall -y gmic && pip install `ls -Art dist/*.whl | tail -n 1` && cd docs && pip install -r requirements.txt && touch *.rst && make html && $BROWSER _build/html/index.html && cd ..

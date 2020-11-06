@@ -48,6 +48,7 @@ jobs:
           bash build_tools.bash 3_test_compiled_so format
           bash build_tools.bash 4b_build_windows_portable_wheel
           bash build_tools.bash 5_test_wheel format
+          bash build_tools.bash 5b_test_wheel_dlls_repaired
       - name: upload .whl debug build dir as artifact
         uses: actions/upload-artifact@v2
         with:
