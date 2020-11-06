@@ -251,7 +251,7 @@ setup(
     # If using Python 2.6 or earlier, then these have to be included in
     # MANIFEST.in as well.
     package_data={"gmic": ["win_dll/*.dll"]},  # get_package_data(),
-    include_package_data=True,
+    #include_package_data=True,
     data_files=[("", ["COPYING"])],
     # Although 'package_data' is the preferred approach, in some case you may
     # need to place data files outside of your packages. See:
