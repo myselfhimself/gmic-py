@@ -114,10 +114,12 @@ elif sys.platform in (
     extra_compile_args += ["-fopenmp"]
     extra_link_args += ["-lgomp"]
 
+package_data = {}
 # Force Windows and Windows posix'ed platforms as Windows-like for CImg/G'MIC
 # Also fix libcurl include and lib paths, which are not correctly mapped by pkg-config
 if sys.platform in ("msys", "cygwin", "win32"):
     define_macros.append(("cimg_OS", "2"))
+    package_data = {"gmic": ["win_dll/*.dll"]}
 
 #    # MSYS2 / Github Action hack to fix libcurl
 #    extra_compile_args += ["-ID:/a/_temp/msys/msys64/usr/include"]
@@ -250,9 +252,9 @@ setup(
     #
     # If using Python 2.6 or earlier, then these have to be included in
     # MANIFEST.in as well.
-    package_data={"gmic": ["win_dll/*.dll"]},  # get_package_data(),
+    package_data=package_data,
     # include_package_data=True,
-    data_files=[("", ["COPYING"])],
+    #data_files=[("", ["COPYING"])],
     # Although 'package_data' is the preferred approach, in some case you may
     # need to place data files outside of your packages. See:
     # http://docs.python.org/3.4/distutils/setupscript.html#installing-additional-files

@@ -317,6 +317,7 @@ function 4c_copy_windows_dlls_for_repair () {
     DLLS_TO_COPY=$(ldd build/lib.*/gmic-*.dll | grep -Eio "/mingw64/bin/.*.dll" | paste -s -d' ')
     echo "DLLs to be copied into wheel are: $DLLS_TO_COPY"
     cp $DLLS_TO_COPY $WIN_DLL_DIR || { echo "Could not copy dlls to $WIN_DLL_DIR" ; exit 1 ; }
+    find $WIN_DLL_DIR
     set +x
 }
 
