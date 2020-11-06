@@ -1,4 +1,4 @@
 graft src/gmic/src
 include VERSION
 include README.md
-graft win_dll
+recursive-include win_dll *.dll
