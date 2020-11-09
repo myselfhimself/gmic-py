@@ -95,13 +95,15 @@ if __name__ == "__main__":
     #dll_dir = os.path.join(os.environ["VCPKG_INSTALLATION_ROOT"], "installed", f"{x}-windows", "bin")
 
     # TODO dll_dir injectability
-    try:
-        print("debug: attempting simple dll dir")
-        dll_dir = os.path.abspath("/mingw64/bin/")
-    except:
-        print("debug: falling back to full hardcoded dll dir")
-        dll_dir = os.path.abspath("D:/a/_temp/msys/msys64/mingw64/bin/")
+    # try:
+    #     print("debug: attempting simple dll dir")
+    #     dll_dir = os.path.abspath("/mingw64/bin/")
+    # except:
+    #     print("debug: falling back to full hardcoded dll dir")
+    #     dll_dir = os.path.abspath("D:/a/_temp/msys/msys64/mingw64/bin/")
 
+    print("debug: falling back to full hardcoded dll dir")
+    dll_dir = os.path.abspath("D:/a/_temp/msys/msys64/mingw64/bin/")
     print("debug: final dll_dir is:", dll_dir)
     
     dll_dependencies = defaultdict(set)
