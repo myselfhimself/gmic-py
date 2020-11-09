@@ -78,7 +78,9 @@ if __name__ == "__main__":
         wheel.extractall(old_wheel_dir)
         wheel.extractall(new_wheel_dir)
         pyd_path = list(filter(lambda x: x.endswith((".pyd", ".dll")), wheel.namelist()))[0]
+        print("debug: pyd_path is:", pyd_path)
         tmp_pyd_path = os.path.join(old_wheel_dir, package_name, os.path.basename(pyd_path))
+        print("debug: tmp_pyd_path is:", tmp_pyd_path)
     
     # https://docs.python.org/3/library/platform.html#platform.architecture
     x = "x64" if sys.maxsize > 2**32 else "x86"
