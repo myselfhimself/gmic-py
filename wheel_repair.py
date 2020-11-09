@@ -76,6 +76,8 @@ if __name__ == "__main__":
     
     with zipfile.ZipFile(args.WHEEL_FILE, "r") as wheel:
         wheel.extractall(old_wheel_dir)
+        print("showing old_wheel_dir contents")
+        print(os.listdir(old_wheel_dir))
         wheel.extractall(new_wheel_dir)
         pyd_path = list(filter(lambda x: x.endswith((".pyd", ".dll")), wheel.namelist()))[0]
         print("debug: pyd_path is:", pyd_path)
