@@ -294,15 +294,19 @@ function 31_test_compiled_so_filters_io () {
 }    
 
 function 4_build_wheel () {
-    if [ -z "WHEEL_REPAIR" ]; then
-        echo "Not doing any auditwheel repair step here, development environment :)"
-    elif ! [ -z "$MSYSTEM" ]; then
-	4c_copy_windows_dlls_for_repair
-    fi
     rm -rf .egg-info # https://stackoverflow.com/questions/18085571/pip-install-error-setup-script-specifies-an-absolute-path#comment94579634_39198529
 
     $PIP3 install wheel || { echo "Fatal wheel package install error" ; exit 1 ; }
     $PYTHON3 setup.py bdist_wheel || { echo "Fatal wheel build error" ; exit 1 ; }
+
+    if [ -z "WHEEL_REPAIR" ]; then
+        echo "Not doing any auditwheel repair step here, development environment :)"
+    elif ! [ -z "$MSYSTEM" ]; then
+	#4c_copy_windows_dlls_for_repair
+	pip install -r dev-requirements-win.txt
+        LAST_WHEEL=`ls -Art dist/*.whl | tail -n 1`
+	$PYTHON3 wheel_repair.py $LAST_WHEEL
+    fi
 }
 
 function 4b_build_windows_portable_wheel () {
