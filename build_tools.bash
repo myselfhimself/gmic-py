@@ -302,6 +302,9 @@ function 4_build_wheel () {
     if [ -z "WHEEL_REPAIR" ]; then
         echo "Not doing any auditwheel repair step here, development environment :)"
     elif ! [ -z "$MSYSTEM" ]; then
+	echo "about to repair wheel for windows using wheel_repair.py"
+	echo ".dll ldd for info, before repair attempt:"
+	ldd build/lib.*/gmic-*.dll
 	#4c_copy_windows_dlls_for_repair
 	pip install -r dev-requirements-win.txt
         LAST_WHEEL=`ls -Art dist/*.whl | tail -n 1`
