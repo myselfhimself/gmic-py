@@ -78,10 +78,14 @@ if __name__ == "__main__":
         wheel.extractall(old_wheel_dir)
         print("showing old_wheel_dir contents")
         print(os.listdir(old_wheel_dir))
+        print("attempting stat of old_wheel_dir:", old_wheel_dir)
+        os.stat(old_wheel_dir)
         wheel.extractall(new_wheel_dir)
         pyd_path = list(filter(lambda x: x.endswith((".pyd", ".dll")), wheel.namelist()))[0]
         print("debug: pyd_path is:", pyd_path)
-        tmp_pyd_path = os.path.join(old_wheel_dir, package_name, os.path.basename(pyd_path))
+        #tmp_pyd_path = os.path.join(old_wheel_dir, package_name, os.path.basename(pyd_path))
+        # add dll recursive autodetection
+        tmp_pyd_path = os.path.join(old_wheel_dir, os.path.basename(pyd_path))
         print("debug: tmp_pyd_path is:", tmp_pyd_path)
     
     # https://docs.python.org/3/library/platform.html#platform.architecture
@@ -101,20 +105,24 @@ if __name__ == "__main__":
             mapping[dep.encode("ascii")] = hashed_name.encode("ascii")
             shutil.copy(
                 os.path.join(dll_dir, dep),
-                os.path.join(new_wheel_dir, package_name, hashed_name),
+                #os.path.join(new_wheel_dir, package_name, hashed_name),
+                os.path.join(new_wheel_dir, hashed_name),
             )
     
         if dll.endswith(".pyd"):
             old_name = os.path.join(
-                old_wheel_dir, package_name, os.path.basename(tmp_pyd_path)
+                #old_wheel_dir, package_name, os.path.basename(tmp_pyd_path)
+                old_wheel_dir, os.path.basename(tmp_pyd_path)
             )
             new_name = os.path.join(
-                new_wheel_dir, package_name, os.path.basename(tmp_pyd_path)
+                #new_wheel_dir, package_name, os.path.basename(tmp_pyd_path)
+                new_wheel_dir, os.path.basename(tmp_pyd_path)
             )
         else:
             old_name = os.path.join(dll_dir, dll)
             hashed_name = hash_filename(os.path.join(dll_dir, dll))  # already basename
-            new_name = os.path.join(new_wheel_dir, package_name, hashed_name)
+            #new_name = os.path.join(new_wheel_dir, package_name, hashed_name)
+            new_name = os.path.join(new_wheel_dir, hashed_name)
     
         mangle_filename(old_name, new_name, mapping)
     
