@@ -77,13 +77,14 @@ if __name__ == "__main__":
     with zipfile.ZipFile(args.WHEEL_FILE, "r") as wheel:
         wheel.extractall(old_wheel_dir)
         wheel.extractall(new_wheel_dir)
-        pyd_path = list(filter(lambda x: x.endswith(".pyd"), wheel.namelist()))[0]
+        pyd_path = list(filter(lambda x: x.endswith((".pyd", ".dll")), wheel.namelist()))[0]
         tmp_pyd_path = os.path.join(old_wheel_dir, package_name, os.path.basename(pyd_path))
     
     # https://docs.python.org/3/library/platform.html#platform.architecture
     x = "x64" if sys.maxsize > 2**32 else "x86"
     # set VCPKG_INSTALLATION_ROOT=C:\dev\vcpkg
-    dll_dir = os.path.join(os.environ["VCPKG_INSTALLATION_ROOT"], "installed", f"{x}-windows", "bin")
+    #dll_dir = os.path.join(os.environ["VCPKG_INSTALLATION_ROOT"], "installed", f"{x}-windows", "bin")
+    dll_dir = "/mingw64/bin/"
     
     dll_dependencies = defaultdict(set)
     find_dll_dependencies(tmp_pyd_path, dll_dir)
