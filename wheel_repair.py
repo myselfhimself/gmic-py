@@ -31,6 +31,7 @@ def find_dll_dependencies(dll_filepath, vcpkg_bin_dir):
 
     for entry in pe.DIRECTORY_ENTRY_IMPORT:
         entry_name = entry.dll.decode("utf-8")
+        print("debug: attempting to find", entry, "in", vcpkg_bin_dir)
         if entry_name in os.listdir(vcpkg_bin_dir):
             dll_dependencies[os.path.basename(dll_filepath)].add(entry_name)
             _dll_filepath = os.path.join(vcpkg_bin_dir, entry_name)
@@ -92,7 +93,16 @@ if __name__ == "__main__":
     x = "x64" if sys.maxsize > 2**32 else "x86"
     # set VCPKG_INSTALLATION_ROOT=C:\dev\vcpkg
     #dll_dir = os.path.join(os.environ["VCPKG_INSTALLATION_ROOT"], "installed", f"{x}-windows", "bin")
-    dll_dir = "/mingw64/bin/"
+
+    # TODO dll_dir injectability
+    try:
+        print("debug: attempting simple dll dir")
+        dll_dir = os.path.abspath("/mingw64/bin/")
+    except:
+        print("debug: falling back to full hardcoded dll dir")
+        dll_dir = os.path.abspath("D:/a/_temp/msys/msys64/mingw64/bin/")
+
+    print("debug: final dll_dir is:", dll_dir)
     
     dll_dependencies = defaultdict(set)
     find_dll_dependencies(tmp_pyd_path, dll_dir)
