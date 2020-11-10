@@ -82,12 +82,12 @@ if __name__ == "__main__":
         print("attempting stat of old_wheel_dir:", old_wheel_dir)
         os.stat(old_wheel_dir)
         wheel.extractall(new_wheel_dir)
-        pyd_path = list(filter(lambda x: x.endswith((".pyd", ".dll")), wheel.namelist()))[0]
-        print("debug: pyd_path is:", pyd_path)
-        #tmp_pyd_path = os.path.join(old_wheel_dir, package_name, os.path.basename(pyd_path))
+        pe_path = list(filter(lambda x: x.endswith((".pyd", ".dll")), wheel.namelist()))[0]
+        print("debug: pe_path is:", pe_path)
+        #tmp_pe_path = os.path.join(old_wheel_dir, package_name, os.path.basename(pe_path))
         # add dll recursive autodetection
-        tmp_pyd_path = os.path.join(old_wheel_dir, os.path.basename(pyd_path))
-        print("debug: tmp_pyd_path is:", tmp_pyd_path)
+        tmp_pe_path = os.path.join(old_wheel_dir, os.path.basename(pe_path))
+        print("debug: tmp_pe_path is:", tmp_pe_path)
     
     # https://docs.python.org/3/library/platform.html#platform.architecture
     x = "x64" if sys.maxsize > 2**32 else "x86"
@@ -107,7 +107,8 @@ if __name__ == "__main__":
     print("debug: final dll_dir is:", dll_dir)
     
     dll_dependencies = defaultdict(set)
-    find_dll_dependencies(tmp_pyd_path, dll_dir)
+    find_dll_dependencies(tmp_pe_path, dll_dir)
+    print("dll_dependencies found:", dll_dependencies)
     
     for dll, dependencies in dll_dependencies.items():
         mapping = {}
@@ -123,14 +124,14 @@ if __name__ == "__main__":
     
         if dll.endswith(".pyd"):
             old_name = os.path.join(
-                #old_wheel_dir, package_name, os.path.basename(tmp_pyd_path)
-                old_wheel_dir, os.path.basename(tmp_pyd_path)
+                #old_wheel_dir, package_name, os.path.basename(tmp_pe_path)
+                old_wheel_dir, os.path.basename(tmp_pe_path)
             )
             new_name = os.path.join(
-                #new_wheel_dir, package_name, os.path.basename(tmp_pyd_path)
-                new_wheel_dir, os.path.basename(tmp_pyd_path)
+                #new_wheel_dir, package_name, os.path.basename(tmp_pe_path)
+                new_wheel_dir, os.path.basename(tmp_pe_path)
             )
-        else:
+        elif dll.endswith(".dll") and dll is not pe_path:
             old_name = os.path.join(dll_dir, dll)
             hashed_name = hash_filename(os.path.join(dll_dir, dll))  # already basename
             #new_name = os.path.join(new_wheel_dir, package_name, hashed_name)
