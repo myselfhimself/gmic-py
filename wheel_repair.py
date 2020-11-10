@@ -151,6 +151,7 @@ if __name__ == "__main__":
     with zipfile.ZipFile(repaired_wheel, "w", zipfile.ZIP_DEFLATED) as new_wheel:
         for root, dirs, files in os.walk(new_wheel_dir):
             for file in files:
+                print("new wheel copying:", os.path.join(root, file), os.path.join(os.path.basename(root), file))
                 new_wheel.write(
                     os.path.join(root, file), os.path.join(os.path.basename(root), file)
                 )
