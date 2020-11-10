@@ -42,10 +42,13 @@ def mangle_filename(old_filename, new_filename, mapping):
     with open(old_filename, "rb") as f:
         buf = f.read()
 
-    new_buf = redll(buf, mapping)
+    try:
+        new_buf = redll(buf, mapping)
 
-    with open(new_filename, "wb") as f:
-        f.write(new_buf)
+        with open(new_filename, "wb") as f:
+            f.write(new_buf)
+    except ValueError:
+        print("Unsolvable machomangler buffer length error. Skipping mangling of:", old_filename)
 
 
 if __name__ == "__main__":
