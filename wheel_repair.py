@@ -111,9 +111,11 @@ if __name__ == "__main__":
     print("dll_dependencies found:", dll_dependencies)
     
     for dll, dependencies in dll_dependencies.items():
+        print("about to mangle:", dll)
         mapping = {}
     
         for dep in dependencies:
+            print("about to hash:",os.path.join(dll_dir, dep))
             hashed_name = hash_filename(os.path.join(dll_dir, dep))  # already basename
             mapping[dep.encode("ascii")] = hashed_name.encode("ascii")
             shutil.copy(
@@ -122,7 +124,10 @@ if __name__ == "__main__":
                 os.path.join(new_wheel_dir, hashed_name),
             )
     
-        if dll.endswith(".pyd"):
+        if dll == pe_path:
+            # skip mangling module's portable executable itself
+            continue
+        elif dll.endswith(".pyd"):
             old_name = os.path.join(
                 #old_wheel_dir, package_name, os.path.basename(tmp_pe_path)
                 old_wheel_dir, os.path.basename(tmp_pe_path)
@@ -131,8 +136,9 @@ if __name__ == "__main__":
                 #new_wheel_dir, package_name, os.path.basename(tmp_pe_path)
                 new_wheel_dir, os.path.basename(tmp_pe_path)
             )
-        elif dll.endswith(".dll") and dll is not pe_path:
+        elif dll.endswith(".dll"):
             old_name = os.path.join(dll_dir, dll)
+            print("about to hash:",os.path.join(dll_dir, dll))
             hashed_name = hash_filename(os.path.join(dll_dir, dll))  # already basename
             #new_name = os.path.join(new_wheel_dir, package_name, hashed_name)
             new_name = os.path.join(new_wheel_dir, hashed_name)
