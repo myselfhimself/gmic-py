@@ -347,6 +347,13 @@ function 5b_test_wheel_dlls_repaired () {
     else
         echo "Found non-gmic DLLs in wheel: $PACKED_DLLS_FOUND"
     fi
+
+    export PYTHONPATH=""
+    $PIP3 uninstall gmic -y
+    $PIP3 install $LAST_WHEEL --no-cache-dir
+    TEST_WHEEL=1 3_test_compiled_so ${@:1}
+    $PIP3 uninstall gmic -y
+ 
     set +x
 }
 
