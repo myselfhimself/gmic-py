@@ -54,6 +54,11 @@ jobs:
         with:
           name: gmic-py-windows-debug-dist-dir
           path: dist/
+      - name: upload .whl repaired build dir as artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: gmic-py-windows-repaired-dist-dir
+          path: wheelhouse/
       - name: upload .dll debug build dir as artifact
         uses: actions/upload-artifact@v2
         with:
