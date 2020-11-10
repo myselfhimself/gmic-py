@@ -339,7 +339,7 @@ function 5_test_wheel () {
 
 function 5b_test_wheel_dlls_repaired () {
     set -x
-    LAST_WHEEL=`ls -Art dist/*.whl | tail -n 1`
+    LAST_WHEEL=`ls -Art wheelhouse/*.whl | tail -n 1`
     unzip -l $LAST_WHEEL
     PACKED_DLLS_FOUND=`unzip -l $LAST_WHEEL | grep -Eio "[a-z].*\.dll" | grep -v gmic | paste -s -d' '`
     if [ -z "$PACKED_DLLS_FOUND" ]; then
