@@ -31,7 +31,7 @@ def find_dll_dependencies(dll_filepath, vcpkg_bin_dir):
 
     for entry in pe.DIRECTORY_ENTRY_IMPORT:
         entry_name = entry.dll.decode("utf-8")
-        print("debug: attempting to find", entry, "in", vcpkg_bin_dir)
+        print("debug: attempting to find", entry, entry.dll, entry.imports, entry.struct, "in", vcpkg_bin_dir)
         if entry_name in os.listdir(vcpkg_bin_dir):
             dll_dependencies[os.path.basename(dll_filepath)].add(entry_name)
             _dll_filepath = os.path.join(vcpkg_bin_dir, entry_name)
