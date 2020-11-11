@@ -44,6 +44,7 @@ def mangle_filename(old_filename, new_filename, mapping):
 
     try:
         new_buf = redll(buf, mapping)
+        print("Building mangle filename mapping and redll:", old_filename, new_filename, mapping)
 
         with open(new_filename, "wb") as f:
             f.write(new_buf)
