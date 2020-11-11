@@ -308,7 +308,7 @@ function 4_build_wheel () {
 	#4c_copy_windows_dlls_for_repair
 	pip install -r dev-requirements-win.txt
         LAST_WHEEL=`ls -Art dist/*.whl | tail -n 1`
-	$PYTHON3 wheel_repair.py $LAST_WHEEL
+	$PYTHON3 wheel_repair.py $LAST_WHEEL "D:/a/_temp/msys/msys64/mingw64/bin/"
     fi
 }
 

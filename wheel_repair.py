@@ -98,21 +98,22 @@ if __name__ == "__main__":
     # set VCPKG_INSTALLATION_ROOT=C:\dev\vcpkg
     #dll_dir = os.path.join(os.environ["VCPKG_INSTALLATION_ROOT"], "installed", f"{x}-windows", "bin")
 
-    # TODO dll_dir injectability
-    # try:
-    #     print("debug: attempting simple dll dir")
-    #     dll_dir = os.path.abspath("/mingw64/bin/")
-    # except:
-    #     print("debug: falling back to full hardcoded dll dir")
-    #     dll_dir = os.path.abspath("D:/a/_temp/msys/msys64/mingw64/bin/")
+    dll_dir = args.DLL_DIR
+    if not dll_dir and os.environ["VCPKG_INSTALLATION_ROOT"]:
+        # https://docs.python.org/3/library/platform.html#platform.architecture
+        #dll_dir = os.path.join(os.environ["VCPKG_INSTALLATION_ROOT"], "installed", f"{x}-windows", "bin")
+        x = "x64" if sys.maxsize > 2**32 else "x86"
+        # set VCPKG_INSTALLATION_ROOT=C:\dev\vcpkg
 
-    print("debug: falling back to full hardcoded dll dir")
-    dll_dir = os.path.abspath("D:/a/_temp/msys/msys64/mingw64/bin/")
-    print("debug: final dll_dir is:", dll_dir)
+    print("debug: dll_dir (lookup directory) is:", dll_dir)
     
     dll_dependencies = defaultdict(set)
     find_dll_dependencies(tmp_pe_path, dll_dir)
     print("dll_dependencies found:", dll_dependencies)
+
+
+    new_wheel_libs_dir = os.path.join(new_wheel_dir, package_name)
+    os.makedirs(new_wheel_dir, exist_ok=True)
     
     for dll, dependencies in dll_dependencies.items():
         print("about to mangle:", dll)
@@ -124,8 +125,7 @@ if __name__ == "__main__":
             mapping[dep.encode("ascii")] = hashed_name.encode("ascii")
             shutil.copy(
                 os.path.join(dll_dir, dep),
-                #os.path.join(new_wheel_dir, package_name, hashed_name),
-                os.path.join(new_wheel_dir, hashed_name),
+                os.path.join(new_wheel_libs_dir, hashed_name),
             )
     
         if dll == pe_path:
@@ -133,28 +133,23 @@ if __name__ == "__main__":
             continue
         elif dll.endswith(".pyd"):
             old_name = os.path.join(
-                #old_wheel_dir, package_name, os.path.basename(tmp_pe_path)
-                old_wheel_dir, os.path.basename(tmp_pe_path)
+                new_wheel_libs_dir, os.path.basename(tmp_pe_path)
             )
             new_name = os.path.join(
-                #new_wheel_dir, package_name, os.path.basename(tmp_pe_path)
-                new_wheel_dir, os.path.basename(tmp_pe_path)
+                new_wheel_libs_dir, os.path.basename(tmp_pe_path)
             )
         elif dll.endswith(".dll"):
             old_name = os.path.join(dll_dir, dll)
             print("about to hash:",os.path.join(dll_dir, dll))
             hashed_name = hash_filename(os.path.join(dll_dir, dll))  # already basename
-            #new_name = os.path.join(new_wheel_dir, package_name, hashed_name)
-            new_name = os.path.join(new_wheel_dir, hashed_name)
+            new_name = os.path.join(new_wheel_libs_dir, hashed_name)
     
         mangle_filename(old_name, new_name, mapping)
     
     with zipfile.ZipFile(repaired_wheel, "w", zipfile.ZIP_DEFLATED) as new_wheel:
         for root, dirs, files in os.walk(new_wheel_dir):
             for file in files:
-                print("new wheel copying:", os.path.join(root, file), os.path.join(package_name, file))
-                #print("new wheel copying:", os.path.join(root, file), os.path.join(os.path.basename(root), file))
+                print("new wheel copying:", os.path.join(root, file), os.path.join(os.path.basename(root), file))
                 new_wheel.write(
-                    os.path.join(root, file), os.path.join(package_name, file)
-                    #os.path.join(root, file), os.path.join(os.path.basename(root), file)
+                    os.path.join(root, file), os.path.join(os.path.basename(root), file)
                 )
