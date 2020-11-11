@@ -341,7 +341,7 @@ function 5b_test_wheel_dlls_repaired () {
     set -x
     LAST_WHEEL=`ls -Art wheelhouse/*.whl | tail -n 1`
     unzip -l $LAST_WHEEL
-    PACKED_DLLS_FOUND=`unzip -l $LAST_WHEEL | grep -Eio "[a-z].*\.dll" | grep -v gmic | paste -s -d' '`
+    PACKED_DLLS_FOUND=`unzip -l $LAST_WHEEL | grep -Eio "[a-z].*\.dll" | grep -v gmic-cpython | paste -s -d' '`
     if [ -z "$PACKED_DLLS_FOUND" ]; then
         echo "Error: non-gmic DLLs not found in wheel."; exit 1
     else
