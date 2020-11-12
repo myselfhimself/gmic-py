@@ -5,7 +5,13 @@ from os import path, listdir, environ
 import sys
 
 from setuptools import setup, Extension, find_packages
-import pkgconfig
+
+try:
+    import pkgconfig
+except:
+    print("No pkgconfig found")
+
+IS_WINDOWS = sys.platform == "win32"
 
 here = path.abspath(path.dirname(__file__))
 gmic_src_path = path.abspath("src/gmic/src")
@@ -14,9 +20,6 @@ WIN_DLL_DIR = path.abspath("win_dll")
 
 # List of non-standard '-l*' compiler parameters
 extra_link_args = []
-
-# List of libs to get include directories and linkable libraries paths from for compiling
-pkgconfig_list = ["zlib"]
 
 # Macros to toggle (gmic or CImg will do C/C++ #ifdef checks on them, testing mostly only their existence)
 # cimg_date and cimg_date are true variables, the value of which is checked in the C/C++ source
@@ -34,59 +37,82 @@ define_macros = [
     ),  # "display" statements display for Jupyter/Ipython
 ]
 
-# Only require x11 if found
-if pkgconfig.exists("x11"):
-    define_macros += [("cimg_display", None)]
-    pkgconfig_list += ["x11"]
+# UNIX build flags pregeneration
+if not IS_WINDOWS:
+    # List of libs to get include directories and linkable libraries paths from for compiling
+    pkgconfig_list = ["zlib"]
 
-# Only require libpng if found
-if pkgconfig.exists("libpng"):
-    define_macros += [("cimg_use_png", None)]
-    pkgconfig_list += ["libpng"]
+    # Only require x11 if found
+    if pkgconfig.exists("x11"):
+        define_macros += [("cimg_display", None)]
+        pkgconfig_list += ["x11"]
 
-# Only require libtiff if found
-if pkgconfig.exists("libtiff-4"):
-    define_macros += [("cimg_use_tiff", None)]
-    pkgconfig_list += ["libtiff-4"]
+    # Only require libpng if found
+    if pkgconfig.exists("libpng"):
+        define_macros += [("cimg_use_png", None)]
+        pkgconfig_list += ["libpng"]
 
-# Only require libjpeg if found
-if pkgconfig.exists("libjpeg"):
-    define_macros += [("cimg_use_jpeg", None)]
-    pkgconfig_list += ["libjpeg"]
+    # Only require libtiff if found
+    if pkgconfig.exists("libtiff-4"):
+        define_macros += [("cimg_use_tiff", None)]
+        pkgconfig_list += ["libtiff-4"]
 
-# Only require fftw3 if found (non-2^ size image processing fails without it)
-# We do not toggle cimg_use_fftw3, it is buggy
-if pkgconfig.exists("fftw3"):
-    define_macros += [("cimg_use_fftw3", None)]
-    pkgconfig_list += ["fftw3"]
-    if sys.platform not in ("cygwin", "win32", "msys"):
-        extra_link_args += ["-lfftw3_threads"]
+    # Only require libjpeg if found
+    if pkgconfig.exists("libjpeg"):
+        define_macros += [("cimg_use_jpeg", None)]
+        pkgconfig_list += ["libjpeg"]
 
-# Only compile with OpenCV if exists (nice for the 'camera' G'MIC command :-D )
-if pkgconfig.exists("opencv"):
-    define_macros += [("cimg_use_opencv", None)]
-    pkgconfig_list += ["opencv"]
+    # Only require fftw3 if found (non-2^ size image processing fails without it)
+    # We do not toggle cimg_use_fftw3, it is buggy
+    if pkgconfig.exists("fftw3"):
+        define_macros += [("cimg_use_fftw3", None)]
+        pkgconfig_list += ["fftw3"]
+        if sys.platform not in ("cygwin", "win32", "msys"):
+            extra_link_args += ["-lfftw3_threads"]
 
-if pkgconfig.exists("libcurl"):
+    # Only compile with OpenCV if exists (nice for the 'camera' G'MIC command :-D )
+    if pkgconfig.exists("opencv"):
+        define_macros += [("cimg_use_opencv", None)]
+        pkgconfig_list += ["opencv"]
+
+    if pkgconfig.exists("libcurl"):
+        define_macros += [("cimg_use_curl", None)]
+        pkgconfig_list += ["libcurl"]
+
+    packages = pkgconfig.parse(" ".join(pkgconfig_list))
+    libraries = packages["libraries"] + [
+        "pthread"
+    ]  # removed core-dumping 'gomp' temporarily (for manylinux builds)
+
+    library_dirs = packages["library_dirs"] + [here, gmic_src_path]
+    if sys.platform == "darwin":
+        library_dirs += ["/usr/local/opt/llvm@6/lib"]
+    include_dirs = packages["include_dirs"] + [here, gmic_src_path]
+    if sys.platform == "darwin":
+        include_dirs += ["/usr/local/opt/llvm@6/include"]
+    # Debugging is now set through --global-option --debug and more.
+    # debugging_args = [
+    #     "-O0",
+    #     "-g",
+    # ]  # Uncomment this for faster compilation with debug symbols and no optimization
+else:
+    # WINDOWS build flags generation
+    x = "x64" if sys.maxsize > 2 ** 32 else "x86"
+    vcpkg_lib_dir = os.path.join(
+        os.environ["VCPKG_INSTALLATION_ROOT"], "installed", f"{x}-windows", "lib"
+    )
+    libraries = ["fftw3", "libpng16", "jpeg", "curl", "zlib", "tiff"]
+    library_dirs = [vcpkg_lib_dir]
+    include_dirs = [here, gmic_src_path]
+    define_macros = []
     define_macros += [("cimg_use_curl", None)]
-    pkgconfig_list += ["libcurl"]
+    define_macros += [("cimg_use_fftw3", None)]
+    define_macros += [("cimg_display", None)]
+    define_macros += [("cimg_use_jpeg", None)]
+    define_macros += [("cimg_use_tiff", None)]
+    define_macros += [("cimg_use_png", None)]
+    define_macros += [("cimg_display", None)]
 
-packages = pkgconfig.parse(" ".join(pkgconfig_list))
-libraries = packages["libraries"] + [
-    "pthread"
-]  # removed core-dumping 'gomp' temporarily (for manylinux builds)
-
-library_dirs = packages["library_dirs"] + [here, gmic_src_path]
-if sys.platform == "darwin":
-    library_dirs += ["/usr/local/opt/llvm@6/lib"]
-include_dirs = packages["include_dirs"] + [here, gmic_src_path]
-if sys.platform == "darwin":
-    include_dirs += ["/usr/local/opt/llvm@6/include"]
-# Debugging is now set through --global-option --debug and more.
-# debugging_args = [
-#     "-O0",
-#     "-g",
-# ]  # Uncomment this for faster compilation with debug symbols and no optimization
 
 debug_enabled = "--debug" in sys.argv
 
@@ -128,6 +154,22 @@ if sys.platform in ("msys", "cygwin", "win32"):
 
 print("Define macros:")
 print(define_macros)
+
+print(
+    "Extension options:",
+    dict(
+        name="gmic",
+        include_dirs=include_dirs,
+        libraries=libraries,
+        library_dirs=library_dirs,
+        sources=["gmicpy.cpp", path.join(gmic_src_path, "gmic.cpp")],
+        define_macros=define_macros,
+        extra_compile_args=extra_compile_args,
+        extra_link_args=extra_link_args,
+        language="c++",
+    ),
+)
+
 
 # Static CPython gmic.so embedding libgmic.so.2
 gmic_module = Extension(
