@@ -43,6 +43,7 @@ jobs:
           vcpkg install libpng:x64-windows libjpeg-turbo:x64-windows zlib:x64-windows curl:x64-windows tiff:x64-windows fftw3:x64-windows
           vcpkg list
           python -m pip --disable-pip-version-check install cibuildwheel==1.6.1
+          python setup.py bdist_wheel 
           REM python -m cibuildwheel --output-dir wheelhouse
         env:
           CIBW_BUILD: "cp3?-win32"
