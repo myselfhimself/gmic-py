@@ -1,0 +1,97 @@
+# Automatically build binary wheels and source packages.
+# Adapted from https://github.com/vinayak-mehta/pdftopng/blob/main/.github/workflows/build.yml
+name: cibuildwheel
+
+on: [push]
+
+env:
+  CIBW_BUILD: "cp3?-manylinux_x86_64 cp3?-macosx_x86_64"
+  CIBW_SKIP: "cp35-*"
+  CIBW_BEFORE_BUILD_LINUX: "sh scripts/build_linux.sh"
+  CIBW_REPAIR_WHEEL_COMMAND_LINUX: "LD_LIBRARY_PATH=$(pwd)/lib/poppler/build/:$LD_LIBRARY_PATH auditwheel repair -w {dest_dir} {wheel}"
+  CIBW_BEFORE_BUILD_MACOS: "sh scripts/build_macos.sh"
+  CIBW_REPAIR_WHEEL_COMMAND_MACOS: "DYLD_LIBRARY_PATH=$(pwd)/lib/poppler/build:$DYLD_LIBRARY_PATH delocate-listdeps {wheel} && delocate-wheel -w {dest_dir} -v {wheel}"
+  CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: "call scripts/wheel_repair.bat {wheel} {dest_dir}"
+
+jobs:
+  build_wheels:
+    name: Build wheels on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-latest]
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+
+      - uses: actions/setup-python@v2
+        name: Install Python
+        with:
+          python-version: 3.8
+
+      - uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x86
+
+      - name: Build dependencies & wheels (Windows / x86)
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: |
+          #call scripts\build_win_x86.bat
+          vcpkg search zlib
+          vcpkg search libfftw
+          vcpkg search libtiff
+          vcpkg search libcurl
+          vcpkg install libpng:x64-windows libjpeg-turbo:x64-windows
+          python -m pip --disable-pip-version-check install cibuildwheel==1.6.1
+          #python -m cibuildwheel --output-dir wheelhouse
+        env:
+          CIBW_BUILD: "cp3?-win32"
+          CIBW_SKIP: "cp35-*"
+          DISTUTILS_USE_SDK: 1
+          MSSdk: 1
+
+#      - uses: ilammy/msvc-dev-cmd@v1
+#        with:
+#          arch: amd64
+#
+#      - name: Build dependencies & wheels (Windows / amd64)
+#        if: runner.os == 'Windows'
+#        shell: cmd
+#        run: |
+#          call scripts\build_win_x64.bat
+#          python -m pip --disable-pip-version-check install cibuildwheel==1.6.1
+#          python -m cibuildwheel --output-dir wheelhouse
+#        env:
+#          CIBW_BUILD: "cp3?-win_amd64"
+#          CIBW_SKIP: "cp35-*"
+#          DISTUTILS_USE_SDK: 1
+#          MSSdk: 1
+#
+#      - name: Install cibuildwheel & build wheels (Linux & MacOS)
+#        if: runner.os != 'Windows'
+#        run: |
+#          python -m pip --disable-pip-version-check install cibuildwheel==1.6.1
+#          python -m cibuildwheel --output-dir wheelhouse
+#
+#      - uses: actions/upload-artifact@v2
+#        with:
+#          path: ./wheelhouse/*.whl
+#
+#  upload_pypi:
+#    needs: [build_wheels]
+#    runs-on: ubuntu-latest
+#    # upload to PyPI on every tag starting with 'v'
+#    if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v')
+#    steps:
+#      - uses: actions/download-artifact@v2
+#        with:
+#          name: artifact
+#          path: dist
+#
+#      - uses: pypa/gh-action-pypi-publish@master
+#        with:
+#          user: __token__
+#          password: ${{ secrets.pypi_password }}
