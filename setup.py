@@ -2,6 +2,7 @@
 """
 
 from os import path, listdir, environ
+import os
 import sys
 
 from setuptools import setup, Extension, find_packages
