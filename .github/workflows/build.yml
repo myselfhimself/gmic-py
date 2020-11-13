@@ -39,9 +39,9 @@ jobs:
         shell: cmd
         run: |
           REM call scripts\build_win_x86.bat
-          cd gmic\src
-          git checkout 2.9.1
-          cd ..\..
+          cd gmic
+          git checkout v.2.9.1
+          cd ..
           C:\msys64\usr\bin\wget.exe -P gmic\src https://gmic.eu/gmic_stdlib.h
           C:\msys64\usr\bin\wget.exe -P gmic\src https://github.com/dtschump/CImg/raw/master/CImg.h
           vcpkg install libpng:x64-windows libjpeg-turbo:x64-windows zlib:x64-windows curl:x64-windows tiff:x64-windows fftw3:x64-windows
