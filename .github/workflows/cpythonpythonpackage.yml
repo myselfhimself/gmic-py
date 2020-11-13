@@ -31,16 +31,6 @@ jobs:
     - uses: actions/checkout@v2
       with:
         submodules: true
-    - name: wget gmic_stdlib
-      uses: wei/wget@v1
-      with:
-        args: -P gmic/src https://gmic.eu/gmic_stdlib.h
-    - name: wget CImg
-      uses: wei/wget@v1
-      with:
-        args: -P gmic/src https://github.com/dtschump/CImg/raw/master/CImg.h
-
-
 
     - name: Compile and run tests on .so, .whl and source distribution of gmic-py ${{ env.GHA_GMIC_VERSION }}
       working-directory: ./
@@ -54,6 +44,8 @@ jobs:
         sudo apt-get install clang-format
         bash build_tools.bash 21_check_c_style # should stop this script on style error
         bash build_tools.bash 23_check_python_style # should stop this script on style error
+        wget -P gmic/src https://gmic.eu/gmic_stdlib.h
+        wget -P gmic/src https://github.com/dtschump/CImg/raw/master/CImg.h
 
         bash build_tools.bash 2b_compile_debug
         ldd build/lib.linux-x86_64-3.*/gmic.cpython-3*-x86_64-linux-gnu.so
