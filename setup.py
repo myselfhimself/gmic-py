@@ -164,7 +164,6 @@ extension_kwargs = dict(
     sources=[
         "gmicpy.cpp",
         path.join(gmic_src_path, "gmic.cpp"),
-        path.join(gmic_src_path, "gmic.h"),
     ],
     define_macros=define_macros,
     extra_compile_args=extra_compile_args,
