@@ -163,7 +163,7 @@ print(
         include_dirs=include_dirs,
         libraries=libraries,
         library_dirs=library_dirs,
-        sources=["gmicpy.cpp", path.join(gmic_src_path, "gmic.cpp")],
+        sources=["gmicpy.cpp", path.join(gmic_src_path, "gmic.cpp"), path.join(gmic_src_path, "gmic.h")],
         define_macros=define_macros,
         extra_compile_args=extra_compile_args,
         extra_link_args=extra_link_args,
