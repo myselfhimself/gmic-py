@@ -49,7 +49,7 @@ function __get_py_package_version () {
 
 function 00_all_steps () {
     # See related but defunct Dockerfile at https://github.com/myselfhimself/gmic-py/blob/fc12cb74f4b02fbfd83e9e9fba44ba7a4cee0d93/Dockerfile
-    21_check_c_style && 23_check_python_style && 1_clean_and_regrab_gmic_src && 2_compile && 3_test_compiled_so && 4_build_wheel && 5_test_wheel && 6_build_sdist && 7_test_sdist
+    21_check_c_style && 23_check_python_style && 2_compile && 3_test_compiled_so && 4_build_wheel && 5_test_wheel && 6_build_sdist && 7_test_sdist
     echo "This is the final file tree:"
     find .
 }
@@ -110,6 +110,7 @@ function 11_send_to_pypi () {
     set +x
 }
 
+# Now replaced by git submodule, kept for legacy
 function 1_clean_and_regrab_gmic_src () {
     set -x
     GMIC_ARCHIVE_GLOB=gmic_${GMIC_VERSION}.tar.gz

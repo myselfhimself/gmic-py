@@ -23,7 +23,10 @@ jobs:
             docker_image: 'quay.io/pypa/manylinux2014_x86_64:latest'
             pre_cmd:
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+
       # Detect G'MIC target version from VERSION file
       - name: Detect G'MIC target version
         run: echo "GHA_GMIC_VERSION=$(GHA_QUIET=1 bash build_tools.bash __get_py_package_version)" >> $GITHUB_ENV

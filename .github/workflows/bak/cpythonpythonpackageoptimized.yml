@@ -43,7 +43,6 @@ jobs:
         bash build_tools.bash 21_check_c_style # should stop this script on style error
         bash build_tools.bash 23_check_python_style # should stop this script on style error
 
-        bash build_tools.bash 1_clean_and_regrab_gmic_src
         bash build_tools.bash 2_compile #2b_compile_debug
         bash build_tools.bash 3_test_compiled_so
         # && bash build_tools.bash 11_send_to_pypi #Note that most probably nothing will be sent to PyPI because of too modern linked libraries 

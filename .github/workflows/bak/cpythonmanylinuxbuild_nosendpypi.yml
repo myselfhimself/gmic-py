@@ -21,7 +21,10 @@ jobs:
             docker_image: 'quay.io/pypa/manylinux2014_x86_64:latest'
             pre_cmd:
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+
       # Prevent running this job on tag-based releases
       - name: Check if Git tag exists
         run: echo "HEAD_TAG::$(git tag --points-at HEAD)" >> $GITHUB_ENV

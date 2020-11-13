@@ -9,7 +9,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
+      with:
+        submodules: true
+
 
     # Prevent running this job on tag-based releases
     - name: Check if Git tag exists
@@ -41,7 +44,6 @@ jobs:
         bash build_tools.bash 21_check_c_style # should stop this script on style error
         bash build_tools.bash 23_check_python_style # should stop this script on style error
 
-        bash build_tools.bash 1_clean_and_regrab_gmic_src
         bash build_tools.bash 2b_compile_debug
         ldd build/lib.linux-x86_64-3.*/gmic.cpython-3*-x86_64-linux-gnu.so
         # bash build_tools.bash 3_test_compiled_so # TODO tests exceptionnally disabled for remote testing
