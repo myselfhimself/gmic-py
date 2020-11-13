@@ -103,7 +103,7 @@ else:
         os.environ["VCPKG_INSTALLATION_ROOT"], "installed", f"{x}-windows", "lib"
     )
     libraries = ["fftw3", "libpng16", "jpeg", "curl", "zlib", "tiff"]
-    library_dirs = [vcpkg_lib_dir]
+    library_dirs = [vcpkg_lib_dir, gmic_src_path]
     include_dirs = [here, gmic_src_path]
     define_macros = []
     define_macros += [("cimg_use_curl", None)]
@@ -155,35 +155,28 @@ if sys.platform in ("msys", "cygwin", "win32"):
 
 print("Define macros:")
 print(define_macros)
-
-print(
-    "Extension options:",
-    dict(
-        name="gmic",
-        include_dirs=include_dirs,
-        libraries=libraries,
-        library_dirs=library_dirs,
-        sources=["gmicpy.cpp", path.join(gmic_src_path, "gmic.cpp"), path.join(gmic_src_path, "gmic.h")],
-        define_macros=define_macros,
-        extra_compile_args=extra_compile_args,
-        extra_link_args=extra_link_args,
-        language="c++",
-    ),
-)
-
-
-# Static CPython gmic.so embedding libgmic.so.2
-gmic_module = Extension(
-    "gmic",
+extension_kwargs = dict(
+    name="gmic",
     include_dirs=include_dirs,
     libraries=libraries,
     library_dirs=library_dirs,
-    sources=["gmicpy.cpp", path.join(gmic_src_path, "gmic.cpp")],
+    sources=[
+        "gmicpy.cpp",
+        path.join(gmic_src_path, "gmic.cpp"),
+        path.join(gmic_src_path, "gmic.h"),
+    ],
     define_macros=define_macros,
     extra_compile_args=extra_compile_args,
     extra_link_args=extra_link_args,
     language="c++",
 )
+
+
+print("Extension options:", extension_kwargs)
+
+
+# Static CPython gmic.so embedding libgmic.so / .dll
+gmic_module = Extension(extension_kwargs)
 
 # Get the long description from the README file
 with open(path.join(here, "README.md"), encoding="utf-8") as f:
