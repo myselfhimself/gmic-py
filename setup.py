@@ -18,9 +18,14 @@ here = path.abspath(path.dirname(__file__))
 gmic_src_path = path.abspath("src/gmic/src")
 WIN_DLL_DIR = path.abspath("win_dll")
 
+debug_enabled = "--debug" in sys.argv
+
 
 # List of non-standard '-l*' compiler parameters
 extra_link_args = []
+
+# Extra C flags
+extra_compile_args = []
 
 # Macros to toggle (gmic or CImg will do C/C++ #ifdef checks on them, testing mostly only their existence)
 # cimg_date and cimg_date are true variables, the value of which is checked in the C/C++ source
@@ -40,6 +45,15 @@ define_macros = [
 
 # UNIX build flags pregeneration
 if not IS_WINDOWS:
+
+    extra_compile_args.extend(["-std=c++11"])
+    if debug_enabled:
+        extra_compile_args += ["-O0"]
+        extra_compile_args += ["-g"]
+    else:
+        extra_compile_args += ["-Ofast", "-flto"]
+        extra_link_args += ["-flto"]
+
     # List of libs to get include directories and linkable libraries paths from for compiling
     pkgconfig_list = ["zlib"]
 
@@ -113,17 +127,7 @@ else:
     define_macros += [("cimg_use_tiff", None)]
     define_macros += [("cimg_use_png", None)]
     define_macros += [("cimg_display", None)]
-
-
-debug_enabled = "--debug" in sys.argv
-
-extra_compile_args = ["-std=c++11"]
-if debug_enabled:
-    extra_compile_args += ["-O0"]
-    extra_compile_args += ["-g"]
-else:
-    extra_compile_args += ["-Ofast", "-flto"]
-    extra_link_args += ["-flto"]
+    extra_compile_args.extend(["/std:c++11", "/OpenMP"])
 
 if sys.platform == "darwin":
     extra_compile_args += ["-fopenmp", "-stdlib=libc++"]
@@ -132,12 +136,8 @@ if sys.platform == "darwin":
         "-nodefaultlibs",
         "-lc++",
     ]  # options inspired by https://github.com/explosion/spaCy/blob/master/setup.py
-elif sys.platform in (
-    "linux",
-    "win32",
-    "msys",
-    "cygwin",
-):  # Enable openmp for 32bit & 64bit linuxes and posix'ed windows
+elif not IS_WINDOWS:
+    # Enable openmp for 32bit & 64bit linuxes and posix'ed windows
     extra_compile_args += ["-fopenmp"]
     extra_link_args += ["-lgomp"]
 
@@ -155,6 +155,7 @@ if sys.platform in ("msys", "cygwin", "win32"):
 
 print("Define macros:")
 print(define_macros)
+
 extension_kwargs = dict(
     name="gmic",
     include_dirs=include_dirs,
@@ -172,11 +173,12 @@ extension_kwargs = dict(
 )
 
 
-print("Extension options:", extension_kwargs)
+print("Extension options:")
+print(extension_kwargs)
 
 
 # Static CPython gmic.so embedding libgmic.so / .dll
-gmic_module = Extension(extension_kwargs)
+gmic_module = Extension(**extension_kwargs)
 
 # Get the long description from the README file
 with open(path.join(here, "README.md"), encoding="utf-8") as f:
