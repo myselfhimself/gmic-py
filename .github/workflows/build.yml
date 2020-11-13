@@ -40,6 +40,8 @@ jobs:
         shell: cmd
         run: |
           REM call scripts\build_win_x86.bat
+          C:\msys64\usr\bin\wget.exe gmic_stdlib.h https://gmic.eu/gmic_stdlib.h
+          C:\msys64\usr\bin\wget.exe CImg.h https://github.com/dtschump/CImg/raw/master/CImg.h
           vcpkg install libpng:x64-windows libjpeg-turbo:x64-windows zlib:x64-windows curl:x64-windows tiff:x64-windows fftw3:x64-windows
           vcpkg list
           python -m pip --disable-pip-version-check install cibuildwheel==1.6.1 wheel
