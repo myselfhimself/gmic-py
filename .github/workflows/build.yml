@@ -42,7 +42,7 @@ jobs:
           REM call scripts\build_win_x86.bat
           vcpkg install libpng:x64-windows libjpeg-turbo:x64-windows zlib:x64-windows curl:x64-windows tiff:x64-windows fftw3:x64-windows
           vcpkg list
-          python -m pip --disable-pip-version-check install cibuildwheel==1.6.1
+          python -m pip --disable-pip-version-check install cibuildwheel==1.6.1 wheel
           python setup.py bdist_wheel 
           REM python -m cibuildwheel --output-dir wheelhouse
         env:
