@@ -34,11 +34,12 @@ Head over to the :doc:`gettingstarted` section for examples.
 
    installing
    gettingstarted
-   compiling
+   tutorial1
    numpy
    PIL
    skimage
    jupyter
+   compiling
    gmic
 
 
