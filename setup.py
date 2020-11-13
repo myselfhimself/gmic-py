@@ -127,7 +127,7 @@ else:
     define_macros += [("cimg_use_tiff", None)]
     define_macros += [("cimg_use_png", None)]
     define_macros += [("cimg_display", None)]
-    extra_compile_args.extend(["/std:c++11", "/OpenMP"])
+    extra_compile_args.extend(["/std:c11", "/OpenMP"])
 
 if sys.platform == "darwin":
     extra_compile_args += ["-fopenmp", "-stdlib=libc++"]

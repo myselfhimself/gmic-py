@@ -1,4 +1,4 @@
-#include "gmic.h"
+#include "src/gmic/src/gmic.h"
 
 // Set T be a float if not platform-overridden
 #ifndef T
