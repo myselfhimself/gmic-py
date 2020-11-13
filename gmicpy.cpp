@@ -1,4 +1,5 @@
 #include "gmicpy.h"
+#include "gmic/src/CImg.h"
 
 #include <Python.h>
 #include <stdint.h>
