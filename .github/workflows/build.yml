@@ -40,6 +40,7 @@ jobs:
         run: |
           REM call scripts\build_win_x86.bat
           cd gmic
+          git fetch --all --tags
           git checkout v.2.9.1
           cd ..
           C:\msys64\usr\bin\wget.exe -P gmic\src https://gmic.eu/gmic_stdlib.h

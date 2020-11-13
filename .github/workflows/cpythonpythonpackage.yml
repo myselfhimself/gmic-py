@@ -40,6 +40,7 @@ jobs:
         PIP3: pip3
       run: |
         cd gmic
+        git fetch --all --tags
         git checkout v.2.9.1
         cd ..
         for apt_file in `grep -lr microsoft /etc/apt/sources.list.d/`; do sudo rm $apt_file; done
