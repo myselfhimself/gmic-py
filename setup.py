@@ -15,7 +15,7 @@ except:
 IS_WINDOWS = sys.platform == "win32"
 
 here = path.abspath(path.dirname(__file__))
-gmic_src_path = path.abspath("src/gmic/src")
+gmic_src_path = path.abspath("gmic/src")
 WIN_DLL_DIR = path.abspath("win_dll")
 
 debug_enabled = "--debug" in sys.argv
