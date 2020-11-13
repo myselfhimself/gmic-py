@@ -1,10 +1,12 @@
 import gmic
 
 # A LITTLE THEORY ABOUT G'MIC COMMANDS SIGNATURE, PIPING AND SUBSETS
-# For this section, you do not need to code anything. Just think.
+# For this section, you do not need to code or run anything at this point. Just meditate.
 """
 G'MIC provides more that 500 commands or filters. Which can get updated from the internet by running the "update" or "up" command.
 This spares you from updating your gmic binary runtime frequently. Instead, a database of many G'MIC commands gets refreshed on your machine from gmic.eu.
+
+G'MIC stores images internally in the x,y,z,c space (or width, height, depth, channels), allowing you to work with 2D greyscale images, 2D color images, or voxels (3D points) for many applications.
 
 For executing expressions, the G'MIC language parser allows you to pipe commands from left to right:
     <command 1> <command 2> <command 3>
@@ -27,7 +29,9 @@ If you want any command in your chain to use only a subset of the leftside resul
     -input image1.png image2.png blur[1] 3 display[0]
 The above command will actually blur image2.png but display image1.png only, which is unblurred
 
+Note that G'MIC is a full fledged scripting language, so you can do for, while, if, functions etc with it.
 
+The gmic.eu website and the https://discuss.pixls.us/c/software/gmic community are good friends to learn and ask about G'MIC.
 """
 
 # THE HELP <SOMECOMMAND> COMMAND
