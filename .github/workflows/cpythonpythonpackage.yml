@@ -49,7 +49,7 @@ jobs:
         bash build_tools.bash 21_check_c_style # should stop this script on style error
         bash build_tools.bash 23_check_python_style # should stop this script on style error
         wget -P gmic/src https://gmic.eu/gmic_stdlib.h
-        wget -P gmic/src https://github.com/dtschump/CImg/raw/master/CImg.h
+        wget -P gmic/src https://github.com/dtschump/CImg/raw/v.2.9.1/CImg.h
 
         bash build_tools.bash 2b_compile_debug
         ldd build/lib.linux-x86_64-3.*/gmic.cpython-3*-x86_64-linux-gnu.so

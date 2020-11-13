@@ -44,7 +44,7 @@ jobs:
           git checkout v.2.9.1
           cd ..
           C:\msys64\usr\bin\wget.exe -P gmic\src https://gmic.eu/gmic_stdlib.h
-          C:\msys64\usr\bin\wget.exe -P gmic\src https://github.com/dtschump/CImg/raw/master/CImg.h
+          C:\msys64\usr\bin\wget.exe -P gmic\src https://github.com/dtschump/CImg/raw/v.2.9.1/CImg.h
           vcpkg install libpng:x64-windows libjpeg-turbo:x64-windows zlib:x64-windows curl:x64-windows tiff:x64-windows fftw3:x64-windows
           vcpkg list
           python -m pip --disable-pip-version-check install cibuildwheel==1.6.1 wheel
