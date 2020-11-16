@@ -34,7 +34,7 @@ Head over to the :doc:`gettingstarted` section for examples.
 
    installing
    gettingstarted
-   tutorial1
+   tutorials
    numpy
    PIL
    skimage
