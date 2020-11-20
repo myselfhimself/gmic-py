@@ -75,7 +75,7 @@ gmic.run("help blur")
 # Jump to the section about input instead, which allows you to load your own images, and replace the "sample <samplename>" commands
 # by "input someimagefilepathonyourcomputer" instead.
 
-gmic.run("help sample") # or "help sp"
+gmic.run("help sample")  # or "help sp"
 """
   gmic: GREYC's Magic for Image Computing: command-line interface
         (https://gmic.eu)
@@ -104,34 +104,54 @@ gmic.run("help sample") # or "help sp"
       Example: [#1]  repeat 6 sample done
 """
 
-gmic.run("sample apples") # A display window would pop up in gmic's command line executable, but not in Python that is intended!
+gmic.run(
+    "sample apples"
+)  # A display window would pop up in gmic's command line executable, but not in Python that is intended!
 
 # THE DISPLAY COMMAND
-gmic.run("sample apples display") # This will pop up a display window showing your image, without it needing to be saved anyway on your drive
+gmic.run(
+    "sample apples display"
+)  # This will pop up a display window showing your image, without it needing to be saved anyway on your drive
 
 # THE OUTPUT <SOMEFILE> COMMAND
-gmic.run("sample earth output myearth.png") # outputs the result of the earth sample to a path you want (.png, .jpeg, .tiff, .bmp, .pbm and more are supported)
+gmic.run(
+    "sample earth output myearth.png"
+)  # outputs the result of the earth sample to a path you want (.png, .jpeg, .tiff, .bmp, .pbm and more are supported)
 
 # THE INPUT <SOMEFILE> COMMAND (simple and short form)
-gmic.run("input myearth.png display") # opens myearth.png and then trying a display
-gmic.run("myearth.png display") # here is the short form, where 'input' can be omitted. Note that the 'display' command is not obligatory, it is left for you as a proof that it works.
+gmic.run("input myearth.png display")  # opens myearth.png and then trying a display
+gmic.run(
+    "myearth.png display"
+)  # here is the short form, where 'input' can be omitted. Note that the 'display' command is not obligatory, it is left for you as a proof that it works.
 
 # LOADING AND SAVING MULTIPLE IMAGES
-gmic.run("sample earth sample apples output myimages.png display") # saves to myimages_000000.png  myimages_000001.png. The display command is optional.
-gmic.run("myimages_000000.png  myimages_000001.png display") # loads myimages_000000.png  myimages_000001.png and displays them. Note the 'input' command name was omitted.
+gmic.run(
+    "sample earth sample apples output myimages.png display"
+)  # saves to myimages_000000.png  myimages_000001.png. The display command is optional.
+gmic.run(
+    "myimages_000000.png  myimages_000001.png display"
+)  # loads myimages_000000.png  myimages_000001.png and displays them. Note the 'input' command name was omitted.
 
 # APPLYING A SIMPLE FILTER
 """ Filters and commands are listed at: https://gmic.eu/reference/
 To get inspiration for commands to run, you may also head to the G'MIC gallery https://gmic.eu/gallery/ and click the images to see corresponding commands
 """
 # Some example commands
-gmic.run("sample apples blur 4 display") # blur's documentation with a nice preview is also at https://gmic.eu/reference/blur.html not just through the "help blur" command
-gmic.run("sample apples rodilius 10 display") # more at https://gmic.eu/reference/rodilius.html
+gmic.run(
+    "sample apples blur 4 display"
+)  # blur's documentation with a nice preview is also at https://gmic.eu/reference/blur.html not just through the "help blur" command
+gmic.run(
+    "sample apples rodilius 10 display"
+)  # more at https://gmic.eu/reference/rodilius.html
 
 # SELECTING IMAGES BY INDEX
-gmic.run("sample apples sample earth blur[1] 4 display") # Here the blur was applied only to image with second position
+gmic.run(
+    "sample apples sample earth blur[1] 4 display"
+)  # Here the blur was applied only to image with second position
 
 # APPLYING THE FAMOUS 'STYLIZE' STYLE TRANSFER FILTER
-gmic.run("sp leno display") # this is the portrait we will want to be stylized
-gmic.run("_fx_stylize landscapenearantwerp display") # let us be hackish and use the internal _fx_stylize function to preview one of Antwerp's painting as a future style
+gmic.run("sp leno display")  # this is the portrait we will want to be stylized
+gmic.run(
+    "_fx_stylize landscapenearantwerp display"
+)  # let us be hackish and use the internal _fx_stylize function to preview one of Antwerp's painting as a future style
 gmic.run("sample leno _fx_stylize landscapenearantwerp stylize .")

@@ -27,14 +27,20 @@ print(dir(gmic))
 
 """
 
-print(gmic.__spec__) # path were your compiled G'MIC Python loaded shared library lives. Mostly useful to people installing gmic-py several times.
-print(gmic.__version__) # version of the embedded the libgmic C++ interpreter
-print(gmic.__build__) # flags that were used for compilation. This allows to understand fast if your gmic-py provides jpeg, png, tiff support
+print(
+    gmic.__spec__
+)  # path were your compiled G'MIC Python loaded shared library lives. Mostly useful to people installing gmic-py several times.
+print(gmic.__version__)  # version of the embedded the libgmic C++ interpreter
+print(
+    gmic.__build__
+)  # flags that were used for compilation. This allows to understand fast if your gmic-py provides jpeg, png, tiff support
 # interesting flags are: openMP is for parallel computing
 # fftw3 is needed for spectrum-based computing and managing images with dimensions not in power of 2
 # OpenCV is by default not linked to gmic-py, although you could rebuild gmic-py easily and use it
 
-help(gmic) # shows an introduction about gmic-py. Note that this is less instructive than running gmic.run("help <somecommand>") for example.
+help(
+    gmic
+)  # shows an introduction about gmic-py. Note that this is less instructive than running gmic.run("help <somecommand>") for example.
 
 
 # The G'MIC interpreter
@@ -57,9 +63,15 @@ For simplicity though, most gmic-py beginner tutorials just write gmic.run() whi
 Here is the better way to evaluate several commands in a row using a single G'MIC interpreter instance:
 """
 
-g = gmic.Gmic() # First create a G'MIC interpreter instance using the Gmic class, and attach to a variable by a simple assignment
-g.run("sp apples rodilius 3") # Reuse your variable as many times as you want, and call its run() method.
-g.run("sp apples blur 5") # Here you are, a 2nd call, where the G'MIC interpreter was not recreated for nothing!
+g = (
+    gmic.Gmic()
+)  # First create a G'MIC interpreter instance using the Gmic class, and attach to a variable by a simple assignment
+g.run(
+    "sp apples rodilius 3"
+)  # Reuse your variable as many times as you want, and call its run() method.
+g.run(
+    "sp apples blur 5"
+)  # Here you are, a 2nd call, where the G'MIC interpreter was not recreated for nothing!
 
 """
 Note that the G'MIC interpreter do not store states between calls, that is that the input and result images from each last call are forgotten.
@@ -76,7 +88,7 @@ You can read more about this by running help(gmic.Gmic) or visiting the API refe
 After discovering the gmic.Gmic interpreter, the G'MIC Image is the other building block of gmic-py (of the G'MIC C++). Here is how to create one from scratch with no data:
 """
 im = gmic.GmicImage()
-help(gmic.GmicImage) # Some mini-doc on how to call the GmicImage class
+help(gmic.GmicImage)  # Some mini-doc on how to call the GmicImage class
 """Now let us take a look at its properties (attributes):"""
 print(dir(im))
 """
@@ -100,7 +112,8 @@ print(im)
 
 """If you know numpy, GmicImages look like numpy's ndarrays, though the former are much less practical to manipulate!!! They are actually a very superficial binding of G'MIC's C++ gmic_image / cimg image class. To instantiate a GmicImage, you can pass in a bytes buffer, as well as optional dimensions: width, height, depth. Numpy does that as well.
 Here is a complex way to create a GmicImage from random data:"""
-import struct # a handy pure-Python module to parse and build buffers
+import struct  # a handy pure-Python module to parse and build buffers
+
 # Here we set up a GmicImage with 6 floats and dimensions 3x2x1
 im2 = gmic.GmicImage(struct.pack("6f", 1, 2, 3, 4, 5, 6), 3, 2, 1)
 # Let us print that image
@@ -118,8 +131,10 @@ print(len(im2._data))
 24 # Remember a 3x2x1 G'MIC Image makes up 6 floats (always 32 bits or 4-bytes long), so 6x4=24 bytes
 """
 
-# You may also want to view your image with your eyes: 
-gmic.run("display", images=im2) # Or try gmic.run("print", im2) or gmic.run("output myimage.png", im2) if your environment has no display
+# You may also want to view your image with your eyes:
+gmic.run(
+    "display", images=im2
+)  # Or try gmic.run("print", im2) or gmic.run("output myimage.png", im2) if your environment has no display
 """
 [gmic]-1./ Display image [0] = '[unnamed]', from point (1,1,0).
 [0] = '[unnamed]':
@@ -133,10 +148,10 @@ gmic.run("display", images=im2) # Or try gmic.run("print", im2) or gmic.run("out
 Just for now, here is a little trick which we have done.
 gmic.run() or gmic.Gmic().run() or gmic.Gmic() all have the same signature (commands, images, image_names), and their second parameter, the 'images' parameter accepts mostly only lists of GmicImage objects, which list will be emptied and refilled in place... OR a single GmicImage, which will be read only (no in-place modification)"""
 # So:
-gmic.run("display", im2) # is a read-only operation, we can pass a single GmicImage
+gmic.run("display", im2)  # is a read-only operation, we can pass a single GmicImage
 # But the proper way is to put your single image in a list
 images_list = [im2]
-gmic.run("add 1 display", images_list) # add value 1 to each pixel then display
+gmic.run("add 1 display", images_list)  # add value 1 to each pixel then display
 # Note above that the min and max value are properly shifted by 1, compared to our first 'display' of im2, before in that same tutorial:
 """
 gmic.run("add 1 display", images_list) # add value 1 to each pixel then display
@@ -154,13 +169,55 @@ print(images_list)
 # Let us check if our images list's single item has the same content or address as the original im2 GmicImage... NO! And this is EXPECTED!
 print(im2 == images_list[0])
 # Maybe the C++ code changes images in place, not always though.. Because tracking images pointers and positions in the gmic_list was too complicated
-# gmic-py will actually not change your images in place at all! Just empty and refill your list of GmicImages! 
+# gmic-py will actually not change your images in place at all! Just empty and refill your list of GmicImages!
 # This is just fine for daily non-picky work!
 
 ## Image names
 # When we run the G'MIC 'display' or 'print' commands, you may notice in your console or with your mouse in the image display window, that our images so far are all 'unnamed'.
 """[gmic]-1./ Display image [0] = '[unnamed]', from point (1,1,0)."""
 # This is not an issue, but you can give names if you prefer, and refer to those names for indexing:
-gmic.run("sp apples sp earth print") # No names given
-#TODO continue + fix: https://github.com/myselfhimself/gmic-py/issues/81
+gmic.run("sp apples sp earth print")  # No names given
+# TODO continue + fix: https://github.com/myselfhimself/gmic-py/issues/81
 
+## Wrapping up - stylized fruits example
+"""
+Here is an example of a stylized nature montage with some parameters injection.
+To prepare this example:
+- the command line command "gmic help sp" (or gmic.run("help sp")) has been used to decide which samples would nice to pick. 
+- The gmic.eu Gallery page for Stylization has been used to pick image names supported by the _fx_stylize (which is a non-documented command providing famous painting samples..): https://gmic.eu/gallery/stylization.html
+  - Actually, since this is a G'MIC internal command, its code can be found here: https://raw.githubusercontent.com/dtschump/gmic/master/src/gmic_stdlib.gmic (look for _fx_stylize)
+- The List of Commands page from the G'MIC only reference, https://gmic.eu/reference/list_of_commands.html especially the stylize command page: https://gmic.eu/reference/stylize.html
+"""
+import gmic
+
+g = gmic.Gmic()
+
+# Stylization pass
+nature_config = [
+    {"sample": "apples", "style": "convergence"},
+    {"sample": "fruits", "style": "redwaistcoat"},
+    {"sample": "flower", "style": "lesdemoisellesdavignon"},
+    {"sample": "tulips", "style": "seatedwoman"},
+    {"sample": "rose", "style": "reservoirhortadeebro"},
+]
+
+images_list = []
+for conf in nature_config:
+    # we use stylize's default parameters, hence the '.' character
+    g.run(
+        "sp {} _fx_stylize {} stylize .".format(conf["sample"], conf["style"]),
+        images_list,
+    )
+    print(images_list)
+
+g.run("display", images_list)
+
+# Montage pass
+# Build a 3x3 pixels frame around images, white, and make an automatic montage, display it and save to file"
+g.run("frame 3,3,255 montage X display output mymontage.png", images_list)
+# TODO add example
+
+"""THE END
+That was it for tutorial number 2! Now you know more about reusing a G'MIC interpreter handle and calling it several times on a GmicImage list. Congratulations!
+Tutorial 3 will be on using PIL (or Pillow) with gmic-py.
+"""
