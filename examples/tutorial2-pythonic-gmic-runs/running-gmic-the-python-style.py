@@ -131,6 +131,17 @@ print(len(im2._data))
 24 # Remember a 3x2x1 G'MIC Image makes up 6 floats (always 32 bits or 4-bytes long), so 6x4=24 bytes
 """
 
+"""
+The GmicImage class has no method to print its pixels into console nicely as you would in numpy with print(myndarray).
+Now, for pixel access, numpy provides a [] coordinates accessor numpy.ndarray[x,y,z,....] to read matrix cell values.
+GmicImage's pixel accessor is just the () on a GmicImage instance, that is to say, each GmicImage object is callable.
+The signature for this accessor is myimage(x=0,y=0,z=0,s=0), each parameter is optional and defaults to 0.
+(s stands for spectrum, it is interchangeable with c for channel in most G'MIC literature)
+"""
+print(im2(y=1))  # reads at x=0,y=1,z=0,s=0
+# 2
+
+
 # You may also want to view your image with your eyes:
 gmic.run(
     "display", images=im2
@@ -192,30 +203,31 @@ import gmic
 
 g = gmic.Gmic()
 
-# Stylization pass
+# I- Stylization pass
 nature_config = [
     {"sample": "apples", "style": "convergence"},
     {"sample": "fruits", "style": "redwaistcoat"},
     {"sample": "flower", "style": "lesdemoisellesdavignon"},
-    {"sample": "tulips", "style": "seatedwoman"},
-    {"sample": "rose", "style": "reservoirhortadeebro"},
 ]
 
-images_list = []
+result_images = []
 for conf in nature_config:
+    images_list = []
     # we use stylize's default parameters, hence the '.' character
+    # the keep[0] command keeps only the first image in the images list
     g.run(
         "sp {} _fx_stylize {} stylize .".format(conf["sample"], conf["style"]),
         images_list,
     )
     print(images_list)
+    result_images.append(images_list[0])
 
-g.run("display", images_list)
 
-# Montage pass
-# Build a 3x3 pixels frame around images, white, and make an automatic montage, display it and save to file"
-g.run("frame 3,3,255 montage X display output mymontage.png", images_list)
-# TODO add example
+g.run("display", result_images)
+
+# II- Montage pass
+# Build a 3x3-bordered pixels frame around images, white, and make an automatic montage, display it and save to file
+g.run("frame 3,3,255 montage X display output mymontage.png")
 
 """THE END
 That was it for tutorial number 2! Now you know more about reusing a G'MIC interpreter handle and calling it several times on a GmicImage list. Congratulations!
