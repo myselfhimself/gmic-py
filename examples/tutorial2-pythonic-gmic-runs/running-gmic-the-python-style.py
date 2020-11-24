@@ -132,6 +132,15 @@ print(len(im2._data))
 """
 
 """
+Just in case you wanted to read your GmicImage's data as floats at once, here is a pythonic way
+"""
+floats = struct.unpack(
+    "6f", im2._data
+)  # "6f" for six floats or str(len(im2._data)/4)+"f"
+print(floats)
+# (1.0, 2.0, 3.0, 4.0, 5.0, 6.0)
+
+"""
 The GmicImage class has no method to print its pixels into console nicely as you would in numpy with print(myndarray).
 Now, for pixel access, numpy provides a [] coordinates accessor numpy.ndarray[x,y,z,....] to read matrix cell values.
 GmicImage's pixel accessor is just the () on a GmicImage instance, that is to say, each GmicImage object is callable.
@@ -139,7 +148,25 @@ The signature for this accessor is myimage(x=0,y=0,z=0,s=0), each parameter is o
 (s stands for spectrum, it is interchangeable with c for channel in most G'MIC literature)
 """
 print(im2(y=1))  # reads at x=0,y=1,z=0,s=0
-# 2
+# 2.0
+
+"""
+Just in case you needed it some day, here is a way to print each pixel within 4D (3D+channels aka spectrum) for loops
+"""
+for z in range(im2._depth):
+    for y in range(im2._height):
+        for x in range(im2._width):
+            for c in range(im2._spectrum):
+                print((x, y, z, c), "=", im2(x, y, z, c))
+
+""" will print:
+(0, 0, 0, 0) = 1.0
+(1, 0, 0, 0) = 2.0
+(2, 0, 0, 0) = 3.0
+(0, 1, 0, 0) = 4.0
+(1, 1, 0, 0) = 5.0
+(2, 1, 0, 0) = 6.0
+"""
 
 
 # You may also want to view your image with your eyes:
@@ -227,7 +254,7 @@ g.run("display", result_images)
 
 # II- Montage pass
 # Build a 3x3-bordered pixels frame around images, white, and make an automatic montage, display it and save to file
-g.run("frame 3,3,255 montage X display output mymontage.png")
+g.run("frame 3,3,255 montage X display output mymontage.png", result_images)
 
 """THE END
 That was it for tutorial number 2! Now you know more about reusing a G'MIC interpreter handle and calling it several times on a GmicImage list. Congratulations!
