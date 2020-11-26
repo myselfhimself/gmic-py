@@ -240,10 +240,8 @@ nature_config = [
 result_images = []
 for conf in nature_config:
     images_list = []
-    # we use stylize's default parameters, hence the '.' character
-    # the keep[0] command keeps only the first image in the images list
     g.run(
-        "sp {} _fx_stylize {} stylize .".format(conf["sample"], conf["style"]),
+        "sp {} _fx_stylize {} stylize[0] [1]".format(conf["sample"], conf["style"]),
         images_list,
     )
     print(images_list)

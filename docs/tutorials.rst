@@ -34,11 +34,11 @@ In G'MIC each command outputs most of the time a G'MIC Image (or G'MIC Image lis
 
 Commands outputting corresponds most of the time to **in-place** transformation within an input images list. Some times (or always when prefixed with a `+` sign, eg. `+blur`), commands can append a new result image to an input images list.
 
-G'MIC commands thus take as input: G'MIC image(s) (or "buffers"), coming from their left side, and also scalar parameters (integers, floats, strings..) on the right side:
+G'MIC commands thus take as input: G'MIC image(s) (or "buffers"), coming from their left side, and also G'MIC image(s) and/or scalar parameters (integers, floats, strings..) on the right side:
 
 .. code-block::
 
-     <former command's output images> <command 1> <command 1 scalar parameters>
+     <former command's output images> <command 1> <command 1 image and/or scalar parameters>
 
 Example:
 
@@ -297,17 +297,13 @@ Here are some example commands and filters:
     gmic.run("sp leno display") # this is the portrait we will want to be stylized
     gmic.run("_fx_stylize landscapenearantwerp display") # let us be hackish and use the internal _fx_stylize function to preview one of Antwerp's painting as a future style
 
-    gmic.run("sample leno _fx_stylize landscapenearantwerp +stylize . keep[2] display")
-    # the keep[index] command allows to remove all images in Gmic Image list but the 'index' one
-    # The + sign in front stylize forces the filter to append its result
-    # image to the end of the Gmic Image list, instead of filtering in place
-    # The . stands for "default" value
+    gmic.run("sample leno _fx_stylize landscapenearantwerp stylize[0] [1] display")
 
 .. gmicpic:: sp leno
 
 .. gmicpic:: _fx_stylize landscapenearantwerp
 
-.. gmicpic:: sample leno _fx_stylize landscapenearantwerp +stylize . keep[2]
+.. gmicpic:: sample leno _fx_stylize landscapenearantwerp stylize[0] [1]
 
 .. code-block:: python
 
@@ -322,3 +318,13 @@ Here are some example commands and filters:
 .. gmicpic:: sample duck smooth 40,0,1,1,2
 
 .. gmicpic:: sample duck repeat 3 smooth 40,0,1,1,2 done blur xy,5 rodilius ,
+
+Tutorial 2 - Optimization, GmicImage, lists
+##############################################
+
+TODO copy from python script
+
+Tutorial 3 - filtering GIF and videos
+#########################################
+
+TODO
