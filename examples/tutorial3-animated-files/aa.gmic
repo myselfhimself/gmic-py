@@ -1,0 +1,9 @@
+labelmap :
+  N={int($#/3)}
+  if $N
+    (${^0}) r. 3,$N,1,1,-1 transpose. s. y,-2 rows.. 0,2 a[-2,-1] y
+    pointcloud. 0,{-2,[w,h]} watershed. ..
+  else 100%,100%
+  fi
+
+
