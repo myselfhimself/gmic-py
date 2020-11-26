@@ -1,109 +1,39 @@
+# You should run first: pip install gmic
+# Make sure to checkout the README.md in this script's directory
+
 import gmic
-
-"""
-The Python binding for G'MIC or gmic-py (although you "pip install gmic" and "import gmic") is quite rudimentary and tries to bring
-together the advantages of the 'gmic' command line tool (a sort of G'MIC language evaluator) with the speed and API-similarity of G'MIC C++.
-
-Below we will cover a bit of what is missing for your full understanding of gmic-py and optimizing processing speed a bit. This will maybe be boring, but investing time there will allow you to spare CPU time and avoid superfluous file reads-writes, especially if you use gmic-py in some bigger back-end or front-end application.
-
-One thing which will be dealt with only in tutorial 3 though, is the interaction of gmic-py with third-party numpy-based libraries and IPython-based environments. If you are impatient, jump to that next tutorial right away. Note though, that some of knowledge of how the GmicImage class works is needed, so you might want to read the related section below beforehand. 
-
-In this tutorial, let us see how the 3 building blocks of gmic-py can be used together: the interpreter, single images, and images lists.
-In tutorial 1, you have used the G'MIC interpreter mostly, without noticing how it was intantiated, but used file input and output to avoid Python-level images management. 
-
-"""
 
 # The G'MIC module - for debugging mostly
 print(dir(gmic))
-"""
-['Gmic', 'GmicException', 'GmicImage', '__build__', '__doc__', '__file__', '__loader__', '__name__', '__package__', '__spec__', '__version__', 'run']
-"""
 
-"""
-- Gmic - the G'MIC language intepreter class
-- run - shortcut to gmic.Gmic().run for beginners to kick-off to run G'MIC expressions right away
-- GmicException - an generic exception thrown by most G'MIC classes (along with standard Python exceptions, such as ValueError etc)
-- GmicImage - a wrapper around C++'s gmic_image class (a CImg alias)
+print(gmic.__spec__)
+print(gmic.__version__)
+print(gmic.__build__)
 
-"""
-
-print(
-    gmic.__spec__
-)  # path were your compiled G'MIC Python loaded shared library lives. Mostly useful to people installing gmic-py several times.
-print(gmic.__version__)  # version of the embedded the libgmic C++ interpreter
-print(
-    gmic.__build__
-)  # flags that were used for compilation. This allows to understand fast if your gmic-py provides jpeg, png, tiff support
-# interesting flags are: openMP is for parallel computing
-# fftw3 is needed for spectrum-based computing and managing images with dimensions not in power of 2
-# OpenCV is by default not linked to gmic-py, although you could rebuild gmic-py easily and use it
-
-help(
-    gmic
-)  # shows an introduction about gmic-py. Note that this is less instructive than running gmic.run("help <somecommand>") for example.
+help(gmic)
 
 
 # The G'MIC interpreter
-"""gmic.run is a function which spawns a G'MIC interpreter object for you, lets it interpret your command, then deletes the interpreter object.
-For those literate in computer science, there is no singleton design pattern in use at all."""
 gmic.run("sp apples rodilius 3 display")
 gmic.run("sp earth blur 5 display")
 
-"""In pure Python, the above two lines would be the same as doing (being unsure of when garbage collection for memory-living G'MIC interpreters would happen):
-"""
 g1 = gmic.Gmic()
 g1.run("sp apples rodilius 3 display")
 del g1
 g2 = gmic.Gmic()
 g2.run("sp earth blur 5 display")
 del g2
-""" gmic.Gmic() instantiates a G'MIC intepreter class, and makes it read its configuration and set up internal variables and operating system capabilities detection etc.. This is a bit heavy and you may not want to repeat too it many times!
-For simplicity though, most gmic-py beginner tutorials just write gmic.run() which is akin to the more famous 'gmic' CLI executable.
 
-Here is the better way to evaluate several commands in a row using a single G'MIC interpreter instance:
-"""
-
-g = (
-    gmic.Gmic()
-)  # First create a G'MIC interpreter instance using the Gmic class, and attach to a variable by a simple assignment
-g.run(
-    "sp apples rodilius 3"
-)  # Reuse your variable as many times as you want, and call its run() method.
-g.run(
-    "sp apples blur 5"
-)  # Here you are, a 2nd call, where the G'MIC interpreter was not recreated for nothing!
-
-"""
-Note that the G'MIC interpreter do not store states between calls, that is that the input and result images from each last call are forgotten.
-Passing in a pure-Python list of G'MIC images is the way to keep track of your images in memory. This will be shown a bit further in the next two sections.
-Especially, as the run() method actually takes 3 parameters:
-- a command(s) string, 
-- an optional list of G'MIC images,
-- an optional list of G'MIC image names.
-You can read more about this by running help(gmic.Gmic) or visiting the API reference: https://gmic-py.readthedocs.io/en/latest/gmic.html#gmic.Gmic
-"""
+g = gmic.Gmic()
+g.run("sp apples rodilius 3")
+g.run("sp apples blur 5")
 
 # The G'MIC image
-"""
-After discovering the gmic.Gmic interpreter, the G'MIC Image is the other building block of gmic-py (of the G'MIC C++). Here is how to create one from scratch with no data:
-"""
 im = gmic.GmicImage()
-help(gmic.GmicImage)  # Some mini-doc on how to call the GmicImage class
-"""Now let us take a look at its properties (attributes):"""
+im_ = gmic.GmicImage(width=640, height=480, spectrum=3)
+help(gmic.GmicImage)
+
 print(dir(im))
-"""
-['__call__', '__class__', '__copy__', '__delattr__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lt__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', '_data', '_data_str', '_depth', '_height', '_is_shared', '_spectrum', '_width', 'from_PIL', 'from_numpy', 'from_numpy_helper', 'from_skimage', 'to_PIL', 'to_numpy', 'to_numpy_helper', 'to_skimage']
-
-Here the most important attributes you see are:
-- _data is a read-only 'bytes' buffer, which G'MIC reads and writes as a list of interleaved 32bit float. Interleaving and non-interleaving is a big topic, and G'MIC seems to an exception compared to many other graphics processing libraries: it stores pixel channel values, channel after channel. For example, for a 3x1 pixels RGB image, the _data would look like: R1R2R3G1G2G3B1B2B3 instead or R1G1B1R2G2B2R3G3B3.
-- _width, _height, _depth, _spectrum: read-only integers. G'MIC works in 3D if needed and stores its channels (eg. RGB, HSV, or a few million other channels) in the _spectrum dimensions. So an RGB 1024x768 screenshot would have those attributes as: 1024, 768, 1, 3. Any dimension must >=1.
-- from_* and to_* methods are for converting to and from other graphics libraries!! (as long as you install them first in your virtual environment or machine). Indeed, gmic-py was designed so that you spend more time using other famous tools you already love (numpy and PIL namely..) than working with the infamous gmic-py! Interoperability FTW!
-
-Here are less important methods:
-- _data_str: is not so important, but for your curiosity, it helps to decode the _data attribute as a unicode string!!! (in same some people wanted to store text in a G'MIC Image... the "parse_gui" command does this actually)
-- _is_shared is never used in Python, it helps avoiding duplicate data to an image, when two interpreters work on it.
-"""
-
 
 # Let us see how a GmicImage is  represented as a string:
 print(im)
