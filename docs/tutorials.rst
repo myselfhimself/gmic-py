@@ -505,8 +505,282 @@ Here the most important attributes you see are:
 Here are less important methods:
 
 - ``_data_str``: is not so important, but for your curiosity, it helps to decode the _data attribute as a unicode string!!! (in same some people wanted to store text in a G'MIC Image... the `parse_gui <https://gmic.eu/reference/parse_gui.html>`_ command does this actually)
-- ``_is_shared`` is never used in Python, it helps avoiding duplicate data to an image, when two interpreters work on it.
+- ``_is_shared`` is never used in Python, is relevant when two interpreters or threads work on the ``GmicImage``.
 
+Let us see how a GmicImage is represented as a string:
+
+.. code-block:: python
+
+    print(im)
+    # Outputs:
+    # <gmic.GmicImage object at 0x7f5d6a028a70 with _data address at 0x26d0180, w=1 h=1 d=1 s=1 shared=0>
+
+So we have just created a ``GmicImage`` with default parameters, that is an empty ``_data`` buffer, and dimensions ``width=height=depth=spectrum=1`` and no sharing.
+
+If you know ``numpy``, ``GmicImage`` object look like ``numpy``'s ndarrays, though the former are much less practical to manipulate!!!
+They are actually a very superficial binding of G'MIC's C++ ``gmic_image`` / ``cimg`` image class.
+
+To instantiate a ``GmicImage``, you can pass in a ``bytes`` buffer, as well as the optional dimensions seen before: width, height, depth. Numpy does that as well.
+Here is a complex way to create a GmicImage from fixed bytes-level data and introspect it:
+
+.. code-block:: python
+
+    import gmic
+    import struct  # a handy native Python module to parse and build buffers
+
+    # Here we set up a GmicImage with 6 floats and dimensions 3x2x1
+    im2 = gmic.GmicImage(struct.pack("6f", 1, 2, 3, 4, 5, 6), 3, 2, 1)
+    # Let us print that image
+    print(im2)
+    # Outputs:
+    # <gmic.GmicImage object at 0x7f5d6a028b10 with _data address at 0x26d0f20, w=3 h=2 d=1 s=1 shared=0>
+
+    # You may print the _data buffer and its length, if you are very curious:
+    print(im2._data)
+    # Outputs:
+    # b'\x00\x00\x80?\x00\x00\x00@\x00\x00@@\x00\x00\x80@\x00\x00\xa0@\x00\x00\xc0@'
+
+    print(len(im2._data))
+    # Outputs:
+    # 24 # Remember a 3x2x1 G'MIC Image makes up 6 floats (always 32 bits or 4-bytes long), so 6x4=24 bytes
+
+    # Just in case you wanted to read your GmicImage's data as floats at once, here is a pythonic way
+    # Reminder: G'MIC stores pixel values in float32 which is the default float type's length on most OSes
+    floats = struct.unpack(
+        "6f", im2._data
+    )  # "6f" for six floats or str(len(im2._data)/4)+"f"
+
+    print(floats)
+    # Outputs:
+    # (1.0, 2.0, 3.0, 4.0, 5.0, 6.0)
+
+
+The ``GmicImage`` class has no method to print its pixels into console nicely as you would in ``numpy`` with ``print(mynparray)``.
+
+For accessing pixels, ``numpy`` provides a ``[]`` coordinates accessor ``numpy.ndarray[x,y,z,....]`` to read matrix cell values.
+
+``GmicImage``'s pixel accessor is just ``()`` parentheses call on a ``GmicImage`` instance. That is to say, each GmicImage object is callable.
+The signature for this accessor is ``mygmicimage(x=0,y=0,z=0,s=0)``, each parameter is optional and defaults to 0.
+
+`Side note:` **s** stands for spectrum, it is interchangeable with c for channel in most G'MIC literature.
+
+Here are two examples of accessing one or all pixel values:
+
+.. code-block:: python
+
+    print(im2(y=1))  # reads at x=0,y=1,z=0,s=0
+    # Outputs:
+    # 4.0
+
+    for z in range(im2._depth):
+        for y in range(im2._height):
+            for x in range(im2._width):
+                for c in range(im2._spectrum):
+                    print((x, y, z, c), "=", im2(x, y, z, c))
+
+    """
+    Outputs:
+    (0, 0, 0, 0) = 1.0
+    (1, 0, 0, 0) = 2.0
+    (2, 0, 0, 0) = 3.0
+    (0, 1, 0, 0) = 4.0
+    (1, 1, 0, 0) = 5.0
+    (2, 1, 0, 0) = 6.0
+    """
+
+You may also want to view your image with your own eyes:
+
+.. code-block:: python
+
+    gmic.run(
+        "display", images=im2
+    )  # Or try gmic.run("print", im2) or gmic.run("output myimage.png", im2) if your environment has no display
+    """
+    [gmic]-1./ Display image [0] = '[unnamed]', from point (1,1,0).
+    [0] = '[unnamed]':
+      size = (3,2,1,1) [24 b of floats].
+      data = (1,2,3;4,5,6).
+      min = 1, max = 6, mean = 3.5, std = 1.87083, coords_min = (0,0,0,0), coords_max = (2,1,0,0).
+    """
+
+.. execute_code::
+    :hide_code:
+    :hide_results:
+    :hide_results_caption:
+
+    import gmic
+    import struct
+    im2 = gmic.GmicImage(struct.pack("6f", 1, 2, 3, 4, 5, 6), 3, 2, 1)
+    gmic.run("_document_gmic output tuto2_im2.png", im2)
+
+.. gmicpic:: tuto2_im2.png display
+
+The G'MIC images list (and image names)
+****************************************
+Ooops!!! In the former section, we forgot to talk about G'MIC's intepreter images list parameter and started using it!!
+
+Just for now, here is a little trick which we have done.
+
+``gmic.run()``, ``gmic.Gmic().run()`` or ``gmic.Gmic()`` all have the same signature ``(commands, images, image_names)``.
+Their second parameter, the ``images`` parameter accepts a rewritable list of ``GmicImage`` objects or a single read-only ``GmicImage``:
+
+- If a list is passed, it will be emptied and refilled in place...
+- If a single ``GmicImage``, which will be read only (no in-place modification)
+
+Let us call the G'MIC interpreter with both single or lists or images:
+
+.. code-block:: python
+
+    import gmic
+    import struct
+
+    im2 = gmic.GmicImage(struct.pack("6f", 1, 2, 3, 4, 5, 6), 3, 2, 1)
+
+    gmic.run("display", im2)  # is a read-only operation, we can pass a single GmicImage
+
+    # But the proper way to see a change is to put your single image in a list
+    images_list = [im2]
+
+    gmic.run("add 1 display", images_list)  # add value 1 to each pixel then display
+    # Note above that the min and max value are properly shifted by 1, compared to our first 'display' of im2, before in that same tutorial:
+    """
+    Outputs:
+    gmic.run("add 1 display", images_list) # add value 1 to each pixel then display
+    [gmic]-1./ Display image [0] = '[unnamed]', from point (1,1,0).
+    [0] = '[unnamed]':
+      size = (3,2,1,1) [24 b of floats].
+      data = (2,3,4;5,6,7).
+      min = 2, max = 7, mean = 4.5, std = 1.87083, coords_min = (0,0,0,0), coords_max = (2,1,0,0).
+    """
+
+.. execute_code::
+    :hide_code:
+    :hide_results:
+    :hide_results_caption:
+
+    import gmic
+    import struct
+    im2 = gmic.GmicImage(struct.pack("6f", 1, 2, 3, 4, 5, 6), 3, 2, 1)
+    gmic.run("add 1 _document_gmic output tuto2_im2_add1.png", im2)
+
+.. gmicpic:: input tuto2_im2_add1.png
+
+Let us continue our in-place changed image list study:
+
+.. code-block:: python
+
+    print(images_list)
+    # Not all commands have the same behaviour in terms or adding, replacing or removing images in the input images list
+    # Here the 'add' command changes input images in place by default, so our images_list is still 1-item long
+    # Outputs:
+    # [<gmic.GmicImage object at 0x7fbbe9fd3d30 with _data address at 0x1c16550, w=3 h=2 d=1 s=1 shared=0>]"""
+
+    # Let us check if our images list's single item has the same content or address as the original im2 GmicImage... NO! And this is EXPECTED!
+    print(im2 == images_list[0])
+    # gmic-py does not change your images in place at all!
+    # Just empty and refill your list of GmicImages, so keep references around if you want to keep them!
+
+Image names
+############
+When we run the G'MIC ``display`` or ``print`` commands, you may notice in your console or with your mouse in the image display window, that our images so far are all ``unnamed``.
+
+.. code-block::
+
+    [gmic]-1./ Display image [0] = '[unnamed]', from point (1,1,0).
+
+This is not an issue, though you can give names if you prefer, and refer to those names for indexing:
+
+.. code-block::
+
+    images_list = []
+    images_names = ["myapples", "myearth"]
+    gmic.run("sp apples sp earth print", images_list, images_names)  # No names given
+
+# TODO continue + fix: https://github.com/myselfhimself/gmic-py/issues/81
+
+Wrapping up - stylized fruits example
+*************************************
+
+Here is an example of a stylized nature montage with some parameters injection.
+
+To prepare this example, the following tricks have been used:
+
+- the command line command ``gmic help sp`` (or ``gmic.run("help sp")``), to help decide which samples would nice to pick.
+- The `gmic.eu Gallery page for Stylization <https://gmic.eu/gallery/stylization.html>`_ shows sample names parameter supported by the _fx_stylize (which is a non-documented G'MIC internal command providing famous painting samples..)
+
+  - Actually, since this is a G'MIC internal command, `its code can be found here (look for _fx_stylize) <https://raw.githubusercontent.com/dtschump/gmic/master/src/gmic_stdlib.gmic>`_
+- The `List of Commands page from the G'MIC online reference <https://gmic.eu/reference/list_of_commands.html>`_, especially the `stylize command page <https://gmic.eu/reference/stylize.html>`_
+
+.. code-block:: python
+
+    import gmic
+
+    g = gmic.Gmic()
+
+    # I- Stylization pass
+    nature_config = [
+        {"sample": "apples", "style": "convergence"},
+        {"sample": "fruits", "style": "redwaistcoat"},
+        {"sample": "flower", "style": "lesdemoisellesdavignon"},
+    ]
+
+    result_images = []
+    for conf in nature_config:
+        images_list = []
+        g.run(
+            "sp {} _fx_stylize {} stylize[0] [1]".format(conf["sample"], conf["style"]),
+            images_list,
+        )
+        print(images_list)
+        result_images.append(images_list[0])
+
+
+    g.run("display", result_images)
+
+    # II- Montage pass
+    # Build a 3x3-bordered pixels frame around images, white, and make an automatic montage, display it and save to file
+    g.run("frame 3,3,255 montage X display output mymontage.png", result_images)
+
+.. execute_code::
+    :hide_code:
+    :hide_results:
+    :hide_results_caption:
+
+    import gmic
+
+    g = gmic.Gmic()
+
+    # I- Stylization pass
+    nature_config = [
+        {"sample": "apples", "style": "convergence"},
+        {"sample": "fruits", "style": "redwaistcoat"},
+        {"sample": "flower", "style": "lesdemoisellesdavignon"},
+    ]
+
+    result_images = []
+    for conf in nature_config:
+        images_list = []
+        g.run(
+            "sp {} _fx_stylize {} stylize[0] [1]".format(conf["sample"], conf["style"]),
+            images_list,
+        )
+        print(images_list)
+        result_images.append(images_list[0])
+
+
+    g.run("_document_gmic output tuto2_stylization.png", result_images)
+
+    # II- Montage pass
+    # Build a 3x3-bordered pixels frame around images, white, and make an automatic montage, display it and save to file
+    g.run("frame 3,3,255 montage X display output tuto2_montage.png", result_images)
+
+.. gmicpic:: tuto2_stylization.png
+
+.. gmicpic:: tuto2_montage.png
+
+THE END
+*******
+That was it for tutorial number 2! Now you know more about reusing a G'MIC interpreter handle and calling it several times on a GmicImage list. Congratulations!
 
 
 Tutorial 3 - filtering GIF and videos

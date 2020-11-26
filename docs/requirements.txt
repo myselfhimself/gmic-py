@@ -4,3 +4,4 @@ gmic-sphinx
 recommonmark
 pyquickhelper
 sphinxcontrib.imagesvg
+-e git+https://github.com/myselfhimself/sphinx-execute-code@7b5812cd09949c4442da6e544927d34d7b06add8#egg=sphinx-execute-code

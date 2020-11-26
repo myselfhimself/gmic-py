@@ -33,7 +33,7 @@ master_doc = 'index' # Per https://stackoverflow.com/a/56448499/420684
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['recommonmark', 'gmic_sphinx', 'sphinx.ext.autodoc', 'sphinx.ext.napoleon', 'pyquickhelper.sphinxext.sphinx_autosignature', 'sphinx.ext.autosectionlabel']
+extensions = ['recommonmark', 'gmic_sphinx', 'sphinx.ext.autodoc', 'sphinx.ext.napoleon', 'pyquickhelper.sphinxext.sphinx_autosignature', 'sphinx.ext.autosectionlabel', 'sphinx_execute_code']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
