@@ -498,7 +498,7 @@ Now let us take a look at the first image's properties (attributes):
 
 Here the most important attributes you see are:
 
-- ``_data``: a read-only 'bytes' buffer, which G'MIC reads and writes as a list of interleaved 32bit float. Interleaving and non-interleaving is a big topic, and G'MIC seems to an exception compared to many other graphics processing libraries: it stores pixel channel values, channel after channel. For example, for a 3x1 pixels RGB image, the _data would look like: R1R2R3G1G2G3B1B2B3 instead or R1G1B1R2G2B2R3G3B3.
+- ``_data``: a read-only 'bytes' buffer, which G'MIC reads and writes as a list of interleaved 32bit float. Interleaving and non-interleaving is a big topic, and G'MIC seems to an exception compared to many other graphics processing libraries: it stores pixel channel values, channel after channel. For example, for a 3x1 pixels RGB image, the _data would look like: ``R1R2R3G1G2G3B1B2B3`` instead of ``R1G1B1R2G2B2R3G3B3``.
 - ``_width``, ``_height``, ``_depth``, ``_spectrum``: read-only integers. G'MIC works in 3D if needed and stores its channels (eg. RGB, HSV, or a few million other channels) in the _spectrum dimensions. So an RGB 1024x768 screenshot would have those attributes as: 1024, 768, 1, 3. Any dimension must be >=1.
 - ``from_*`` and ``to_*``: conversion methods to and from other graphics libraries!! (as long as you install them first in your virtual environment or machine). Indeed, gmic-py was designed so that you spend more time using other famous tools you already love (numpy and PIL namely..) than working with the less famous ``gmic-py``! Interoperability FTW!
 
