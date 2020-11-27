@@ -98,7 +98,7 @@ for conf in nature_config:
     result_images.append(images_list[0])
 
 
-g.run("display", result_images)
+g.run("display output tuto2_stylization.png", result_images)
 
 # II- Montage pass
-g.run("frame 3,3,255 montage X display output mymontage.png", result_images)
+g.run("frame 3,3,255 montage X display output tuto2_montage.png", result_images)

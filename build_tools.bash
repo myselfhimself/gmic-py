@@ -291,7 +291,7 @@ function 6_make_full_doc () {
 }
 
 function 6b_make_doc_without_c_recompilation () {
-    pip uninstall -y gmic && pip install `ls -Art dist/*.whl | tail -n 1` && cd docs && touch *.rst && make html && $BROWSER _build/html/index.html && cd ..
+    pip uninstall -y gmic && pip install `ls -Art dist/*.whl | tail -n 1` && cd docs && pip install -r requirements.txt && touch *.rst && make html && $BROWSER _build/html/index.html && cd ..
 }
 
 function --help () {

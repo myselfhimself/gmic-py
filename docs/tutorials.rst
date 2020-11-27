@@ -347,8 +347,8 @@ Here are some example commands and filters:
 
 .. gmicpic:: sample duck repeat 3 smooth 40,0,1,1,2 done blur xy,5 rodilius ,
 
-Tutorial 2 - Optimization, GmicImage, lists
-##############################################
+Tutorial 2 - Optimization, GmicImage, lists, stylize
+#####################################################
 
 The Python binding for G'MIC or ``gmic-py`` (although you "pip install gmic" and "import gmic") is quite rudimentary.
 ``gmic-py`` tries to bring together the advantages of the ``gmic`` command line tool (a sort of G'MIC language evaluator) with the speed and API-similarity of G'MIC's C++ library.
@@ -561,6 +561,7 @@ For accessing pixels, ``numpy`` provides a ``[]`` coordinates accessor ``numpy.n
 
 ``GmicImage``'s pixel accessor is just ``()`` parentheses call on a ``GmicImage`` instance. That is to say, each GmicImage object is callable.
 The signature for this accessor is ``mygmicimage(x=0,y=0,z=0,s=0)``, each parameter is optional and defaults to 0.
+**Important:** for now, the ``GmicImage`` pixel accessor is read-only. You are encouraged to use I/O functions described in :ref:`Tutorial 5 - numpy, PIL, Scikit-image other libraries for writing.
 
 `Side note:` **s** stands for spectrum, it is interchangeable with c for channel in most G'MIC literature.
 
@@ -613,7 +614,7 @@ You may also want to view your image with your own eyes:
     im2 = gmic.GmicImage(struct.pack("6f", 1, 2, 3, 4, 5, 6), 3, 2, 1)
     gmic.run("_document_gmic output tuto2_im2.png", im2)
 
-.. gmicpic:: tuto2_im2.png display
+.. gmicpic:: tuto2_im2.png
 
 The G'MIC images list (and image names)
 ****************************************
@@ -663,7 +664,7 @@ Let us call the G'MIC interpreter with both single or lists or images:
     im2 = gmic.GmicImage(struct.pack("6f", 1, 2, 3, 4, 5, 6), 3, 2, 1)
     gmic.run("add 1 _document_gmic output tuto2_im2_add1.png", im2)
 
-.. gmicpic:: input tuto2_im2_add1.png
+.. gmicpic:: tuto2_im2_add1.png
 
 Let us continue our in-place changed image list study:
 
@@ -762,17 +763,17 @@ To prepare this example, the following tricks have been used:
         images_list = []
         g.run(
             "sp {} _fx_stylize {} stylize[0] [1]".format(conf["sample"], conf["style"]),
-            images_list,
+            images_list
         )
         print(images_list)
         result_images.append(images_list[0])
 
 
-    g.run("_document_gmic output tuto2_stylization.png", result_images)
+    g.run("+_document_gmic output. tuto2_stylization.png keep[0-2]", result_images)
 
     # II- Montage pass
     # Build a 3x3-bordered pixels frame around images, white, and make an automatic montage, display it and save to file
-    g.run("frame 3,3,255 montage X display output tuto2_montage.png", result_images)
+    g.run("frame 3,3,255 montage X output tuto2_montage.png", result_images)
 
 .. gmicpic:: tuto2_stylization.png
 
@@ -780,7 +781,11 @@ To prepare this example, the following tricks have been used:
 
 THE END
 *******
-That was it for tutorial number 2! Now you know more about reusing a G'MIC interpreter handle and calling it several times on a GmicImage list. Congratulations!
+That was it for tutorial number 2!
+
+Now you know more about reusing a G'MIC interpreter handle and calling it several times on a GmicImage list.
+
+Congratulations!
 
 
 Tutorial 3 - filtering GIF and videos
