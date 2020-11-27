@@ -2,13 +2,13 @@ import gmic
 import shutil
 
 # Flipbook example from a GIF file
-#----------------------------------
+# ----------------------------------
 g = gmic.Gmic()
 images_list = []
-GIF_FILENAME = 'moonphases.gif'
+GIF_FILENAME = "moonphases.gif"
 
 # If 'convert' is installed
-if shutil.which('convert'):
+if shutil.which("convert"):
     g.run(GIF_FILENAME, images_list)
 else:
     # If convert is absent
@@ -46,5 +46,3 @@ gmic.run(
 
 # TODO AVI non-linear video editor example
 # Using PyAv https://scikit-image.org/docs/dev/user_guide/video.html#pyav which embed libffmpeg on all OSes
-
-
