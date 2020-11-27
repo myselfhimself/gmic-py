@@ -858,7 +858,7 @@ If the `convert`-executable technique does work, but you see a green frame as th
     import numpy
     from PIL import Image, ImageSequence
 
-    im = Image.open("moonphases.gif")
+    im = Image.open("_static/images/moonphases.gif")
 
     images_list = []
 
