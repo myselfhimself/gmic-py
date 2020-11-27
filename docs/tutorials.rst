@@ -822,9 +822,12 @@ Let us try to open and display that GIF renamed ``moonphases.gif`` (download it 
 
 .. gmicpic:: _static/images/moonphases.gif _document_gmic
 
-If this does not work on your machine, let us try another way using PIL (or Pillow). (You might otherwise other install ``convert`` on your machine).
+If this does not work on your machine, let us try another way using PIL (or Pillow). (You might otherwise install ``convert`` on your machine).
 
-If it does work, but you see a green frame as the first frame, skip the PIL step and continue.
+Here we take benefit from ``gmic-py``'s PIL input/output converter which uses numpy under the hood.
+The magic piece of code involved is: ``gmic.GmicImage.from_PIL()`` - a static method of the ``GmicImage`` class, which returns a ``GmicImage`` object from a ``PIL.Image.Image`` object .
+
+If the `convert`-executable technique does work, but you see a green frame as the first frame, skip the PIL step and continue.
 
 .. code-block:: sh
 
