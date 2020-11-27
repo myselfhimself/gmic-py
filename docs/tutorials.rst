@@ -779,8 +779,6 @@ To prepare this example, the following tricks have been used:
 
 .. gmicpic:: tuto2_montage.png
 
-THE END
-*******
 That was it for tutorial number 2!
 
 Now you know more about reusing a G'MIC interpreter handle and calling it several times on a GmicImage list.
@@ -791,7 +789,111 @@ Congratulations!
 Tutorial 3 - filtering GIF and videos
 #########################################
 
-TODO
+This tutorial will lead you into filtering frames of animated content using ``gmic-py``:
+
+- a moon phases GIF file to make a `flip book <https://en.wikipedia.org/wiki/Flip_book>`_
+- a video file to apply time-controlled filters
+
+Making a moon phases flip book
+*******************************
+The strategy behind transforming a GIF into a `flip book <https://en.wikipedia.org/wiki/Flip_book>`_ is to:
+
+1. split the GIF file into frames
+2. modify each frame to our taste to make them fancier (stars, increasing blur)
+3. make a big montage grid of the frames
+4. save it to PNG and print it on quite thick a A4 paper sheet
+5. cut, assemble and snap them with a binder
+6. time to flip!
+
+If you lack a printer that accepts thick pages, you may as well laser cut your PNG file.
+
+Here is a GIF of moon phases by Thomas Bresson under Creative Commons License 4.0 BY, `obtained from Wikimedia <https://commons.wikimedia.org/wiki/File:2016-09-16_20-30-00_eclipse-lunaire-ann2.gif>`_:
+
+.. image:: _static/images/moonphases.gif
+
+G'MIC does not have internal support for GIF, because the GIF file format has many variants. Instead it relies on ImageMagick's ``convert`` executable if installed.
+
+Let us try to open and display that GIF renamed ``moonphases.gif`` (download it `from this link directly <_static/images/moonphases.gif>`_) into separate frames.
+
+.. code-block:: python
+
+    import gmic
+    gmic.run("moonphases.gif display")
+
+.. gmicpic:: _static/images/moonphases.gif _document_gmic
+
+If this does not work on your machine, let us try another way using PIL (or Pillow). (You might otherwise other install ``convert`` on your machine).
+
+If it does work, but you see a green frame as the first frame, skip the PIL step and continue.
+
+.. code-block:: sh
+
+    pip install Pillow
+    pip install numpy # compulsory for gmic-py PIL I/O converter to work
+
+.. code-block:: python
+
+    import gmic
+    import numpy
+    from PIL import Image, ImageSequence
+
+    im = Image.open("moonphases.gif")
+
+    images_list = []
+
+    for frame in ImageSequence.Iterator(im):
+        images_list.append(gmic.GmicImage.from_PIL(frame))
+
+    gmic.run("display", images_list)
+
+.. execute_code::
+    :hide_code:
+    :hide_results:
+    :hide_results_caption:
+
+    import gmic
+    import numpy
+    from PIL import Image, ImageSequence
+
+    im = Image.open("moonphases.gif")
+
+    images_list = []
+
+    for frame in ImageSequence.Iterator(im):
+        images_list.append(gmic.GmicImage.from_PIL(frame))
+
+    gmic.run("_document_gmic output moonphases_PIL.png", images_list)
+
+.. gmicpic:: moonphases_PIL.png
+
+Here is a synthetic adaptive version of both ways:
+
+.. code-block:: python
+
+    import gmic
+    import shutil
+
+    g = gmic.Gmic()
+    images_list = []
+    GIF_FILENAME = 'moonphases.gif'
+
+    # If 'convert' is installed
+    if shutil.which('convert'):
+        g.run(GIF_FILENAME, images_list)
+    else:
+        # If convert is absent
+        # PIL and numpy must be installed for this to work
+        import numpy
+        from PIL import Image, ImageSequence
+
+        im = Image.open("moonphases.gif")
+
+        for frame in ImageSequence.Iterator(im):
+            images_list.append(gmic.GmicImage.from_PIL(frame))
+
+    gmic.run("display", images_list)
+
+Now we have the ``images_list`` variable filled with a GIF's frame.
 
 Tutorial 4 - segmentation and Pygame
 ######################################

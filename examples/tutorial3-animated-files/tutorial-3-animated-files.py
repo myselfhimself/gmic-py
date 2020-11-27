@@ -1,8 +1,28 @@
 import gmic
+import shutil
 
-# TODO intro
+# Flipbook example from a GIF file
+#----------------------------------
+g = gmic.Gmic()
+images_list = []
+GIF_FILENAME = 'moonphases.gif'
 
-#  TODO GIF flipbook
+# If 'convert' is installed
+if shutil.which('convert'):
+    g.run(GIF_FILENAME, images_list)
+else:
+    # If convert is absent
+    # PIL and numpy must be installed for this to work
+    import numpy
+    from PIL import Image, ImageSequence
+
+    im = Image.open("moonphases.gif")
+
+    for frame in ImageSequence.Iterator(im):
+        images_list.append(gmic.GmicImage.from_PIL(frame))
+
+gmic.run("display", images_list)
+
 """
 Goal make a flipbook to be printed on DIN A4 Paper, then cut and flipped by hand
 """
@@ -18,7 +38,7 @@ gmic.run(
 )
 
 # Example of live window demo
-g.run(
+gmic.run(
     "w[] https://gmic.eu/gallery/img/codesamples_full_1.gif remove[0] repeat $! blur[$>] {$>*5} w[$>] done"
 )
 
@@ -26,3 +46,5 @@ g.run(
 
 # TODO AVI non-linear video editor example
 # Using PyAv https://scikit-image.org/docs/dev/user_guide/video.html#pyav which embed libffmpeg on all OSes
+
+
