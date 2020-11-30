@@ -559,7 +559,7 @@ The ``GmicImage`` class has no method to print its pixels into console nicely as
 
 For accessing pixels, ``numpy`` provides a ``[]`` coordinates accessor ``numpy.ndarray[x,y,z,....]`` to read matrix cell values.
 
-``GmicImage``'s pixel accessor is just ``()`` parentheses call on a ``GmicImage`` instance. That is to say, each GmicImage object is callable.
+The ``GmicImage`` class pixel accessor is just ``()`` parentheses call on a ``GmicImage`` instance. That is to say, each GmicImage object is callable.
 The signature for this accessor is ``mygmicimage(x=0,y=0,z=0,s=0)``, each parameter is optional and defaults to 0.
 **Important:** for now, the ``GmicImage`` pixel accessor is read-only. You are encouraged to use I/O functions described in :ref:`Tutorial 5 - numpy, PIL, Scikit-image other libraries for writing.
 
@@ -682,7 +682,7 @@ Let us continue our in-place changed image list study:
     # Just empty and refill your list of GmicImages, so keep references around if you want to keep them!
 
 Image names
-############
+*************
 When we run the G'MIC ``display`` or ``print`` commands, you may notice in your console or with your mouse in the image display window, that our images so far are all ``unnamed``.
 
 .. code-block::

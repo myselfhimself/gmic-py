@@ -1,1 +1,3 @@
 .py.class,.py.exception,.py.method,.py.attribute,.py.function { margin-top: 1em; }
+.wy-side-nav-search { background-color: #6EB6B0; }
+.wy-side-nav-search input[type=text] { border-color:#6EB6B0;}

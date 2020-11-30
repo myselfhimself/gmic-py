@@ -33,7 +33,7 @@ master_doc = 'index' # Per https://stackoverflow.com/a/56448499/420684
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['recommonmark', 'gmic_sphinx', 'sphinx.ext.autodoc', 'sphinx.ext.napoleon', 'pyquickhelper.sphinxext.sphinx_autosignature', 'sphinx.ext.autosectionlabel', 'sphinx_execute_code']
+extensions = ['sphinx_rtd_theme', 'recommonmark', 'gmic_sphinx', 'sphinx.ext.autodoc', 'sphinx.ext.napoleon', 'pyquickhelper.sphinxext.sphinx_autosignature', 'sphinx.ext.autosectionlabel', 'sphinx_execute_code']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -49,7 +49,8 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'alabaster'
+#html_theme = 'alabaster'
+html_theme = "sphinx_rtd_theme"
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -60,4 +61,4 @@ html_css_files = [
     'css/custom.css',
 ]
 
-html_logo = "_static/images/gmicky.png"
+html_logo = "_static/images/gmicky_outercolor_small.png"
