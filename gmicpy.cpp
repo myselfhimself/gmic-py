@@ -1525,7 +1525,7 @@ static PyMethodDef gmic_methods[] = {
 
 PyDoc_STRVAR(gmic_module_doc,
              "G'MIC image processing library Python binary module.\n\n\
-Use ``gmic.run`` or ``gmic.Gmic`` to run G'MIC commands inside the G'MIC C++ interpreter, manipulate ``gmic.GmicImage`` which has ``numpy`` input/output support.\n\n\
+Use ``gmic.run`` or ``gmic.Gmic`` to run G'MIC commands inside the G'MIC C++ interpreter, manipulate ``gmic.GmicImage`` which has ``numpy``/``PIL`` input/output support, assemble lists of ``gmic.GmicImage`` items inside read-writeable pure-Python `list` objects.\n\n\
 \n\n");
 
 PyModuleDef gmic_module = {PyModuleDef_HEAD_INIT, "gmic", gmic_module_doc, 0,
