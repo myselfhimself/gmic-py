@@ -2,21 +2,30 @@
 """
 
 from os import path, listdir, environ
+import os
 import sys
-import platform
 
 from setuptools import setup, Extension, find_packages
-import pkgconfig
+
+try:
+    import pkgconfig
+except:
+    print("No pkgconfig found")
+
+IS_WINDOWS = sys.platform == "win32"
 
 here = path.abspath(path.dirname(__file__))
-gmic_src_path = path.abspath("src/gmic/src")
+gmic_src_path = path.abspath("gmic/src")
+WIN_DLL_DIR = path.abspath("win_dll")
+
+debug_enabled = "--debug" in sys.argv
 
 
 # List of non-standard '-l*' compiler parameters
 extra_link_args = []
 
-# List of libs to get include directories and linkable libraries paths from for compiling
-pkgconfig_list = ["zlib"]
+# Extra C flags
+extra_compile_args = []
 
 # Macros to toggle (gmic or CImg will do C/C++ #ifdef checks on them, testing mostly only their existence)
 # cimg_date and cimg_date are true variables, the value of which is checked in the C/C++ source
@@ -34,68 +43,91 @@ define_macros = [
     ),  # "display" statements display for Jupyter/Ipython
 ]
 
-# Only require x11 if found
-if pkgconfig.exists("x11"):
-    define_macros += [("cimg_display", None)]
-    pkgconfig_list += ["x11"]
+# UNIX build flags pregeneration
+if not IS_WINDOWS:
 
-# Only require libpng if found
-if pkgconfig.exists("libpng"):
-    define_macros += [("cimg_use_png", None)]
-    pkgconfig_list += ["libpng"]
+    extra_compile_args.extend(["-std=c++11"])
+    if debug_enabled:
+        extra_compile_args += ["-O0"]
+        extra_compile_args += ["-g"]
+    else:
+        extra_compile_args += ["-Ofast", "-flto"]
+        extra_link_args += ["-flto"]
 
-# Only require libtiff if found
-if pkgconfig.exists("libtiff-4"):
-    define_macros += [("cimg_use_tiff", None)]
-    pkgconfig_list += ["libtiff-4"]
+    # List of libs to get include directories and linkable libraries paths from for compiling
+    pkgconfig_list = ["zlib"]
 
-# Only require libjpeg if found
-if pkgconfig.exists("libjpeg"):
-    define_macros += [("cimg_use_jpeg", None)]
-    pkgconfig_list += ["libjpeg"]
+    # Only require x11 if found
+    if pkgconfig.exists("x11"):
+        define_macros += [("cimg_display", None)]
+        pkgconfig_list += ["x11"]
 
-# Only require fftw3 if found (non-2^ size image processing fails without it)
-# We do not toggle cimg_use_fftw3, it is buggy
-if pkgconfig.exists("fftw3"):
-    define_macros += [("cimg_use_fftw3", None)]
-    pkgconfig_list += ["fftw3"]
-    extra_link_args += ["-lfftw3_threads"]
+    # Only require libpng if found
+    if pkgconfig.exists("libpng"):
+        define_macros += [("cimg_use_png", None)]
+        pkgconfig_list += ["libpng"]
 
-# Only compile with OpenCV if exists (nice for the 'camera' G'MIC command :-D )
-if pkgconfig.exists("opencv"):
-    define_macros += [("cimg_use_opencv", None)]
-    pkgconfig_list += ["opencv"]
+    # Only require libtiff if found
+    if pkgconfig.exists("libtiff-4"):
+        define_macros += [("cimg_use_tiff", None)]
+        pkgconfig_list += ["libtiff-4"]
 
-if pkgconfig.exists("libcurl"):
-    define_macros += [("cimg_use_curl", None)]
-    pkgconfig_list += ["libcurl"]
+    # Only require libjpeg if found
+    if pkgconfig.exists("libjpeg"):
+        define_macros += [("cimg_use_jpeg", None)]
+        pkgconfig_list += ["libjpeg"]
 
-packages = pkgconfig.parse(" ".join(pkgconfig_list))
-libraries = packages["libraries"] + [
-    "pthread"
-]  # removed core-dumping 'gomp' temporarily (for manylinux builds)
+    # Only require fftw3 if found (non-2^ size image processing fails without it)
+    # We do not toggle cimg_use_fftw3, it is buggy
+    if pkgconfig.exists("fftw3"):
+        define_macros += [("cimg_use_fftw3", None)]
+        pkgconfig_list += ["fftw3"]
+        if sys.platform not in ("cygwin", "win32", "msys"):
+            extra_link_args += ["-lfftw3_threads"]
 
-library_dirs = packages["library_dirs"] + [here, gmic_src_path]
-if sys.platform == "darwin":
-    library_dirs += ["/usr/local/opt/llvm@6/lib"]
-include_dirs = packages["include_dirs"] + [here, gmic_src_path]
-if sys.platform == "darwin":
-    include_dirs += ["/usr/local/opt/llvm@6/include"]
-# Debugging is now set through --global-option --debug and more.
-# debugging_args = [
-#     "-O0",
-#     "-g",
-# ]  # Uncomment this for faster compilation with debug symbols and no optimization
+    # Only compile with OpenCV if exists (nice for the 'camera' G'MIC command :-D )
+    if pkgconfig.exists("opencv"):
+        define_macros += [("cimg_use_opencv", None)]
+        pkgconfig_list += ["opencv"]
 
-debug_enabled = "--debug" in sys.argv
+    if pkgconfig.exists("libcurl"):
+        define_macros += [("cimg_use_curl", None)]
+        pkgconfig_list += ["libcurl"]
 
-extra_compile_args = ["-std=c++11"]
-if debug_enabled:
-    extra_compile_args += ["-O0"]
-    extra_compile_args += ["-g"]
+    packages = pkgconfig.parse(" ".join(pkgconfig_list))
+    libraries = packages["libraries"] + [
+        "pthread"
+    ]  # removed core-dumping 'gomp' temporarily (for manylinux builds)
+
+    library_dirs = packages["library_dirs"] + [here, gmic_src_path]
+    if sys.platform == "darwin":
+        library_dirs += ["/usr/local/opt/llvm@6/lib"]
+    include_dirs = packages["include_dirs"] + [here, gmic_src_path]
+    if sys.platform == "darwin":
+        include_dirs += ["/usr/local/opt/llvm@6/include"]
+    # Debugging is now set through --global-option --debug and more.
+    # debugging_args = [
+    #     "-O0",
+    #     "-g",
+    # ]  # Uncomment this for faster compilation with debug symbols and no optimization
 else:
-    extra_compile_args += ["-Ofast", "-flto"]
-    extra_link_args += ["-flto"]
+    # WINDOWS build flags generation
+    x = "x64" if sys.maxsize > 2 ** 32 else "x86"
+    vcpkg_lib_dir = os.path.join(
+        os.environ["VCPKG_INSTALLATION_ROOT"], "installed", f"{x}-windows", "lib"
+    )
+    libraries = ["fftw3", "libpng16", "jpeg", "curl", "zlib", "tiff"]
+    library_dirs = [vcpkg_lib_dir, gmic_src_path]
+    include_dirs = [here, gmic_src_path]
+    define_macros = []
+    define_macros += [("cimg_use_curl", None)]
+    define_macros += [("cimg_use_fftw3", None)]
+    define_macros += [("cimg_display", None)]
+    define_macros += [("cimg_use_jpeg", None)]
+    define_macros += [("cimg_use_tiff", None)]
+    define_macros += [("cimg_use_png", None)]
+    define_macros += [("cimg_display", None)]
+    extra_compile_args.extend(["/std:c11", "/OpenMP"])
 
 if sys.platform == "darwin":
     extra_compile_args += ["-fopenmp", "-stdlib=libc++"]
@@ -104,25 +136,48 @@ if sys.platform == "darwin":
         "-nodefaultlibs",
         "-lc++",
     ]  # options inspired by https://github.com/explosion/spaCy/blob/master/setup.py
-elif sys.platform == "linux":  # Enable openmp for 32bit & 64bit linuxes
+elif not IS_WINDOWS:
+    # Enable openmp for 32bit & 64bit linuxes and posix'ed windows
     extra_compile_args += ["-fopenmp"]
     extra_link_args += ["-lgomp"]
+
+package_data = {}
+# Force Windows and Windows posix'ed platforms as Windows-like for CImg/G'MIC
+# Also fix libcurl include and lib paths, which are not correctly mapped by pkg-config
+if sys.platform in ("msys", "cygwin", "win32"):
+    define_macros.append(("cimg_OS", "2"))
+    package_data = {"gmic": ["win_dll/*.dll"]}
+
+#    # MSYS2 / Github Action hack to fix libcurl
+#    extra_compile_args += ["-ID:/a/_temp/msys/msys64/usr/include"]
+#    extra_link_args += ["-LD:/a/_temp/msys/msys64/usr/lib"]
+
 
 print("Define macros:")
 print(define_macros)
 
-# Static CPython gmic.so embedding libgmic.so.2
-gmic_module = Extension(
-    "gmic",
+extension_kwargs = dict(
+    name="gmic",
     include_dirs=include_dirs,
     libraries=libraries,
     library_dirs=library_dirs,
-    sources=["gmicpy.cpp", path.join(gmic_src_path, "gmic.cpp")],
+    sources=[
+        "gmicpy.cpp",
+        path.join(gmic_src_path, "gmic.cpp"),
+    ],
     define_macros=define_macros,
     extra_compile_args=extra_compile_args,
     extra_link_args=extra_link_args,
     language="c++",
 )
+
+
+print("Extension options:")
+print(extension_kwargs)
+
+
+# Static CPython gmic.so embedding libgmic.so / .dll
+gmic_module = Extension(**extension_kwargs)
 
 # Get the long description from the README file
 with open(path.join(here, "README.md"), encoding="utf-8") as f:
@@ -136,64 +191,31 @@ with open(path.join(".", "VERSION")) as version_file:
 # Arguments marked as "Required" below must be included for upload to PyPI.
 # Fields marked as "Optional" may be commented out.
 
+
+def get_package_data():
+    """Return a list of DLL dependencies paths if on Windows platforms and DLL dir was prepared
+    Needs build_tools.bash 4b_build_windows_portable_wheel to be run first on Windows OS
+    Returns nothing quietly on other platforms
+    """
+    package_data = {}
+    if sys.platform in ("msys", "cygwin", "win32") and path.exists(WIN_DLL_DIR):
+        libfiles = listdir(WIN_DLL_DIR)
+        package_data["win_dll"] = libfiles
+
+    # TODO remove me
+    print("just built package_data:", package_data)
+    return package_data
+
+
 setup(
-    # This is the name of your project. The first time you publish this
-    # package, this name will be registered for you. It will determine how
-    # users can install this project, e.g.:
-    #
-    # $ pip install sampleproject
-    #
-    # And where it will live on PyPI: https://pypi.org/project/sampleproject/
-    #
-    # There are some restrictions on what makes a valid project name
-    # specification here:
-    # https://packaging.python.org/specifications/core-metadata/#name
-    name="gmic",  # Required
-    # Versions should comply with PEP 440:
-    # https://www.python.org/dev/peps/pep-0440/
-    #
-    # For a discussion on single-sourcing the version across setup.py and the
-    # project code, see
-    # https://packaging.python.org/en/latest/single_source_version.html
+    name="gmic",
     version=version,
-    # This is a one-line description or tagline of what your project does. This
-    # corresponds to the "Summary" metadata field:
-    # https://packaging.python.org/specifications/core-metadata/#summary
     description="Binary Python3 bindings for the G'MIC C++ image processing library",  # Optional
-    # This is an optional longer description of your project that represents
-    # the body of text which users will see when they visit PyPI.
-    #
-    # Often, this is the same as your README, so you can just read it in from
-    # that file directly (as we have already done above)
-    #
-    # This field corresponds to the "Description" metadata field:
-    # https://packaging.python.org/specifications/core-metadata/#description-optional
-    long_description=long_description,  # Optional
-    # Denotes that our long_description is in Markdown; valid values are
-    # text/plain, text/x-rst, and text/markdown
-    #
-    # Optional if long_description is written in reStructuredText (rst) but
-    # required for plain-text or Markdown; if unspecified, "applications should
-    # attempt to render [the long_description] as text/x-rst; charset=UTF-8 and
-    # fall back to text/plain if it is not valid rst" (see link below)
-    #
-    # This field corresponds to the "Description-Content-Type" metadata field:
-    # https://packaging.python.org/specifications/core-metadata/#description-content-type-optional
+    long_description=long_description,
     long_description_content_type="text/markdown",  # Optional (see note above)
-    # This should be a valid link to your project's main homepage.
-    #
-    # This field corresponds to the "Home-Page" metadata field:
-    # https://packaging.python.org/specifications/core-metadata/#home-page-optional
     url="https://github.com/dtschump/gmic-py",  # Optional
-    # This should be your name or the name of the organization which owns the
-    # project.
     author="David Tschumperlé, Jonathan-David Schröder G'MIC GREYC IMAGE Team of CNRS, France",  # Optional
-    # This should be a valid email address corresponding to the author listed
-    # above.
     author_email="David.Tschumperle@ensicaen.fr, jonathan.schroder@gmail.com",  # Optional
-    # Classifiers help users find your project by categorizing it.
-    #
-    # For a list of valid classifiers, see https://pypi.org/classifiers/
     classifiers=[  # Optional
         # How mature is this project? Common values are
         #   3 - Alpha
@@ -215,6 +237,7 @@ setup(
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
     ],
     # This field adds keywords for your project which will appear on the
     # project page. What does your project relate to?
@@ -266,9 +289,9 @@ setup(
     #
     # If using Python 2.6 or earlier, then these have to be included in
     # MANIFEST.in as well.
-    # package_data={  # Optional
-    #     'sample': ['package_data.dat'],
-    # },
+    package_data=package_data,
+    # include_package_data=True,
+    # data_files=[("", ["COPYING"])],
     # Although 'package_data' is the preferred approach, in some case you may
     # need to place data files outside of your packages. See:
     # http://docs.python.org/3.4/distutils/setupscript.html#installing-additional-files

@@ -74,7 +74,7 @@ def numpy_PIL_duck():
     im1_name = "image.bmp"
 
     # 1. Generate duck bitmap, save it to disk
-    gmic.run("sp duck -output " + im1_name)
+    gmic.run("tests/samples/duck.png -output " + im1_name)
 
     # 2. Load disk duck through PIL/numpy, make it a GmicImage
     yield numpy.array(PIL.Image.open(im1_name))
@@ -310,7 +310,7 @@ def test_toolkit_to_PIL():
     l = []
     PIL_leno_filename = "PIL_leno.png"
     PIL_apples_filename = "PIL_apples.png"
-    gmic.run("sp leno sp apples", l)
+    gmic.run("tests/samples/leno.png tests/samples/apples.png", l)
     PIL_leno, PIL_apples = l[0].to_PIL(), l[1].to_PIL()
     PIL_leno.save(PIL_leno_filename, compress_level=0)
     PIL_apples.save(PIL_apples_filename, compress_level=0)
@@ -325,7 +325,7 @@ def test_toolkit_to_PIL():
 def test_toolkit_to_PIL_advanced():
     # to_PIL fine-graining parameters testing
     l = []
-    gmic.run("sp leno sp apples", l)
+    gmic.run("tests/samples/leno.png tests/samples/apples.png", l)
     PIL_leno = l[0].to_PIL(mode="HSV")
     assert PIL_leno.mode == "HSV"
     assert PIL_leno.width == l[0]._width
@@ -342,18 +342,18 @@ def test_toolkit_from_PIL():
     import PIL.Image
 
     l = []
-    gmic.run("sp leno sp apples", l)
+    gmic.run("tests/samples/leno.png tests/samples/apples.png", l)
 
     PIL_apples_filename = "PIL_apples.png"
     PIL_leno_filename = "PIL_leno.png"
 
-    gmic.run("sp leno output " + PIL_leno_filename)
+    gmic.run("tests/samples/leno.png output " + PIL_leno_filename)
     PIL_leno = PIL.Image.open(PIL_leno_filename)
     leno = gmic.GmicImage.from_PIL(PIL_leno)
     assert_gmic_images_are_identical(l[0], leno)
     assert_non_empty_file_exists(PIL_leno_filename).unlink()
 
-    gmic.run("sp apples output " + PIL_apples_filename)
+    gmic.run("tests/samples/apples.png output " + PIL_apples_filename)
     PIL_apples = PIL.Image.open(PIL_apples_filename)
     apples = gmic.GmicImage.from_PIL(PIL_apples)
     assert_gmic_images_are_identical(l[1], apples)

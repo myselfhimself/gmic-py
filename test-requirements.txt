@@ -1,5 +1,10 @@
-# Requirements for a local developer environment and for CI building (shared library and wheel-level)
-wheel
-pkgconfig
+# For testing, pip install -r dev-requirements.txt first, then this
 
+#scikit-image
+numpy #==1.16.1 # fixes https://github.com/scikit-image/scikit-image/issues/3655
+Pillow
+pytest
+setuptools
+pytest-xdist #allow parallelization
+psutil
 # Do not put the 'black' Python code formatter as a dependency here it will not install for Python <= 3.6 and crash the Mac OS CI, black must be installed at formatting check time, outside any docker wheel-building environment. See the related formatting functions in build_tools.bash script.

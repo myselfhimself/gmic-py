@@ -1,0 +1,4 @@
+[submodule "gmic"]
+	path = gmic
+	url = https://github.com/dtschump/gmic
+	branch = tags/2.9.1

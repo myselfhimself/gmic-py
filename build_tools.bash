@@ -5,6 +5,8 @@ PYTHON3=${PYTHON3:-python3}
 PIP3=${PIP3:-pip3}
 PYTHON_VERSION=$($PYTHON3 --version | cut -d' ' -f2 | cut -d'.' -f1,2)
 
+WIN_DLL_DIR="win_dll" # Directory where gmic-py dependents .dll files will be stored
+
 # Detect if Python is a debug build, per https://stackoverflow.com/a/647312/420684
 # Useful for testing leaks within the compiled .so library
 if python -c "import sys; sys.exit(int(hasattr(sys, 'gettotalrefcount')))"; then
@@ -47,7 +49,7 @@ function __get_py_package_version () {
 
 function 00_all_steps () {
     # See related but defunct Dockerfile at https://github.com/myselfhimself/gmic-py/blob/fc12cb74f4b02fbfd83e9e9fba44ba7a4cee0d93/Dockerfile
-    21_check_c_style && 23_check_python_style && 1_clean_and_regrab_gmic_src && 2_compile && 3_test_compiled_so && 4_build_wheel && 5_test_wheel && 6_build_sdist && 7_test_sdist
+    21_check_c_style && 23_check_python_style && 2_compile && 3_test_compiled_so && 4_build_wheel && 5_test_wheel && 6_build_sdist && 7_test_sdist
     echo "This is the final file tree:"
     find .
 }
@@ -108,6 +110,7 @@ function 11_send_to_pypi () {
     set +x
 }
 
+# Now replaced by git submodule, kept for legacy
 function 1_clean_and_regrab_gmic_src () {
     set -x
     GMIC_ARCHIVE_GLOB=gmic_${GMIC_VERSION}.tar.gz
@@ -217,24 +220,40 @@ function 33_build_manylinux () {
 }
 
 function 3_test_compiled_so () {
+    set -x
     # Example usage: <this_script.bash> 3_test_compiled_so my_pytest_expr ====> pytest <the pytest file> -k my_pytest_expr
     # Example usage: <this_script.bash> 3_test_compiled_so my_pytest_expr -x --pdb ====> pytest <the pytest file> -k my_pytest_expr -x --pdb
     PYTEST_EXPRESSION_PARAM=
     if ! [ -z "$1" ]; then
         PYTEST_EXPRESSION_PARAM="-k ${@:1}"
     fi
-    if ! [ -z "$PYTHON_DEBUG" ]; then
-        GMIC_LIB_DIR="./build/lib*$PYTHON_VERSION*debug*/"
+
+    # No python path must be set for the case 5_test_wheel
+    # Otherwise add the path of directory containing .so (debugging or optimized version)
+    if [ -z "$TEST_WHEEL" ]; then
+	pip uninstall gmic -y
+        if ! [ -z "$PYTHON_DEBUG" ]; then
+            export PYTHONPATH=$(readlink -f ./build/lib*$PYTHON_VERSION*debug*/)
+        else
+            export PYTHONPATH=$(readlink -f ./build/lib*$PYTHON_VERSION/)
+        fi
     else
-        GMIC_LIB_DIR="./build/lib*$PYTHON_VERSION/"
+	export PYTHONPATH=""
     fi
-    TEST_FILES="${TEST_FILES:-../../tests/test_gmic_py.py ../../tests/test_gmic_numpy.py ../../tests/test_gmic_numpy_toolkits.py ../../tests/test_gmic_py_memfreeing.py}"
-    #TEST_FILES="${TEST_FILES:-../../tests/test_gmic_py_memfreeing.py}"
+    $PYTHON3 -c "import gmic; print(gmic.__spec__)"
+    ls -l $PYTHONPATH
+
+    TEST_FILES="${TEST_FILES:-tests/test_gmic_py.py tests/test_gmic_numpy.py tests/test_gmic_numpy_toolkits.py tests/test_gmic_py_memfreeing.py}"
+
+    REQUIREMENTS="-r dev-requirements.txt  -r test-requirements.txt"
+    if ! [ -z "$MSYSTEM" ]; then #windows / msys2 related
+        REQUIREMENTS="-r dev-requirements.txt  -r test-requirements-win.txt"
+    fi
+    #TEST_FILES="${TEST_FILES:-tests/test_gmic_py_memfreeing.py}"
     FAILED_SUITES=0
-    $PIP3 uninstall gmic -y; cd $GMIC_LIB_DIR ; LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH ; $PIP3 install -r ../../dev-requirements.txt ; pwd; ls; 
+    $PIP3 install $REQUIREMENTS; pwd; ls; 
 
     for TEST_FILE in $TEST_FILES; do
-        # $PIP3 uninstall gmic -y; cd $GMIC_LIB_DIR ; LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH ; $PIP3 install -r ../../dev-requirements.txt ; pwd; ls; PYTHONMALLOC=malloc valgrind --show-leak-kinds=all --leak-check=full --log-file=/tmp/valgrind-output $PYTHON3 -m pytest $TEST_FILES $PYTEST_EXPRESSION_PARAM -vvv -rxXs || { echo "Fatal error while running pytests" ; exit 1 ; } ; cd ../..
         $PYTHON3 -m pytest $TEST_FILE $PYTEST_EXPRESSION_PARAM -vvv -rxX || { echo "Fatal error while running pytest suite $TEST_FILE" ; FAILED_SUITES=$((FAILED_SUITES+1)) ; }
     done
     cd ../..
@@ -244,10 +263,12 @@ function 3_test_compiled_so () {
     else
         return 0;
     fi
+    export PYTHONPATH=""
+    set +x
 }
 
 function 3b_test_compiled_so_no_numpy () {
-    TEST_FILES="../../tests/test_gmic_py.py" 3_test_compiled_so
+    TEST_FILES="tests/test_gmic_py.py" 3_test_compiled_so
 }
 
 function 31_test_compiled_so_filters_io () {
@@ -269,20 +290,72 @@ function 31_test_compiled_so_filters_io () {
         PYTEST_NB_THREADS="-n 4"
     fi
     find ~/.config/gmic
-    $PIP3 uninstall gmic -y; cd ./build/lib*$PYTHON_VERSION*/ ; LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH ; $PIP3 install -r ../../dev-requirements.txt ; pwd; ls; $PYTHON3 -m pytest ../../tests/test_gmic_py_filters_io.py $PYTEST_EXPRESSION_PARAM $PYTEST_NB_THREADS -vvv -rxXs || { echo "Fatal error while running pytests" ; exit 1 ; } ; cd ../..
+    $PIP3 uninstall gmic -y; cd ./build/lib*$PYTHON_VERSION*/ ; export PYTHONPATH=`pwd` ; $PIP3 install -r ../../{test,dev}-requirements.txt ; pwd; ls; $PYTHON3 -m pytest ../../tests/test_gmic_py_filters_io.py $PYTEST_EXPRESSION_PARAM $PYTEST_NB_THREADS -vvv -rxXs || { echo "Fatal error while running pytests" ; exit 1 ; } ; cd ../..
     find ~/.config/gmic
 }    
 
 function 4_build_wheel () {
+    rm -rf .egg-info # https://stackoverflow.com/questions/18085571/pip-install-error-setup-script-specifies-an-absolute-path#comment94579634_39198529
+
     $PIP3 install wheel || { echo "Fatal wheel package install error" ; exit 1 ; }
     $PYTHON3 setup.py bdist_wheel || { echo "Fatal wheel build error" ; exit 1 ; }
-    echo "Not doing any auditwheel repair step here, development environment :)"
+
+    if [ -z "WHEEL_REPAIR" ]; then
+        echo "Not doing any auditwheel repair step here, development environment :)"
+    elif ! [ -z "$MSYSTEM" ]; then
+	echo "about to repair wheel for windows using wheel_repair.py"
+	echo ".dll ldd for info, before repair attempt:"
+	ldd build/lib.*/gmic-*.dll
+	#4c_copy_windows_dlls_for_repair
+	pip install -r dev-requirements-win.txt
+        LAST_WHEEL=`ls -Art dist/*.whl | tail -n 1`
+	$PYTHON3 wheel_repair.py $LAST_WHEEL -d "D:/a/_temp/msys/msys64/mingw64/bin/"
+    fi
+}
+
+function 4b_build_windows_portable_wheel () {
+   WHEEL_REPAIR=1 4_build_wheel
+}
+
+
+function 4c_copy_windows_dlls_for_repair () {
+    set -x
+    # Inspired by gmic CLI Windows build instructions at https://gmic.eu/download.html#windows
+    mkdir -p $WIN_DLL_DIR
+    DLLS_TO_COPY=$(ldd build/lib.*/gmic-*.dll | grep -Eio "/mingw64/bin/.*.dll" | paste -s -d' ')
+    echo "DLLs to be copied into wheel are: $DLLS_TO_COPY"
+    cp $DLLS_TO_COPY $WIN_DLL_DIR || { echo "Could not copy dlls to $WIN_DLL_DIR" ; exit 1 ; }
+    find $WIN_DLL_DIR
+    set +x
 }
 
 function 5_test_wheel () {
-    $PIP3 install dist/gmic*.whl --no-cache-dir
-    $PYTHON3 -m pytest tests/test_gmic_py.py -rxXs -vvv
+    set -x
+    export PYTHONPATH=""
+    $PIP3 install `ls -Art dist/*.whl | tail -n 1` --no-cache-dir
+    TEST_WHEEL=1 3_test_compiled_so ${@:1}
     $PIP3 uninstall gmic -y
+    set +x
+}
+
+function 5b_test_wheel_dlls_repaired () {
+    set -x
+    LAST_WHEEL=`ls -Art wheelhouse/*.whl | tail -n 1`
+    unzip -l $LAST_WHEEL
+    PACKED_DLLS_FOUND=`unzip -l $LAST_WHEEL | grep -Eio "[a-z].*\.dll" | grep -v gmic-cpython | paste -s -d' '`
+    if [ -z "$PACKED_DLLS_FOUND" ]; then
+        echo "Error: non-gmic DLLs not found in wheel."; exit 1
+    else
+        echo "Found non-gmic DLLs in wheel: $PACKED_DLLS_FOUND"
+    fi
+
+    export PYTHONPATH=""
+    $PIP3 uninstall gmic -y
+    $PIP3 install $LAST_WHEEL --no-cache-dir
+    TEST_WHEEL=1 3_test_compiled_so ${@:1}
+    $PIP3 uninstall gmic -y
+ 
+    set +x
 }
 
 function 6_make_full_doc () {

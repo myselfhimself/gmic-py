@@ -73,7 +73,9 @@ def test_run_gmic_ensure_openmp_linked_and_working(capfd, gmic_instance_run):
     import traceback
     import sys
 
-    gmic_instance_run("v - sp lena eval. \"end(run('echo_stdout[] ',merge(t,max)))\"")
+    gmic_instance_run(
+        "v - tests/samples/lena.png eval. \"end(run('echo_stdout[] ',merge(t,max)))\""
+    )
     outerr = capfd.readouterr()
     try:
         assert (
@@ -104,7 +106,7 @@ def test_run_gmic_instance_run_helloworld(capfd, gmic_instance_run):
 def make_sample_format_file(extension):
     filename = "{}_format_io_test.{}".format(extension, extension)
 
-    gmic.run("sp apples output {}".format(filename))
+    gmic.run("tests/samples/apples.png output {}".format(filename))
 
     yield filename
 
@@ -250,7 +252,7 @@ def test_gmic_user_file_autoload_and_use(gmic_instance_run, request, capfd):
             gmic_instance_run = g.run
 
         # 2. Check that our custom command was auto-loaded as expected
-        gmic_instance_run("sp leno " + gmicpy_testing_command)
+        gmic_instance_run("tests/samples/leno.png " + gmicpy_testing_command)
 
 
 @pytest.mark.parametrize(**gmic_instance_types)
@@ -269,9 +271,9 @@ def test_gmic_user_file_explicit_load_and_use(gmic_instance_run, capfd):
                     gmicpy_testing_command
                 ),
             ):
-                gmic_instance_run("sp leno " + gmicpy_testing_command)
+                gmic_instance_run("tests/samples/leno.png " + gmicpy_testing_command)
         else:
-            gmic_instance_run("sp leno " + gmicpy_testing_command)
+            gmic_instance_run("tests/samples/leno.png " + gmicpy_testing_command)
 
 
 # Skipping test per https://github.com/dtschump/gmic/issues/256#issuecomment-694121423
@@ -513,7 +515,7 @@ def assert_gmic_image_is_filled_with(gmic_image, w, h, d, s, pixel_value):
 
 def test_gmic_image_pixel_access():
     images = []
-    gmic.run("sp apples", images)
+    gmic.run("tests/samples/apples.png", images)
     image = images[0]
     assert image(0, 0, 0, 0) == image()
     assert image(s=3) == image(0, 0, 0, 3)
@@ -1070,7 +1072,7 @@ def test_gmic_class_direct_run_remains_usable_instance():
 
 def test_filling_empty_gmicimage_list_with_input_image_nonregtest_issue_30():
     images = []
-    gmic.run(images=images, command="sp lena")
+    gmic.run(images=images, command="tests/samples/lena.png")
     assert len(images) == 1
     assert type(images[0]) == gmic.GmicImage
 
@@ -1078,7 +1080,7 @@ def test_filling_empty_gmicimage_list_with_input_image_nonregtest_issue_30():
 def test_gmic_module_run_vs_single_instance_run_benchmark():
     from time import time
 
-    testing_command = "sp lena blur 10 blur 30 blur 4"
+    testing_command = "tests/samples/lena.png blur 10 blur 30 blur 4"
     testing_iterations_max = 100
     expected_speed_improvement_by_single_instance_runs = 1.1  # at least 10%
 

@@ -305,7 +305,7 @@ def test_gmic_filter_io(filter_inputs, filter_id, filter_params):
         ):
             filter_params[pos] = '"{}"'.format(param.replace('"', '\\"'))
             # One of the worst CLI expression that works thanks to escaping similar to the one below:
-            # gmic sp parrots -srand 781123 fx_watermark_fourier \"\(a\) b\'o\\\"nsoir\",53 output[0]  "/home/jd/Productions/GMIC/gmic-py/build/lib.linux-x86_64-3.7/test-images/fx_watermark_fourier_gmiccli.png"
+            # gmic tests/samples/parrots.png -srand 781123 fx_watermark_fourier \"\(a\) b\'o\\\"nsoir\",53 output[0]  "/home/jd/Productions/GMIC/gmic-py/build/lib.linux-x86_64-3.7/test-images/fx_watermark_fourier_gmiccli.png"
             filter_params_cli[pos] = '\\"{}\\"'.format(
                 param.replace("(", "\\(")
                 .replace(")", "\\)")
