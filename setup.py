@@ -111,6 +111,9 @@ elif sys.platform == "linux":  # Enable openmp for 32bit & 64bit linuxes
 print("Define macros:")
 print(define_macros)
 
+print("Include dirs:")
+print(include_dirs)
+
 # Static CPython gmic.so embedding libgmic.so.2
 gmic_module = Extension(
     "gmic",
