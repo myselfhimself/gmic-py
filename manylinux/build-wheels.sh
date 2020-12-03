@@ -5,14 +5,18 @@ set -e -x
 
 export OMP_NUM_THREADS=16  # Fix for https://github.com/myselfhimself/gmic-py/issues/47
 
+PYBIN_PREFIX=${PYBIN_PREFIX:-cp3}
+
 # Install a system package required by our library
 yum check-update || { echo "yum check-update failed but manylinux build-wheels script will continue" ; }
 yum install fftw-devel curl-devel libpng-devel zlib-devel libgomp wget -y || { echo "Fatal yum dependencies install error" ; exit 1; }
 
 # Install slightly newer libpng12 includes if too old, to avoid c++11 problem listed here: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=676157
-if [ "1.2.51" \> "$(yum info libpng-devel | grep Version | cut -d':' -f2)" ]; then
+if [ "1.2.51" \> "$(yum info libpng-devel | grep Version | cut -d':' -f2 | awk '{print $1}' | uniq)" ]; then
     cd /tmp/
-    curl -o libpng-1.2.51.tar.gz -s https://master.dl.sourceforge.net/project/libpng/libpng12/older-releases/1.2.51/libpng-1.2.51.tar.gz
+    ls -l
+    curl -o libpng-1.2.51.tar.gz -s "https://master.dl.sourceforge.net/project/libpng/libpng12/older-releases/1.2.51/libpng-1.2.51.tar.gz?viasf=1"
+    ls -l
     tar xzvf libpng*
     rm libpng*.tar.gz
     mv libpng* libpng12
@@ -28,7 +32,7 @@ cd /io/
 
 
 # Compile wheels #Choosing only Python 3 executables
-for PYBIN in /opt/python/cp3*/bin; do
+for PYBIN in /opt/python/$PYBIN_PREFIX*/bin; do
     # Skip Python35 executables, slated for end of support in september 2020 https://devguide.python.org/#status-of-python-branches
     if [[ $PYBIN == *"cp35"* ]]; then
         continue
@@ -56,7 +60,7 @@ for whl in wheelhouse/*gmic*.whl; do
 done
 
 # Install packages and test
-for PYBIN in /opt/python/cp3*/bin; do
+for PYBIN in /opt/python/$PYBIN_PREFIX*/bin; do
     # Skip Python35 executables, slated for end of support in september 2020 https://devguide.python.org/#status-of-python-branches
     if [[ $PYBIN == *"cp35"* ]]; then
         continue

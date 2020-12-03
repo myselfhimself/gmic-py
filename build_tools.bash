@@ -205,15 +205,19 @@ function 24_reformat_python_style () {
 }
 
 function 33_build_manylinux () {
+    # Usage: 33_build_manylinux [cp36]
+    # where cp36 is an optional python binary prefix (do not add wildcard suffix!)
+    # default is cp, ie. All CPython 3.x versions
+    PYBIN_PREFIX=${1:-cp3}
     # Feel free to preset the following variables before running this script
     # Default values allow for local running on a developer machine :)
     if [ -z "$DOCKER_IMAGE" ]
     then
-      DOCKER_IMAGE="quay.io/pypa/manylinux1_x86_64"
+      DOCKER_IMAGE="quay.io/pypa/manylinux2010_x86_64"
     fi
     if [ -z "$PLAT" ]
     then
-      PLAT="manylinux1_x86_64"
+      PLAT="manylinux2010_x86_64"
     fi
     if [ -z "$PRE_CMD" ]
     then

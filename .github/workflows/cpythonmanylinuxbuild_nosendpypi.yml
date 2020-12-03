@@ -1,0 +1,55 @@
+name: CPython GMIC Manylinux 2010 & 2014 x86_64 Optimized No-release
+# Use this for development purposes, not for release
+# Ugly mix of https://github.com/htm-community/htm.core/blob/master/.github/workflows/build.yml and https://github.com/pypa/python-manylinux-demo
+
+# See further, this job shall not be run on tag-based releases
+on: [push]
+
+jobs:
+  build-manylinux-optimized-test-norelease:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.6'] #Python versions iteration happens within the manylinux docker images 
+        #plat: ['manylinux2014_x86_64']
+        plat: ['manylinux2010_x86_64', 'manylinux2014_x86_64']
+        include:
+          - plat: manylinux2010_x86_64
+            docker_image: 'quay.io/pypa/manylinux2010_x86_64:latest'
+            pre_cmd:
+          - plat: manylinux2014_x86_64
+            docker_image: 'quay.io/pypa/manylinux2014_x86_64:latest'
+            pre_cmd:
+    steps:
+      - uses: actions/checkout@v1
+      # Prevent running this job on tag-based releases
+      - name: Check if Git tag exists
+        run: echo "HEAD_TAG::$(git tag --points-at HEAD)" >> $GITHUB_ENV
+      - name: Runs only if Git tag does not exist
+        run: |
+          echo "This runs because Git tag points at HEAD ..."
+          exit 1
+        if: env.HEAD_TAG != ''
+      # Detect G'MIC target version from VERSION file
+      - name: Detect G'MIC target version
+        run: echo "GMIC_VERSION=$(cat VERSION)" >> $GITHUB_ENV
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v1
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Build, test packages gmic-py ${{ env.GMIC_VERSION }} on ${{ matrix.plat }} architecture without publishing them to PyPI
+        working-directory: ./
+        env:
+          TWINE_PASSWORD_GITHUB_SECRET: ${{ secrets.TWINE_PASSWORD_GITHUB_SECRET }} # For build_tools.bash 11_send_to_pypi
+          DOCKER_IMAGE: ${{ matrix.docker_image }}
+          PLAT: ${{ matrix.plat }}
+          CMD: ${{ matrix.cmd }}
+        run: |
+          for apt_file in `grep -lr microsoft /etc/apt/sources.list.d/`; do sudo rm $apt_file; done
+          # Enforcing CPython 3.6
+          bash build_tools.bash 33_build_manylinux cp36 # && bash build_tools.bash 11_send_to_pypi
+      - name: upload wheelhouse as artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: manylinux-gmicpy-optimized-wheels
+          path: wheelhouse/
