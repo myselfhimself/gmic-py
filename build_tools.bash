@@ -146,6 +146,7 @@ function 1_clean_and_regrab_gmic_src () {
 function 2_compile () {
     set -x
 
+    2c_clear_temp_compiled_objects
     $PIP3 install -r dev-requirements.txt || { echo "Fatal pip install of dev-requirements.txt error" ; exit 1; }
     $PYTHON3 setup.py build 2>&1 || { echo "Fatal setup.py build error" ; exit 1; }
     set +x
@@ -154,8 +155,17 @@ function 2_compile () {
 function 2b_compile_debug () {
     set -x
 
+    2c_clear_temp_compiled_objects
     $PIP3 install -r dev-requirements.txt || { echo "Fatal pip install of dev-requirements.txt error" ; exit 1; }
     $PYTHON3 setup.py --verbose build --debug 2>&1 || { echo "Fatal setup.py build error" ; exit 1; }
+    set +x
+}
+
+function 2c_clear_temp_compiled_objects () {
+    set -x
+
+    rm -rf build/temp.*
+
     set +x
 }
 
