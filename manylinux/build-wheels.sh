@@ -54,7 +54,7 @@ done
 
 find /opt/python -name auditwheel
 # Bundle external shared libraries into the wheels
-for whl in wheelhouse/*gmic*$PYBIN_PREFIX*$PLAT*.whl; do
+for whl in wheelhouse/*gmic*$PYBIN_PREFIX*-linux*.whl; do
     which auditwheel
     auditwheel repair "$whl" --plat $PLAT -w /io/wheelhouse/  || { echo "Fatal auditwheel repair error" ; exit 1; }
 done
