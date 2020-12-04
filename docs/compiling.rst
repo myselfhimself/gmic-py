@@ -5,6 +5,42 @@ Developing, compiling, testing, releasing
 
 Any Linux / Mac OS / Unix operating system with Python >= 3.6 (possibly less) should be able to compile the binding without any non-standard Python tooling. 32bit architectures are not supported since Q3 2020, in favor of pure x86_64, but the project used to compile well against the former.
 
+TL;DR building `gmic-py` on Linux
+##################################################
+You can build G'MIC by forcing pip install to build it from a source tarball:
+
+.. code-block:: sh
+
+    pip install gmic --compile
+
+You can build G'MIC from a Git repository clone. For this run the following lines one by one, deciding on your options:
+
+.. code-block:: bash
+
+    git clone https://github.com/myselfhimself/gmic-py --depth=1
+
+    # For Centos / Redhat / Fedora..:
+    yum install fftw-devel curl-devel libpng-devel zlib-devel libgomp libtiff-devel libjpeg-devel wget
+
+    # For Ubuntu
+    sudo apt-get install libfftw3-dev libcurl4-openssl-dev libpng-dev liblz-dev libgomp1 libtiff-dev libjpeg-dev wget
+
+    # Download libgmic's preassembled source archive (equates to 2 git clone commands + 2-3 make commands..)
+    bash build_tools.bash 1_clean_and_regrab_gmic_src
+
+    # For building linux-repaired wheels, using the manylinux docker images, run:
+    bash build_tools.bash 33_build_manylinux # to focus on one version, add eg. 'cp36' as a final parameter
+    ls wheelhouse/ # here you have .whl files
+
+    # For building just a non-repaired debug .so file the current machine:
+    bash build_tools.bash 2b_compile_debug
+    ls build/lib* # cd into any directory with a .so file and run python3 in it, to be able to 'import gmic'
+
+    # Same but optmimized non-repaired .so file
+    bash build_tools.bash 2_compile
+    ls build/lib*
+
+
 ``gmic-py`` development to release lifecycle (overview)
 ########################################################
 In very short, the G'MIC Python binding per-version lifecycle is as follows:
@@ -91,9 +127,9 @@ For the upcoming Windows support, MSYS2 - mimicking the UNIX standards - will be
 
 Library requirements
 #####################
-``gmic-py`` embeds `libgmic C++ library <https://gmic.eu/libgmic.shtml>`_ and has the same library needs as the latter. Namely zlib and libpng, optionally OpenMP. ``gmic-py``'s `setup.py file <https://github.com/myselfhimself/gmic-py/blob/master/setup.py>`_ shows the use of the Unix-compatible `pkgconfig <https://pypi.org/project/pkgconfig/>`_ module, for available libraries detection and toggling in order to run a smooth compilation with you having to tune compile flags at all.
+``gmic-py`` embeds `libgmic C++ library <https://gmic.eu/libgmic.shtml>`_ and has the same library needs as the latter. Namely zlib and libpng, optionally libfftw3, libjpeg, libtiff, OpenMP. ``gmic-py``'s `setup.py file <https://github.com/myselfhimself/gmic-py/blob/master/setup.py>`_ shows the use of the Unix-compatible `pkgconfig <https://pypi.org/project/pkgconfig/>`_ module, for available libraries detection and toggling in order to run a smooth compilation with you having to tune compile flags at all.
 
-Note that our releases are all built against: zlib, libpng, libopenmp, similarly to libgmic releases. Libgmic IS embedded inside the ``gmic-py`` binding.
+Note that our releases are all built against: zlib, libpng, libopenmp, libtiff, libjpeg, similarly to libgmic releases. Libgmic IS embedded inside the ``gmic-py`` binding.
 
 Optimized vs. debugging
 ########################
