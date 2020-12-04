@@ -231,7 +231,7 @@ function 33_build_manylinux () {
     docker pull $DOCKER_IMAGE
     docker run --rm -e PLAT=$PLAT -v `pwd`:/io $DOCKER_IMAGE find /io
     docker run --rm -e PLAT=$PLAT -e PYBIN_PREFIX=$PYBIN_PREFIX -v `pwd`:/io $DOCKER_IMAGE $PRE_CMD /bin/bash /io/manylinux/build-wheels.sh || { echo "Many linux build wheels script failed. Exiting" ; exit 1; }
-    ls wheelhouse/
+    ls -lhart wheelhouse/
     set +x
 }
 

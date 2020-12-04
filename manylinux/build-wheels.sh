@@ -54,7 +54,7 @@ done
 
 find /opt/python -name auditwheel
 # Bundle external shared libraries into the wheels
-for whl in wheelhouse/*gmic*.whl; do
+for whl in wheelhouse/*gmic*$PYBIN_PREFIX*$PLAT*.whl; do
     which auditwheel
     auditwheel repair "$whl" --plat $PLAT -w /io/wheelhouse/  || { echo "Fatal auditwheel repair error" ; exit 1; }
 done
@@ -73,4 +73,5 @@ for PYBIN in /opt/python/$PYBIN_PREFIX*/bin; do
     "${PYBIN}/pip" install gmic --no-index -f /io/wheelhouse || { echo "Fatal wheel install error" ; exit 1; }
     # TODO reenable tests for 2.9.1!
     #"${PYBIN}/python" -m pytest tests/test_gmic_py.py tests/test_gmic_numpy.py -vvv -rxXs || { echo "Fatal pytests suite error" ; exit 1; }
+    "${PYBIN}/pip" uninstall gmic -y || { echo "Fatal gmic uninstall error" ; exit 1; }
 done
