@@ -208,7 +208,10 @@ function 33_build_manylinux () {
     # Usage: 33_build_manylinux [cp36]
     # where cp36 is an optional python binary prefix (do not add wildcard suffix!)
     # default is cp, ie. All CPython 3.x versions
+
+    set -x
     PYBIN_PREFIX=${1:-cp3}
+
     # Feel free to preset the following variables before running this script
     # Default values allow for local running on a developer machine :)
     if [ -z "$DOCKER_IMAGE" ]
@@ -224,10 +227,12 @@ function 33_build_manylinux () {
       PRE_CMD=
     fi
     
+    rm wheelhouse/*$PYBIN_PREFIX*$PLAT* -f
     docker pull $DOCKER_IMAGE
     docker run --rm -e PLAT=$PLAT -v `pwd`:/io $DOCKER_IMAGE find /io
-    docker run --rm -e PLAT=$PLAT -v `pwd`:/io $DOCKER_IMAGE $PRE_CMD /bin/bash /io/manylinux/build-wheels.sh || { echo "Many linux build wheels script failed. Exiting" ; exit 1; }
+    docker run --rm -e PLAT=$PLAT -e PYBIN_PREFIX=$PYBIN_PREFIX -v `pwd`:/io $DOCKER_IMAGE $PRE_CMD /bin/bash /io/manylinux/build-wheels.sh || { echo "Many linux build wheels script failed. Exiting" ; exit 1; }
     ls wheelhouse/
+    set +x
 }
 
 function 3_test_compiled_so () {
