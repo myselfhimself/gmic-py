@@ -216,11 +216,11 @@ function 33_build_manylinux () {
     # Default values allow for local running on a developer machine :)
     if [ -z "$DOCKER_IMAGE" ]
     then
-      DOCKER_IMAGE="quay.io/pypa/manylinux2010_x86_64"
+      DOCKER_IMAGE="quay.io/pypa/manylinux2014_x86_64"
     fi
     if [ -z "$PLAT" ]
     then
-      PLAT="manylinux2010_x86_64"
+      PLAT="manylinux2014_x86_64"
     fi
     if [ -z "$PRE_CMD" ]
     then
