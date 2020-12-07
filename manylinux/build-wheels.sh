@@ -38,10 +38,12 @@ for PYBIN in /opt/python/$PYBIN_PREFIX*/bin; do
 done
 
 find /opt/python -name auditwheel
+$PIP3 uninstall auditwheel -y
+$PIP3 install git+https://github.com/thomaslima/auditwheel.git@a9092a0e739204866c2cb35550bbf2348aa009bb
 # Bundle external shared libraries into the wheels
 for whl in wheelhouse/*gmic*$PYBIN_PREFIX*-linux*.whl; do
     which auditwheel
-    auditwheel repair "$whl" --plat $PLAT -w /io/wheelhouse/  || { echo "Fatal auditwheel repair error" ; exit 1; }
+    auditwheel -v repair "$whl" --plat $PLAT -w /io/wheelhouse/  2>&1 | tee -a /io/REPAIRLOG || { echo "Fatal auditwheel repair error" ; exit 1; }
 done
 
 # Install packages and test
