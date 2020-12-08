@@ -20,6 +20,7 @@ for PYBIN in /opt/python/$PYBIN_PREFIX*/bin; do
     fi
 
     "${PYBIN}/pip" install gmic --no-index -f /io/wheelhouse || { echo "Fatal wheel install error" ; exit 1; }
+    "$PYBIN/python" -c "import gmic; print(gmic.__spec__); gmic.run('sp display');"
     # TODO reenable tests for 2.9.1!
     #"${PYBIN}/python" -m pytest tests/test_gmic_py.py tests/test_gmic_numpy.py -vvv -rxXs || { echo "Fatal pytests suite error" ; exit 1; }
     "${PYBIN}/pip" uninstall gmic -y || { echo "Fatal gmic uninstall error" ; exit 1; }
