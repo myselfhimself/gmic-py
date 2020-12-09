@@ -66,10 +66,6 @@ if pkgconfig.exists("opencv"):
     define_macros += [("cimg_use_opencv", None)]
     pkgconfig_list += ["opencv"]
 
-if pkgconfig.exists("libcurl"):
-    define_macros += [("cimg_use_curl", None)]
-    pkgconfig_list += ["libcurl"]
-
 packages = pkgconfig.parse(" ".join(pkgconfig_list))
 libraries = packages["libraries"] + [
     "pthread"
