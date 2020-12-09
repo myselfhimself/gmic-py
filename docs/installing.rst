@@ -1,6 +1,12 @@
 Installing
 ===============
-Here is how to install the gmic-py binary Python module on your OS.
+Here is how to install the ``gmic-py`` binary Python module on your operating system.
+
+For now only Mac OS (till 2.8.3) and Linux / Unix (2.9.x) are supported.
+
+For ``sp`` / ``sample`` and ``update`` commands to work, the `curl <https://curl.se/>`_ executable must be installed (highly likely).
+
+If you cannot install anything on your machine, you may also install ``gmic-py`` from a Jupyter Notepad or Google Colab, see :doc:`jupyter`
 
 For Linux / Unix
 #########################

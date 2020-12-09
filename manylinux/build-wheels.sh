@@ -9,8 +9,7 @@ PYBIN_PREFIX=${PYBIN_PREFIX:-cp3}
 
 # Install a system package required by our library
 yum check-update || { echo "yum check-update failed but manylinux build-wheels script will continue" ; }
-yum reinstall ca-certificates -y # prevent libcurl CA 77 certificate error
-yum install fftw-devel curl-devel openssl-devel nss-softokn-devel libcurl-devel libpng-devel zlib-devel libgomp libtiff-devel libjpeg-devel wget zip unzip -y || { echo "Fatal yum dependencies install error" ; exit 1; }
+yum install fftw-devel libpng-devel zlib-devel libgomp libtiff-devel libjpeg-devel wget -y || { echo "Fatal yum dependencies install error" ; exit 1; }
 
 cd /io/
 
@@ -41,8 +40,5 @@ cd /io/wheelhouse
 # Bundle external shared libraries into the wheels
 for whl in *gmic*$PYBIN_PREFIX*-linux*.whl; do
     which auditwheel
-    #auditwheel -v repair "$whl" --plat $PLAT -w /io/wheelhouse/  2>&1 | tee -a /io/REPAIRLOG || { echo "Fatal auditwheel repair error" ; exit 1; }
-    # 2nd repair pass
-    #bash ../0812repair/repair.bash $(echo $whl | sed -e 's/linux/manylinux2014/') gmic.libs
-    bash ../0812repair/repair.bash $whl .
+    auditwheel -v repair "$whl" --plat $PLAT -w /io/wheelhouse/  2>&1 | tee -a /io/REPAIRLOG || { echo "Fatal auditwheel repair error" ; exit 1; }
 done
