@@ -3,10 +3,12 @@
 set -x
 OUTPUTDIR=$(readlink -f .)
 TEMPDIR=$(readlink -f out)
+DISTINFODIR="gmic-2.9.1a5.dist-info"
 LIBSPATH=$TEMPDIR
 EXCLUDEFILEPATH=/tmp/exclude-list-gmic
 PIP3=${PIP3:-pip}
 PYTHON3=${PYTHON3:-python}
+PYARCH="cp$($PYTHON3 --version | sed -e 's/[a-z .]*//gi' | cut -c1-2)"
 
 cat >$EXCLUDEFILEPATH <<EOL
 libgcc_s.so.1
@@ -51,7 +53,14 @@ for so in $(ls *.so); do
 done
 cd $TEMPDIR
 find -type f | sed 's/\.\///g' | xargs -IAAA sh -c "sha256sum AAA | cut -d' ' -f1; ls -s AAA" | xargs -n 3 | awk '{ print $3",sha256="$1","$2 }' | grep -v RECORD > *.dist-info/RECORD
-echo "gmic-2.9.1a5.dist-info/RECORD,," >> *.dist-info/RECORD
+echo "$DISTINFODIR/RECORD,," >> *.dist-info/RECORD
+cat >$DISTINFODIR/WHEEL <<EOF
+Wheel-Version: 1.0
+Generator: bdist_wheel (0.36.1)
+Root-Is-Purelib: false
+Tag: $PYARCH-${PYARCH}m-manylinux2014_x86_64
+EOF
+
 ls
 zip $1_repaired * -r
 mv $1_repaired $OUTPUTDIR

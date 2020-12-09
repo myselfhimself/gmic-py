@@ -41,7 +41,8 @@ cd /io/wheelhouse
 # Bundle external shared libraries into the wheels
 for whl in *gmic*$PYBIN_PREFIX*-linux*.whl; do
     which auditwheel
-    auditwheel -v repair "$whl" --plat $PLAT -w /io/wheelhouse/  2>&1 | tee -a /io/REPAIRLOG || { echo "Fatal auditwheel repair error" ; exit 1; }
+    #auditwheel -v repair "$whl" --plat $PLAT -w /io/wheelhouse/  2>&1 | tee -a /io/REPAIRLOG || { echo "Fatal auditwheel repair error" ; exit 1; }
     # 2nd repair pass
-    bash ../0812repair/repair.bash $(echo $whl | sed -e 's/linux/manylinux2014/') gmic.libs
+    #bash ../0812repair/repair.bash $(echo $whl | sed -e 's/linux/manylinux2014/') gmic.libs
+    bash ../0812repair/repair.bash $whl .
 done
