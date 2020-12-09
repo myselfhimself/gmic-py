@@ -5,6 +5,12 @@ Here are major changes to the project.
 
 All versions listed here correspond to a [downloadable package release from G'MIC's pypi.org project](https://pypi.org/project/gmic/#history).
 
+## 2.9.1-alpha6 (2020-12-09)
+
+- discarding libcurl as a dependency, relying on libgmic/CImg's `curl` executable detection https://github.com/myselfhimself/gmic-py/issues/82
+- still linux only for now
+
+
 ## 2.9.1-alpha5 (2020-10-23)
 
 - embedding recompiled libgmic 2.9.1
@@ -18,7 +24,7 @@ All versions listed here correspond to a [downloadable package release from G'MI
 
 - embedding recompiled libgmic 2.9.0
 - binding of C++ `gmic::gmic`` class and callable class as Python `gmic.Gmic` type.
-- binding of C++ `gmic_image`` class as Python `gmic.GmicImage` type.
+- binding of C++ `gmic\_image`` class as Python `gmic.GmicImage` type.
 - C++ `gmic_list` class is discarded for binding in favor of pure-Python lists.
 - MacOS and Linux support only.
 

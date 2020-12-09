@@ -18,7 +18,7 @@ Unless you are using a local `JupyterLab` (ie. web interface) or `Jupyter QtCons
 
 .. code-block:: sh
 
-    !pip install gmic # or gmic==2.9.1-alpha5
+    !pip install gmic # or gmic==2.9.1-alpha6
 
 .. code-block::
 
