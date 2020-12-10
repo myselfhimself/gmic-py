@@ -154,8 +154,8 @@ The ``sample`` or ``sp`` command
 *********************************
 The ``sample`` or ``sp`` command allows you to load sample images provided by G'MIC. None are pre-downloaded by default.
 
-If you see network errors when running examples for this section, you should install the ``curl`` executable, change your firewall settings or just skip using the sample command for now.
-You may also skip reading to the section about ``input`` instead below, which allows you to load your own images.
+If you see network errors when running examples for this section, you should install the ``curl`` or ``wget`` executable, change your firewall settings or just skip using the sample command for now.
+You may also directly read the section about ``input`` instead below, which allows you to load your own local images.
 
 First pop some ``help`` about the command, and notice how many sample image names you can use as a first parameter.
 

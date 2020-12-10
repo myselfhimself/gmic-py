@@ -20,7 +20,7 @@ You can build G'MIC from a Git repository clone. For this run the following line
     git clone https://github.com/myselfhimself/gmic-py --depth=1
 
     # For Centos / Redhat / Fedora..:
-    yum install fftw-devel curl-devel libpng-devel zlib-devel libgomp libtiff-devel libjpeg-devel wget
+    yum install fftw-devel libpng-devel zlib-devel libgomp libtiff-devel libjpeg-devel wget
 
     # For Ubuntu
     sudo apt-get install libfftw3-dev libcurl4-openssl-dev libpng-dev liblz-dev libgomp1 libtiff-dev libjpeg-dev wget
