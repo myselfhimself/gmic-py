@@ -4,7 +4,7 @@ Tutorials
 
 This is the good place to start if you know a tiny bit of Python but very little about G'MIC commands.
 
-If you are in a hurry, you may head to the related `G'MIC Python script <https://github.com/myselfhimself/gmic-py/blob/master/examples/tutorial1-simple-filter-and-io/simple_filter_and_io.py>`_ and run it right away after a `pip install gmic`.
+If you are in a hurry, you may head to the related `G'MIC Python script <https://github.com/myselfhimself/gmic-py/blob/master/examples/tutorial1-simple-filter-and-io/simple_filter_and_io.py>`_ and run it right away after a ``pip install gmic``.
 
 Tutorial 1 - G'MIC commands syntax
 ####################################################################
@@ -781,6 +781,8 @@ To prepare this example, the following tricks have been used:
 
 That was it for tutorial number 2!
 
+📁 The tutorial's `source code files can be found in gmic-py's Github's example directory <https://github.com/myselfhimself/gmic-py/tree/master/examples/tutorial2-pythonic-gmic-runs>`_.
+
 Now you know more about reusing a G'MIC interpreter handle and calling it several times on a GmicImage list.
 
 Congratulations!
@@ -794,8 +796,10 @@ This tutorial will lead you into filtering frames of animated content using ``gm
 - a moon phases GIF file to make a `flip book <https://en.wikipedia.org/wiki/Flip_book>`_
 - a video file to apply time-controlled filters
 
-Making a moon phases flip book
-*******************************
+📁 If you are in a hurry, `this tutorial's source code is on Github in the examples folder <https://github.com/myselfhimself/gmic-py/tree/master/examples/tutorial3-animated-files>`_.
+
+Goal: Making a moon phases flip book
+*************************************
 The strategy behind transforming a GIF into a `flip book <https://en.wikipedia.org/wiki/Flip_book>`_ is to:
 
 1. split the GIF file into frames
@@ -806,6 +810,9 @@ The strategy behind transforming a GIF into a `flip book <https://en.wikipedia.o
 6. time to flip!
 
 If you lack a printer that accepts thick pages, you may as well laser cut your PNG file.
+
+Loading a GIF into a list of GmicImages
+****************************************
 
 Here is a GIF of moon phases by Thomas Bresson under Creative Commons License 4.0 BY, `obtained from Wikimedia <https://commons.wikimedia.org/wiki/File:2016-09-16_20-30-00_eclipse-lunaire-ann2.gif>`_:
 
@@ -822,12 +829,12 @@ Let us try to open and display that GIF renamed ``moonphases.gif`` (download it 
 
 .. gmicpic:: _static/images/moonphases.gif _document_gmic
 
-If this does not work on your machine, let us try another way using PIL (or Pillow). (You might otherwise install ``convert`` on your machine).
+If this does not work on your machine, let us try another way using PIL (or Pillow). (You might otherwise install ``convert``).
 
 Here we take benefit from ``gmic-py``'s PIL input/output converter which uses numpy under the hood.
 The magic piece of code involved is: ``gmic.GmicImage.from_PIL()`` - a static method of the ``GmicImage`` class, which returns a ``GmicImage`` object from a ``PIL.Image.Image`` object .
 
-If the `convert`-executable technique does work, but you see a green frame as the first frame, skip the PIL step and continue.
+If the ``convert``-executable technique does work, but you see a green frame as the first frame, skip the PIL step and continue.
 
 .. code-block:: sh
 
@@ -898,8 +905,66 @@ Here is a synthetic adaptive version of both ways:
 
 Now we have the ``images_list`` variable filled with a GIF's frame.
 
+Filtering individual animation frames
+****************************************
+
+TIME FOR SPECIAL EFFECTS!!!
+
+TODO
+
+Making a montage of the frames
+*******************************
+
+An A4 sheet of paper is what we typically print on in any office or house in Europe. Its dimensions are: 21 x 29.7 millimeters.
+
+Let us skip dots-per-inch printing resolution calculation and assume that our final images will be 100 times this ratio in pixels: 2100 x 2970 px.
+
+The G'MIC language provides the `montage <https://gmic.eu/reference/montage.html>`_ and `frame (aka frame_xy) <https://gmic.eu/reference/frame_xy.html>`_ commands to help building nice montages of images with padding in between.
+
+Here is a related `specialists conversation on pixls.us, a community forum <https://discuss.pixls.us/t/gmic-montage-padding/21480>`_.
+
+TODO command
+
+Saving to PNG and printing
+****************************
+
+You could theoretically output to a pdf: TODO command
+Using Imagemagick's ``convert``, G'MIC could output a PDF file for our image. However, there seems to be canvas or view size misconfigurations.
+
+Instead, the PNG output prints well using any regular desktop's printing tools.
+
+TODO output to png command
+
+Three printing tips:
+- print on the thickest paper as you can, as long as your printer can stand it
+- try to disable any kind of page margin in your printing setup, we do not want to squeeze down our frames.
+- page resizing is OK, if your image ratio is respected.
+
+TODO print settings screenshot
+
+Cutting and assembling paper frames
+************************************
+
+Take your best cutter or scissors and cut each frames without mixing up their order :)
+
+We want no white margin to appear.
+
+Stack your paper frames and bind them on the left or right side with a binder (or your fingers hey!!).
+
+Time to flip
+************
+
+This is how my flip book ended up!! Not that bad!!
+
+.. image:: _static/images/tutorial3_flipbook.gif
+
+To improve it, I could have more frames (spanning on several printed sheets), colors (or laser engraving), thicker paper (>200g/m2) and a proper binder 🐅
+
+📁 In case you missed it, `this tutorial's source code is on Github in the examples folder <https://github.com/myselfhimself/gmic-py/tree/master/examples/tutorial3-animated-files>`_.
+
+
 Tutorial 4 - segmentation and Pygame or tkinter
-######################################
+#################################################
 
 This tutorial will show you two ways to implement a user interface around ``gmic-py`` using Pygame (a Python module for building video games) or tkinter (a simplistic GUI library).
 Both possibilities are cross-platform, your goal will be to allow users to isolate background from foreground in a window using their mouse.
