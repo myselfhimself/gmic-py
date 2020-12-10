@@ -314,7 +314,7 @@ function 6b_make_doc_without_c_recompilation () {
     if ! [ -z "$1" ]; then
         FILES_TO_TOUCH="$1"
     else
-        FILES_TO_TOUCH=
+        FILES_TO_TOUCH=*.rst
     fi
     pip uninstall -y gmic && pip install `ls -Art dist/*.whl | tail -n 1` && cd docs && pip install -r requirements.txt && touch $FILES_TO_TOUCH && make html && $BROWSER _build/html/index.html && cd ..
 }
