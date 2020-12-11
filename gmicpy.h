@@ -20,6 +20,18 @@
 #define lipng_enabled 0
 #endif
 
+#ifdef cimg_use_tiff
+#define libtiff_enabled 1
+#else
+#define libtiff_enabled 0
+#endif
+
+#ifdef cimg_use_jpeg
+#define libjpeg_enabled 1
+#else
+#define libjpeg_enabled 0
+#endif
+
 #ifdef cimg_display
 #define display_enabled 1
 #else
@@ -54,9 +66,11 @@
 
 #define gmicpy_build_info                                                   \
     PyUnicode_FromFormat(                                                   \
-        "zlib_enabled:%d libpng_enabled:%d display_enabled:%d "             \
+        "zlib_enabled:%d libpng_enabled:%d libtiff_enabled:%d "             \
+        "libjpeg_enabled:%d display_enabled:%d "                            \
         "fftw3_enabled:%d libcurl_enabled:%d openmp_enabled:%d cimg_OS:%d " \
         "numpy_enabled:%d "                                                 \
         "OS_type:%s",                                                       \
-        zlib_enabled, libpng_enabled, display_enabled, fftw3_enabled,       \
-        libcurl_enabled, cimg_use_openmp, cimg_OS, numpy_enabled, OS_type)
+        zlib_enabled, libpng_enabled, libtiff_enabled, libjpeg_enabled,     \
+        display_enabled, fftw3_enabled, libcurl_enabled, cimg_use_openmp,   \
+        cimg_OS, numpy_enabled, OS_type)
