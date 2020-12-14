@@ -2,7 +2,10 @@ name: CPython GMIC Windows build
 # Imitating https://github.com/vinecopulib/pyvinecopulib/blob/master/.github/workflows/pypi.yml 
 # and https://github.com/joerick/cibuildwheel/blob/master/.github/workflows/test.yml
 
-on: [push]
+on:
+  push:
+    tags-ignore:
+      - v*
 
 jobs:
   build-windows:
@@ -16,7 +19,7 @@ jobs:
         uses: actions/setup-python@v1
         with:
           python-version: ${{ matrix.python-version }}
-      - name: build on macos
+      - name: build on windows
         working-directory: ./
         env:
           TWINE_PASSWORD_GITHUB_SECRET: ${{ secrets.TWINE_PASSWORD_GITHUB_SECRET }} # For build_tools.bash 11_send_to_pypi
@@ -29,9 +32,7 @@ jobs:
           CIBW_TEST_COMMAND: python -W default -m pytest {project}/tests/test_gmic_py.py -vvv -rxXs
           CIBW_BUILD_VERBOSITY: 3
         run: |
-          # brew install pkg-config fftw libpng libomp llvm@6
           bash build_tools.bash 1_clean_and_regrab_gmic_src
           pip install git+https://github.com/joerick/cibuildwheel.git
           python -m cibuildwheel --output-dir wheelhouse
-          #echo "Mac OS wheelhouse after cibuildwheel looks like:"
           #bash build_tools.bash 11_send_to_pypi

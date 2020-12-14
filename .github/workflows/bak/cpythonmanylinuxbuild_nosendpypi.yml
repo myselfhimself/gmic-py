@@ -2,9 +2,10 @@ name: CPython GMIC Manylinux 2010 & 2014 x86_64 Optimized No-release
 # Use this for development purposes, not for release
 # Ugly mix of https://github.com/htm-community/htm.core/blob/master/.github/workflows/build.yml and https://github.com/pypa/python-manylinux-demo
 
-# See further, this job shall not be run on tag-based releases
-on: [push]
-
+on:
+  push:
+    tags-ignore:
+      - v*
 jobs:
   build-manylinux-optimized-test-norelease:
     runs-on: ubuntu-latest
@@ -22,14 +23,6 @@ jobs:
             pre_cmd:
     steps:
       - uses: actions/checkout@v1
-      # Prevent running this job on tag-based releases
-      - name: Check if Git tag exists
-        run: echo "HEAD_TAG=$(git tag --points-at HEAD)" >> $GITHUB_ENV
-      - name: Runs only if Git tag does not exist
-        run: |
-          echo "This runs because Git tag points at HEAD ..."
-          exit 1
-        if: env.HEAD_TAG != ''
       # Detect G'MIC target version from VERSION file
       - name: Detect G'MIC target version
         run: echo "GMIC_VERSION=$(cat VERSION)" >> $GITHUB_ENV
