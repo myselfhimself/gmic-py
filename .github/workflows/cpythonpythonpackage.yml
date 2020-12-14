@@ -10,25 +10,26 @@ on:
 
 jobs:
   grab-full-source-and-python:
-    - runs-on: ubuntu-latest
-    - uses: actions/checkout@v1
-    - name: Set up Python 3.7
-      uses: actions/setup-python@v1
-      with:
-        python-version: 3.7
-    - name: Detect G'MIC target version
-      run: |
-        echo "GHA_GMIC_VERSION=$(GHA_QUIET=1 bash build_tools.bash __get_py_package_version)" >> $GITHUB_ENV
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - name: Set up Python 3.7
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.7
+      - name: Detect G'MIC target version
+        run: |
+          echo "GHA_GMIC_VERSION=$(GHA_QUIET=1 bash build_tools.bash __get_py_package_version)" >> $GITHUB_ENV
 
-    - name: Grab ligmic
-      run: |
-        bash build_tools.bash 1_clean_and_regrab_gmic_src
+      - name: Grab ligmic ${{env.GHA_GMIC_VERSION}}
+        run: |
+          bash build_tools.bash 1_clean_and_regrab_gmic_src
 
 
   check-code-style:
-    runs-on: ubuntu-latest
-    needs: grab-full-source-and-python
-    steps:
+    - runs-on: ubuntu-latest
+    - needs: grab-full-source-and-python
+    - steps:
       - name: Check C/C++ style
         run: |
           sudo apt-get install clang-format
@@ -38,9 +39,9 @@ jobs:
           bash build_tools.bash 23_check_python_style # should stop this script on style error
 
   build-linux-debug-test-norelease:
-    needs: check-code-style
+    - needs: check-code-style
 
-    runs-on: ubuntu-latest
+    - runs-on: ubuntu-latest
 
     steps:
 
