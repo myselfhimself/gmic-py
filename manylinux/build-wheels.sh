@@ -20,10 +20,6 @@ for PYBIN in /opt/python/$PYBIN_PREFIX*/bin; do
     if [[ $PYBIN == *"cp35"* ]]; then
         continue
     fi
-    # skip Python39 making scikitimage error, see https://github.com/myselfhimself/gmic-py/runs/1176958436?check_suite_focus=true
-    if [[ $PYBIN == *"cp39"* ]]; then
-        continue
-    fi
 
     # home made patching for our scripts
     export PIP3="${PYBIN}/pip"

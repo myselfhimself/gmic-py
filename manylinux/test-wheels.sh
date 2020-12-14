@@ -14,10 +14,6 @@ for PYBIN in /opt/python/$PYBIN_PREFIX*/bin; do
     if [[ $PYBIN == *"cp35"* ]]; then
         continue
     fi
-    # skip Python39 making scikitimage error, see https://github.com/myselfhimself/gmic-py/runs/1176958436?check_suite_focus=true
-    if [[ $PYBIN == *"cp39"* ]]; then
-        continue
-    fi
 
     "${PYBIN}/pip" install gmic --no-index -f /io/wheelhouse || { echo "Fatal wheel install error" ; exit 1; }
     "$PYBIN/python" -c "import gmic; print(gmic.__spec__); gmic.run('sp display');"
