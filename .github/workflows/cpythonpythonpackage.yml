@@ -4,7 +4,7 @@ name: CPython GMIC Debug Python package (Source and Debian/Ubuntu OS compilation
 on:
   push:
     branches:
-      - *
+      - '*'
     tags-ignore:
       - v*
 
