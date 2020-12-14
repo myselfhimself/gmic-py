@@ -32,6 +32,7 @@ jobs:
     steps:
       - name: Check C/C++ style
         run: |
+          working-directory: ./
           sudo apt-get install clang-format
           bash build_tools.bash 21_check_c_style # should stop this script on style error
       - name: Check Python style
