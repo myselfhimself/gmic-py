@@ -35,6 +35,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: grab-full-source-and-python
     steps:
+      - uses: actions/checkout@v1
       - name: Check C/C++ style
         run: |
           sudo apt-get install clang-format
