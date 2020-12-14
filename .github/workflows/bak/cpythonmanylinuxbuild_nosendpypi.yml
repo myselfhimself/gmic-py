@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['3.6'] #Python versions iteration happens within the manylinux docker images 
+        python-version: ['3.7'] #Python versions iteration happens within the manylinux docker images
         #plat: ['manylinux2014_x86_64']
         plat: ['manylinux2010_x86_64', 'manylinux2014_x86_64']
         include:
