@@ -22,10 +22,6 @@ jobs:
         run: |
           sudo apt-get install clang-format
           bash build_tools.bash 21_check_c_style # should stop this script on style error
-      - name: Set up Python 3.7
-        uses: actions/setup-python@v1
-        with:
-          python-version: 3.7
       - name: Check Python style
         run: |
           bash build_tools.bash 23_check_python_style # should stop this script on style error
@@ -35,8 +31,6 @@ jobs:
       - name: Grab ligmic ${{env.GHA_GMIC_VERSION}}
         run: |
           bash build_tools.bash 1_clean_and_regrab_gmic_src
-      - name: Detect G'MIC target version
-        run: echo "GHA_GMIC_VERSION=$(GHA_QUIET=1 bash build_tools.bash __get_py_package_version)" >> $GITHUB_ENV
       - name: Compile and run tests on .so, .whl and source distribution of gmic-py ${{ env.GHA_GMIC_VERSION }}
         working-directory: ./
         env:
