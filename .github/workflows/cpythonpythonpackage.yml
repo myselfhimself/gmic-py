@@ -40,6 +40,10 @@ jobs:
         run: |
           sudo apt-get install clang-format
           bash build_tools.bash 21_check_c_style # should stop this script on style error
+      - name: Set up Python 3.7
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.7
       - name: Check Python style
         run: |
           bash build_tools.bash 23_check_python_style # should stop this script on style error
