@@ -9,6 +9,12 @@ Since version 2.9.1, `gmic-py` has been improved so that you can use `gmic` as a
 * `Jupyter QtConsole <https://qtconsole.readthedocs.io/en/stable/>`_ is an implementation of the JupyterLab as as desktop application using the Qt GUI framework.
 * `Google Colab <https://colab.research.google.com/>`_ is a Google alternative to `JupyterLab`, also leveraging the IPython technology.
 
+Example screenshots:
+
+.. gmicpic:: _static/images/jupyter_example.png
+
+.. gmicpic:: _static/images/gcolab_example.png
+
 How-to
 ########
 

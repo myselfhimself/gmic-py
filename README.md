@@ -29,6 +29,14 @@ This project lives under the CeCILL license (similar to GNU Public License).
 
 You can use the `gmic` Python module for projects related to desktop or server-side graphics software, numpy, video-games, image procesing.
 
+Check out the [`gmic-py` documentation website (readthedocs)](https://gmic-py.readthedocs.io/) for Quickstart, Tutorials, API Reference and `gmic-py` third-party integrations.
+
+`gmic-py`'s slowly growing community gravitates around:
+    
+- this [Github's project Issue tracker](https://github.com/myselfhimself/gmic-py/issues),
+- [Twitter (#gmicpy)](https://twitter.com/search?q=%23gmicpy&src=typed_query)
+- [the pixls.us `gmic-py` forum thread](https://discuss.pixls.us/t/developing-and-fiddling-with-the-gmic-python-binding/20406).
+
 ![gmic-py 2.9.2 release plan](docs/_static/images/292_plan.png)
 
 [gmic-blender](https://github.com/myselfhimself/gmic-blender) is a Blender3d add-on bundling `gmic-py` and allowing you use a new `gmic` module from there without installing anything more.
@@ -48,7 +56,8 @@ gmic.run("sp earth blur 4") # On Linux a window shall open-up with a blurred ear
 gmic.run("sp rose fx_bokeh 3,8,0,30,8,4,0.3,0.2,210,210,80,160,0.7,30,20,20,1,2,170,130,20,110,0.15,0 output rose_with_bokeh.png") # Save a rose with bokeh effect to file
 ```
 
-Longer tutorials are available in the [documentation](https://gmic-py.readthedocs.io/).
+A [full-featured `gmic-py` Quickstart tutorial](https://gmic-py.readthedocs.io/en/latest/gettingstarted.html) is available here.
+Tutorials on various topics are available in the [documentation](https://gmic-py.readthedocs.io/en/latest/tutorials.html).
 
 ## Documentation
 Full documentation is being written at [https://gmic-py.readthedocs.io/](https://gmic-py.readthedocs.io/).
@@ -60,6 +69,10 @@ In case your environment is a type of Unix, but compiling from source is needed,
 See the `CONTRIBUTING.md` file and the [documentation](https://gmic-py.readthedocs.io/) for tips on building `gmic-py` for your own OS.
 
 ## Examples
+All examples belong [in the examples/ folder](examples/).
+
+Some of them correspond to [tutorials on `gmic-py`'s readthedocs website](https://gmic-py.readthedocs.io/en/latest/tutorials.html).
+
 ### Applying a simple filter
 
 ```python
@@ -67,11 +80,14 @@ import gmic
 gmic.run("sample apples rodilius 10 display") # more at https://gmic.eu/reference/rodilius.html
 ```
 
-[Example tutorial 1](https://gmic-py.readthedocs.io/en/latest/tutorials.html#applying-a-one-or-more-filter-s)
+[Example from tutorial 1](https://gmic-py.readthedocs.io/en/latest/tutorials.html#applying-a-one-or-more-filter-s)
+
 ![Apple with rodilius effect](examples/tutorial1-simple-filter-and-io/rodilius_apple.png)
 
-## Numpy integration
+### Numpy integration
 `gmic-py` supports `GmicImage` input/output with `numpy`, `scikit-image` and `Pillow` (`PIL`) if any of those are installed.
+
+[Example from the Quickstart tutorial](https://gmic-py.readthedocs.io/en/latest/gettingstarted.html#working-with-the-numpy-support)
 
 ```python
 import numpy
@@ -85,20 +101,25 @@ plt.imshow(numpy_im, plt.get_cmap('gray'))
 plt.show()
 ```
 
-[Read more in the Quickstart tutorial](https://gmic-py.readthedocs.io/en/latest/gettingstarted.html#working-with-the-numpy-support)
-![Numpy + Matplotlib](docs/_images/gmic_apples_gray.png)
-
+![Numpy + Matplotlib](docs/_static/images/gmic_apples_gray.png)
 
 ### Creating a flipbook from a GIF file
-Filtering GIF images, montage'd into an A4 sheet paper.
+Filtering GIF images, ontage'd into an A4 sheet paper.
 
-[Example tutorial 3](https://gmic-py.readthedocs.io/en/latest/tutorials.html#tutorial-3-filtering-gif-and-videos)
+[Example from tutorial 3](https://gmic-py.readthedocs.io/en/latest/tutorials.html#tutorial-3-filtering-gif-and-videos)
+
 ![Example flipping](examples/tutorial3-animated-files/tutorial3_flipbook.gif)
 
-### Using your camera with G'MIC's optional OpenCV linking
-If your machine has `libopencv` installed and your gmic-py was compiled from source (ie. `python setup.py build`), it will be dynamically linked.
+### Jupyter / Google Colab / IPython integration
+`gmic-py` provides G'MIC console output retrieval and images `display` emulation for IPython/Jupyter/Google Colab environments:
 
-[Example script](examples/opencv-camera/gmic-py-opencv-camera.py)
+![Jupyter support example](docs/_static/images/jupyter_example.png)
+
+Details on the [related Jupyter/IPython/* support documentation page](https://gmic-py.readthedocs.io/en/latest/jupyter.html).
+
+### Using your camera with G'MIC's optional OpenCV linking (advanced)
+If your machine has `libopencv` installed and you [build `gmic-py` from source](https://gmic-py.readthedocs.io/en/latest/compiling.html#tl-dr-building-gmic-py-on-linux) (ie. `python setup.py build`), G'MIC OpenCV commands will be enabled.
+
+[Example G'MIC OpenCV script](examples/opencv-camera/gmic-py-opencv-camera.py)
 
 ![Live example](examples/opencv-camera/gmic-py-opencv-camera.gif)
-
