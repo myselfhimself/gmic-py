@@ -60,6 +60,40 @@ In case your environment is a type of Unix, but compiling from source is needed,
 See the `CONTRIBUTING.md` file and the [documentation](https://gmic-py.readthedocs.io/) for tips on building `gmic-py` for your own OS.
 
 ## Examples
+### Applying a simple filter
+
+```python
+import gmic
+gmic.run("sample apples rodilius 10 display") # more at https://gmic.eu/reference/rodilius.html
+```
+
+[Example tutorial 1](https://gmic-py.readthedocs.io/en/latest/tutorials.html#applying-a-one-or-more-filter-s)
+![Apple with rodilius effect](examples/tutorial1-simple-filter-and-io/rodilius_apple.png)
+
+## Numpy integration
+`gmic-py` supports `GmicImage` input/output with `numpy`, `scikit-image` and `Pillow` (`PIL`) if any of those are installed.
+
+```python
+import numpy
+from matplotlib import pyplot as plt
+import gmic
+
+images = []
+gmic.run("sp apples blur_x 30 fx_freaky_bw 90,20,0,0,0,0", images) # horizontal blur+special black&white
+numpy_im = images[0].to_numpy_helper(interleave=True,permute="yxzc", squeeze_shape=True, astype=numpy.uint8)
+plt.imshow(numpy_im, plt.get_cmap('gray'))
+plt.show()
+```
+
+[Read more in the Quickstart tutorial](https://gmic-py.readthedocs.io/en/latest/gettingstarted.html#working-with-the-numpy-support)
+![Numpy + Matplotlib](docs/_images/gmic_apples_gray.png)
+
+
+### Creating a flipbook from a GIF file
+Filtering GIF images, montage'd into an A4 sheet paper.
+
+[Example tutorial 3](https://gmic-py.readthedocs.io/en/latest/tutorials.html#tutorial-3-filtering-gif-and-videos)
+![Example flipping](examples/tutorial3-animated-files/tutorial3_flipbook.gif)
 
 ### Using your camera with G'MIC's optional OpenCV linking
 If your machine has `libopencv` installed and your gmic-py was compiled from source (ie. `python setup.py build`), it will be dynamically linked.
