@@ -11,9 +11,9 @@ Since version 2.9.1, `gmic-py` has been improved so that you can use `gmic` as a
 
 Example screenshots:
 
-.. gmicpic:: _static/images/jupyter_example.png
+.. gmicpic:: _static/images/jupyter_example.png display
 
-.. gmicpic:: _static/images/gcolab_example.png
+.. gmicpic:: _static/images/gcolab_example.png display
 
 How-to
 ########

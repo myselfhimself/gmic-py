@@ -32,7 +32,7 @@ You can use the `gmic` Python module for projects related to desktop or server-s
 Check out the [`gmic-py` documentation website (readthedocs)](https://gmic-py.readthedocs.io/) for Quickstart, Tutorials, API Reference and `gmic-py` third-party integrations.
 
 `gmic-py`'s slowly growing community gravitates around:
-    
+
 - this [Github's project Issue tracker](https://github.com/myselfhimself/gmic-py/issues),
 - [Twitter (#gmicpy)](https://twitter.com/search?q=%23gmicpy&src=typed_query)
 - [the pixls.us `gmic-py` forum thread](https://discuss.pixls.us/t/developing-and-fiddling-with-the-gmic-python-binding/20406).
