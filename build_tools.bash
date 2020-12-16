@@ -53,7 +53,7 @@ function 00_all_steps () {
 }
 
 function 01_reload_gmic_env () {
-    4_build_wheel && pip uninstall -y gmic && pip install $(ls -rt dist/*.whl | tail -1)
+    4_build_wheel && pip uninstall -y gmic && pip install gmic -f dist/
 }
 
 function 10a_make_version_tag () {
@@ -300,14 +300,14 @@ function 4_build_wheel () {
 }
 
 function 5_test_wheel () {
-    $PIP3 install dist/gmic*.whl --no-cache-dir
+    $PIP3 install gmic -f dist/ --no-cache-dir
     $PYTHON3 -m pytest tests/test_gmic_py.py -rxXs -vvv
     $PIP3 uninstall gmic -y
 }
 
 function 6_make_full_doc () {
     # Use this for generating doc when gmicpy.cpp has been changed
-    20_reformat_all && 2b_compile_debug && 4_build_wheel && pip uninstall -y gmic && pip install `ls -Art dist/*.whl | tail -n 1` && cd docs && pip install -r requirements.txt && touch *.rst && make html && $BROWSER _build/html/index.html && cd ..
+    20_reformat_all && 2b_compile_debug && 4_build_wheel && pip uninstall -y gmic && pip install gmic -f dist/ && cd docs && pip install -r requirements.txt && touch *.rst && make html && $BROWSER _build/html/index.html && cd ..
 }
 
 function 6b_make_doc_without_c_recompilation () {
@@ -316,7 +316,7 @@ function 6b_make_doc_without_c_recompilation () {
     else
         FILES_TO_TOUCH=*.rst
     fi
-    pip uninstall -y gmic && pip install `ls -Art dist/*.whl | tail -n 1` && cd docs && pip install -r requirements.txt && touch $FILES_TO_TOUCH && make html && $BROWSER _build/html/index.html && cd ..
+    pip uninstall -y gmic && pip install gmic -f dist/ && cd docs && pip install -r requirements.txt && touch $FILES_TO_TOUCH && make html && $BROWSER _build/html/index.html && cd ..
 }
 
 function --help () {
