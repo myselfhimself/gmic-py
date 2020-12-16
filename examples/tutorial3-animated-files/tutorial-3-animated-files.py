@@ -1,7 +1,7 @@
 import gmic
 import shutil
 
-# Flipbook example from a GIF file
+# Paper flipbook example from a GIF file
 # ----------------------------------
 g = gmic.Gmic()
 images_list = []
@@ -16,33 +16,55 @@ else:
     import numpy
     from PIL import Image, ImageSequence
 
-    im = Image.open("moonphases.gif")
+    im = Image.open(GIF_FILENAME)
 
     for frame in ImageSequence.Iterator(im):
         images_list.append(gmic.GmicImage.from_PIL(frame))
 
-gmic.run("display", images_list)
+# Skip first green frame
+images_list = images_list[1:]
+# The G'MIC equivalent would be using 'remove' or 'keep'
+# remove: https://gmic.eu/reference/remove.html
+# keep: https://gmic.eu/reference/keep.html
+# g.run("remove[0]", images_list)
+# or
+# g.run("keep[1--1]", images_list)
 
-"""
-Goal make a flipbook to be printed on DIN A4 Paper, then cut and flipped by hand
-"""
+# Display all frames at once (no change to images list)
+g.run("display", images_list)
+# Alternative for debugging
+g.run("_document_gmic display", images_list)
+# Playback
+g.run("animate", images_list)
+
+# Adding a random stars pass
+g.run("stars , animate", images_list)
+
+# Adding a growing blur pass (blur strength = 5 x current frame index)
+# $! is the number of frames
+# $> is the current frame's index
+g.run("repeat $! blur[$>] {$>*2} done animate", images_list)
+
+
+# Make a montage for DIN A4 shape with 10 pixels per mm density
+
 
 # With implicit subprocess call to ImageMagick's convert if installed
 # gmic https://upload.wikimedia.org/wikipedia/commons/c/cb/2016-09-16_20-30-00_eclipse-lunaire-ann2.gif remove[0] repeat $! blur[$>] {$>*5} stars , done frame 40,3 append_tiles ,4 rotate 90 resize_ratio2d 2100,2970 output flipbook.png
 # Or with PIL sequence editor
 # TODO
-
-# Example of a longer GIF requiring multiple pages
-gmic.run(
-    "https://gmic.eu/gallery/img/codesamples_full_1.gif remove[0] repeat $! blur[$>] {$>*5} done frame 40,3 append_tiles 2,2 display rotate 90 resize_ratio2d 2100,2970 display"
-)
-
-# Example of live window demo
-gmic.run(
-    "w[] https://gmic.eu/gallery/img/codesamples_full_1.gif remove[0] repeat $! blur[$>] {$>*5} w[$>] done"
-)
-
-# ---------------
-
-# TODO AVI non-linear video editor example
-# Using PyAv https://scikit-image.org/docs/dev/user_guide/video.html#pyav which embed libffmpeg on all OSes
+# 
+# # Example of a longer GIF requiring multiple pages
+# gmic.run(
+#     "https://gmic.eu/gallery/img/codesamples_full_1.gif remove[0] repeat $! blur[$>] {$>*5} done frame 40,3 append_tiles 2,2 display rotate 90 resize_ratio2d 2100,2970 display"
+# )
+# 
+# # Example of live window demo
+# gmic.run(
+#     "w[] https://gmic.eu/gallery/img/codesamples_full_1.gif remove[0] repeat $! blur[$>] {$>*5} w[$>] done"
+# )
+# 
+# # ---------------
+# 
+# # TODO AVI non-linear video editor example
+# # Using PyAv https://scikit-image.org/docs/dev/user_guide/video.html#pyav which embed libffmpeg on all OSes

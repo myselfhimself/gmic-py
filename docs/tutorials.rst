@@ -559,7 +559,7 @@ The ``GmicImage`` class has no method to print its pixels into console nicely as
 
 For accessing pixels, ``numpy`` provides a ``[]`` coordinates accessor ``numpy.ndarray[x,y,z,....]`` to read matrix cell values.
 
-The ``GmicImage`` class pixel accessor is just ``()`` parentheses call on a ``GmicImage`` instance. That is to say, each GmicImage object is callable.
+The ``GmicImage`` class pixel accessor is just ``\(\)`` parentheses call on a ``GmicImage`` instance. That is to say, each ``GmicImage`` object is callable.
 The signature for this accessor is ``mygmicimage(x=0,y=0,z=0,s=0)``, each parameter is optional and defaults to 0.
 **Important:** for now, the ``GmicImage`` pixel accessor is read-only. You are encouraged to use I/O functions described in :ref:`Tutorial 5 - numpy, PIL, Scikit-image other libraries for writing.
 
@@ -816,7 +816,7 @@ Loading a GIF into a list of GmicImages
 
 Here is a GIF of moon phases by Thomas Bresson under Creative Commons License 4.0 BY, `obtained from Wikimedia <https://commons.wikimedia.org/wiki/File:2016-09-16_20-30-00_eclipse-lunaire-ann2.gif>`_:
 
-.. image:: _static/images/moonphases.gif
+.. image:: _static/images/tutorial3_moonphases.gif
 
 G'MIC does not have internal support for GIF, because the GIF file format has many variants. Instead it relies on ImageMagick's ``convert`` executable if installed.
 
@@ -827,9 +827,19 @@ Let us try to open and display that GIF renamed ``moonphases.gif`` (download it 
     import gmic
     gmic.run("moonphases.gif display")
 
-.. gmicpic:: _static/images/moonphases.gif _document_gmic
+.. gmicpic:: _static/images/tutorial3_moonphases.gif _document_gmic
 
-If this does not work on your machine, let us try another way using PIL (or Pillow). (You might otherwise install ``convert``).
+Note that we have a green frame which we do not want.
+Let us remove that first frame systematically.
+
+.. code-block:: python
+
+    import gmic
+    gmic.run("moonphases.gif remove[0] display")
+
+.. gmicpic:: _static/images/tutorial3_moonphases.gif remove[0] _document_gmic
+
+If this GIF import leveraging ``convert`` does not work on your machine, let us try another way using PIL (or Pillow). (You might otherwise install ``convert``).
 
 Here we take benefit from ``gmic-py``'s PIL input/output converter which uses numpy under the hood.
 The magic piece of code involved is: ``gmic.GmicImage.from_PIL()`` - a static method of the ``GmicImage`` class, which returns a ``GmicImage`` object from a ``PIL.Image.Image`` object .
@@ -856,26 +866,6 @@ If the ``convert``-executable technique does work, but you see a green frame as 
 
     gmic.run("display", images_list)
 
-.. execute_code::
-    :hide_code:
-    :hide_results:
-    :hide_results_caption:
-
-    import gmic
-    import numpy
-    from PIL import Image, ImageSequence
-
-    im = Image.open("_static/images/moonphases.gif")
-
-    images_list = []
-
-    for frame in ImageSequence.Iterator(im):
-        images_list.append(gmic.GmicImage.from_PIL(frame))
-
-    gmic.run("_document_gmic output moonphases_PIL.png", images_list)
-
-.. gmicpic:: moonphases_PIL.png
-
 Here is a synthetic adaptive version of both ways:
 
 .. code-block:: python
@@ -896,21 +886,161 @@ Here is a synthetic adaptive version of both ways:
         import numpy
         from PIL import Image, ImageSequence
 
-        im = Image.open("moonphases.gif")
+        im = Image.open(GIF_FILENAME)
 
         for frame in ImageSequence.Iterator(im):
             images_list.append(gmic.GmicImage.from_PIL(frame))
 
-    gmic.run("display", images_list)
+    g.run("remove[0]", images_list) # discard the first black or green frame
+    # equivalent to this Python expression which works too: images_list = images_list[1:]
+    g.run("display", images_list)
 
-Now we have the ``images_list`` variable filled with a GIF's frame.
+.. execute_code::
+    :hide_code:
+    :hide_results:
+    :hide_results_caption:
+
+    import gmic
+    import shutil
+
+    g = gmic.Gmic()
+    images_list = []
+    GIF_FILENAME = '_static/images/tutorial3_moonphases.gif'
+
+    # If 'convert' is installed
+    if shutil.which('convert'):
+        g.run(GIF_FILENAME, images_list)
+    else:
+        # If convert is absent
+        # PIL and numpy must be installed for this to work
+        import numpy
+        from PIL import Image, ImageSequence
+
+        im = Image.open(GIF_FILENAME)
+
+        for frame in ImageSequence.Iterator(im):
+            images_list.append(gmic.GmicImage.from_PIL(frame))
+
+    g.run("remove[0] output tuto3_gif_separated_images.png", images_list)
+
+.. gmicpic:: input_glob tuto3_gif_separated_images*.png _document_gmic
+
+Now we have the ``images_list`` variable filled with a GIF's frames except for the first void frame.
+
+If you are curious to playback your ``GmicImage`` list, you may use the `animate command <https://gmic.eu/reference/animate.html>`_ with ``g.run("animate", images_list)`` (works on a Linux OS with a GUI).
+
+
 
 Filtering individual animation frames
 ****************************************
 
-TIME FOR SPECIAL EFFECTS!!!
+TIME FOR SPECIAL EFFECTS!!! (simple)
 
-TODO
+We will be adding two special effects:
+    1. blinking stars
+    2. a growing blur
+
+Adding blinking stars
+======================
+
+First let us add random stars on each frame, to make things blink as the Eiffel tower every nighttime hour.
+`G'MIC's ``stars`` command <https://gmic.eu/reference/stars.html>`_ does just that, and its default input arguments (simplified by a comma ``,``) are sufficient.
+
+Remember that G'MIC pipes commands from left to right on all the images in the current list.
+
+Since our images list is stored in Python list, we can reuse it in a new command, without having to build a very long G'MIC expression though.
+
+Append the following line to your script, so stars get generated differently for each frame with default settings:
+
+.. code-block:: python
+
+    g.run("stars ,", images_list)
+
+Here are three variants for displaying the ``stars``-filtered ``images_list``.
+We have been using them since tutorial 1 more or less explicitly:
+
+.. code-block:: python
+
+    g.run("display", images_list) # The basic one.
+    # On Jupyter/Google Colab use 'output somefilename' instead, see known issue: https://github.com/myselfhimself/gmic-py/issues/63#issuecomment-704396555
+    g.run("_document_gmic display", images_list) # For debugging
+    g.run("animate display", images_list) # For playback
+
+.. execute_code::
+    :hide_code:
+    :hide_results:
+    :hide_results_caption:
+
+    import gmic
+
+    g.run("input_glob tuto3_gif_separated_images*.png stars , output tuto3_gif_separated_images_stars.png", images_list)
+
+
+.. gmicpic:: input_glob tuto3_gif_separated_images_stars*.png stars , _document_gmic display
+
+Now let us make things unclear with blurring!!
+
+Adding a blur effect
+======================
+
+We will use the `G'MIC blur command <https://gmic.eu/reference/blur.html>`_ with a strength = frame index * 2.
+
+For looping over the images and applying a different blur strength for each, we would do a Python for loop.
+Unfortunately ``GmicImage`` objects are immutable in G'MIC and ``GmicImage`` lists are emptied and refilled in place (but its items are not edited in place).
+
+Here is a Pythonic not so efficient way to apply a growing blur in place.
+
+.. code-block::
+
+    for pos, image in enumerate(images_list):
+        single_image_list = [image]
+        g.run("blur {strength}".format(strength=(pos*2)), single_image_list)
+        images_list[pos] = single_image_list[0]
+
+.. execute_code::
+    :hide_code:
+    :hide_results:
+    :hide_results_caption:
+
+    import gmic
+
+    images_list = []
+    g.run("input_glob tuto3_gif_separated_images_stars*.png", images_list)
+
+    for pos, image in enumerate(images_list):
+        single_image_list = [image]
+        g.run("blur {strength}".format(strength=(pos*2)), single_image_list)
+        images_list[pos] = single_image_list[0]
+
+    g.run("output tuto3_gif_blurred_pythonic_separated_images.png", images_list)
+
+.. gmicpic:: input_glob tuto3_gif_blurred_pythonic_separated_images*.png _document_gmic display
+
+Now, do not believe that G'MIC is slow as hell. It uses OpenMP for parallelization for a growing number of commands.
+
+So let us discover a pure-G'MIC syntax instead for looping a growing blur, which gives us a one-liner.
+
+.. code-block:: python
+
+    g.run("repeat $! blur[$>] {$>*2} done animate", images_list)
+
+.. execute_code::
+    :hide_code:
+    :hide_results:
+    :hide_results_caption:
+
+    import gmic
+
+    images_list = []
+    g.run("input_glob tuto3_gif_separated_images_stars*.png", images_list)
+
+    g.run("repeat $! blur[$>] {$>*5} done output tuto3_gif_blurred_gmicclike_separated_images.png", images_list)
+
+.. gmicpic:: input_glob tuto3_gif_blurred_gmicclike_separated_images*.png _document_gmic display
+
+You have added two special effects to our animation!!! Congratulation!!!
+
+Now is the time to flatten all our frames onto a sheet of paper :)
 
 Making a montage of the frames
 *******************************
