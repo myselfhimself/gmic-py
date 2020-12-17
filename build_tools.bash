@@ -316,7 +316,7 @@ function 6b_make_doc_without_c_recompilation () {
     else
         FILES_TO_TOUCH=*.rst
     fi
-    pip uninstall -y gmic && pip install gmic -f dist/ && cd docs && pip install -r requirements.txt && touch $FILES_TO_TOUCH && make html && $BROWSER _build/html/index.html && cd ..
+    pip uninstall -y gmic && pip install gmic -f dist/ && cd docs && pip install -r requirements.txt && rm -f *.png *.gif *.jp*g && touch $FILES_TO_TOUCH && make html && $BROWSER _build/html/index.html && cd ..
 }
 
 function --help () {

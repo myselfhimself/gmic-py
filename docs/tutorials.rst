@@ -923,7 +923,7 @@ Here is a synthetic adaptive version of both ways:
 
     g.run("remove[0] output tuto3_gif_separated_images.png", images_list)
 
-.. gmicpic:: input_glob tuto3_gif_separated_images*.png _document_gmic
+.. gmicpic:: input_glob tuto3_gif_separated_images_0*.png _document_gmic
 
 Now we have the ``images_list`` variable filled with a GIF's frames except for the first void frame.
 
@@ -976,7 +976,7 @@ We have been using them since tutorial 1 more or less explicitly:
     g.run("input_glob tuto3_gif_separated_images*.png stars , output tuto3_gif_separated_images_stars.png", images_list)
 
 
-.. gmicpic:: input_glob tuto3_gif_separated_images_stars*.png stars , _document_gmic display
+.. gmicpic:: input_glob tuto3_gif_separated_images_stars_0*.png _document_gmic display
 
 Now let us make things unclear with blurring!!
 
@@ -1005,7 +1005,7 @@ Here is a Pythonic not so efficient way to apply a growing blur in place.
     import gmic
 
     images_list = []
-    g.run("input_glob tuto3_gif_separated_images_stars*.png", images_list)
+    g.run("input_glob tuto3_gif_separated_images_stars_0*.png", images_list)
 
     for pos, image in enumerate(images_list):
         single_image_list = [image]
@@ -1014,7 +1014,7 @@ Here is a Pythonic not so efficient way to apply a growing blur in place.
 
     g.run("output tuto3_gif_blurred_pythonic_separated_images.png", images_list)
 
-.. gmicpic:: input_glob tuto3_gif_blurred_pythonic_separated_images*.png _document_gmic display
+.. gmicpic:: input_glob tuto3_gif_blurred_pythonic_separated_images_0*.png _document_gmic display
 
 Now, do not believe that G'MIC is slow as hell. It uses OpenMP for parallelization for a growing number of commands.
 
@@ -1032,7 +1032,7 @@ So let us discover a pure-G'MIC syntax instead for looping a growing blur, which
     import gmic
 
     images_list = []
-    g.run("input_glob tuto3_gif_separated_images_stars*.png", images_list)
+    g.run("input_glob tuto3_gif_separated_images_stars_0*.png", images_list)
 
     g.run("repeat $! blur[$>] {$>*5} done output tuto3_gif_blurred_gmicclike_separated_images.png", images_list)
 
@@ -1051,7 +1051,7 @@ Let us skip dots-per-inch printing resolution calculation and assume that our fi
 
 The G'MIC language provides the `montage <https://gmic.eu/reference/montage.html>`_ and `frame (aka frame_xy) <https://gmic.eu/reference/frame_xy.html>`_ commands to help building nice montages of images with padding in between.
 
-Here is a related `specialists conversation on pixls.us, a community forum <https://discuss.pixls.us/t/gmic-montage-padding/21480>`_.
+Here is a related `montage specialists conversation on pixls.us, a community forum <https://discuss.pixls.us/t/gmic-montage-padding/21480>`_.
 
 TODO command
 
