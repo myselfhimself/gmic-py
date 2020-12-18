@@ -959,10 +959,20 @@ We have been using them since tutorial 1 more or less explicitly:
 
 .. code-block:: python
 
+    # basic G'MIC 'display' command
     g.run("display", images_list) # The basic one.
     # On Jupyter/Google Colab use 'output somefilename' instead, see known issue: https://github.com/myselfhimself/gmic-py/issues/63#issuecomment-704396555
-    g.run("_document_gmic display", images_list) # For debugging
-    g.run("animate display", images_list) # For playback
+
+    # '_document_gmic', for debugging
+    # beware this replaces your list's contents with single image!
+    # hence the optional backup with copy.copy() (GmicImage objects are copy()-compatible)
+    import copy
+    images_list_2 = [copy.copy(im) for im in images_list]
+    g.run("_document_gmic display", images_list_2)
+    print(len(images_list_2)) # prints '1'
+
+    # 'animate' for playing back images (will not work on Jupyter/Google Colab)
+    g.run("animate", images_list)
 
 .. execute_code::
     :hide_code:
@@ -985,7 +995,9 @@ We will use the `G'MIC blur command <https://gmic.eu/reference/blur.html>`_ with
 For looping over the images and applying a different blur strength for each, we would do a Python for loop.
 Unfortunately ``GmicImage`` objects are immutable in G'MIC and ``GmicImage`` lists are emptied and refilled in place (but its items are not edited in place).
 
-Here is a Pythonic not so efficient way to apply a growing blur in place.
+A - Pythonic way
+------------------
+Here is a Pythonic not so short way of applying a growing blur on a list of images in place.
 
 .. code-block::
 
@@ -1011,7 +1023,12 @@ Here is a Pythonic not so efficient way to apply a growing blur in place.
 
 Now, do not believe that G'MIC is slow as hell. It uses `OpenMP <https://www.openmp.org/>`_ for parallelization for more and more commands in each new release.
 
-So let us discover a pure-G'MIC syntax instead for looping a growing blur, which gives us a one-liner.
+B - G'MIC one-liner way
+------------------------
+
+In case you are satisfied with the former result, you may skip to the next section.
+
+Out of curiosity, here is just a pure-G'MIC syntax alternative for the growing blur, which stands as a one-liner.
 
 .. code-block:: python
 
@@ -1028,9 +1045,9 @@ So let us discover a pure-G'MIC syntax instead for looping a growing blur, which
 
     g.run("repeat $! blur[$>] {$>*2} done output tuto3_gif_blurred_gmicclike_separated_images.png", images_list)
 
-.. gmicpic:: input_glob tuto3_gif_blurred_gmicclike_separated_images*.png _document_gmic display
+.. gmicpic:: input_glob tuto3_gif_blurred_gmicclike_separated_images_0*.png _document_gmic display
 
-You have added two special effects to our animation!!! Congratulation!!!
+You have added two special effects to our animation!!! Congratulations!!!
 
 Now is the time to flatten all our frames onto a sheet of paper :)
 
@@ -1039,25 +1056,119 @@ Making a montage of the frames
 
 An A4 sheet of paper is what we typically print on in any office or house in Europe. Its dimensions are: 21 x 29.7 millimeters.
 
+Here is a related `montage-making specialists conversation on pixls.us, a community forum <https://discuss.pixls.us/t/gmic-montage-padding/21480>`_.
+
 Let us skip dots-per-inch printing resolution calculation and assume that our final images will be 100 times this ratio in pixels: 2100 x 2970 px.
 
-The G'MIC language provides the `montage <https://gmic.eu/reference/montage.html>`_ and `frame (aka frame_xy) <https://gmic.eu/reference/frame_xy.html>`_ commands to help building nice montages of images with padding in between.
+For our work, the following commands will be used:
 
-Here is a related `montage specialists conversation on pixls.us, a community forum <https://discuss.pixls.us/t/gmic-montage-padding/21480>`_.
+- `frame (aka frame_xy) <https://gmic.eu/reference/frame_xy.html>` for adding vertical and horizontal margins to each image,
+- `append_tiles <https://gmic.eu/reference/append_tiles.html>`_ (instead of the more famous `montage <https://gmic.eu/reference/montage.html>`_ command) for combining images into a 2D grid,
+- `resize_ratio2d <https://gmic.eu/reference/resize_ratio2d.html>`_  to make the result image fit into our pixel dimensions, without stretching.
 
-TODO command
+A - Easy way, non-optimizing paper space
+-----------------------------------------
+
+Here is what each step with the aforementioned G'MIC commands looks like.
+
+Build frames (padding or margins) :
+
+.. code-block:: python
+
+    # Adding a 40px horizontal margin to each frame, and 3px high
+    g.run("frame_xy 40,3", images_list) # frame and frame_xy commands are the same
+
+.. execute_code::
+    :hide_code:
+    :hide_results:
+    :hide_results_caption:
+
+    # reusing images_list from last execute_code block
+
+    g.run("frame 40,3 output tuto3_frame_xy.png", images_list)
+
+.. gmicpic:: input_glob tuto3_frame_xy_0*.png _document_gmic display
+
+Build a grid (or sort of montage) :
+
+.. code-block:: python
+
+    # Make 4-items wide grid of all images,
+    # 4 is the x-count, the second y-count parameter is omitted (hence ',' comma followed by nothing)
+    g.run("append_tiles 4,", images_list)
+
+.. execute_code::
+    :hide_code:
+    :hide_results:
+    :hide_results_caption:
+
+    # reusing images_list from last execute_code block
+
+    g.run("append_tiles 4, output tuto3_frame_xy_appended.png", images_list)
+
+.. gmicpic:: input_glob tuto3_frame_xy_appended_0*.png _document_gmic display
+
+Resize it to fit nicely on an A4 page :
+
+.. code-block:: python
+
+    g.run("resize_ratio2d 2100,2970", images_list)
+
+.. execute_code::
+    :hide_code:
+    :hide_results:
+    :hide_results_caption:
+
+    # reusing images_list from last execute_code block
+
+    g.run("resize_ratio2d 2100,2970 output tuto3_resized_sheet.png", images_list)
+
+.. gmicpic:: input_glob tuto3_resized_sheet.png _document_gmic display
+
+As you notice, paper space is not fully used and our image is 2100x1406 pixels big.
+
+You may skip the next section if you are please with this result.
+
+B - Optimized way paper space
+------------------------------
+
+Actually arranging our images in the vertical direction yields use bigger images and less paper space wasting.
+
+For this we use the G'MIC `rotate <https://gmic.eu/reference/rotate.html>`_ command and swap the ``append_tiles`` columns (y) and rows (x) parameters.
+
+Here is a one-liner that spares a bit more space.
+
+.. code-block:: python
+
+    g.run("frame_xy 40,3 append_tiles ,4 rotate 90 resize_ratio2d 2100,2970", images_list)
+
+.. execute_code::
+    :hide_code:
+    :hide_results:
+    :hide_results_caption:
+
+    # discarding images_list from last execute_code block
+    images_list = []
+    g.run("input_glob input_glob tuto3_gif_blurred_gmicclike_separated_images_0*.png", images_list)
+    g.run("frame_xy 40,3 append_tiles ,4 rotate 90 resize_ratio2d 2100,2970 output tuto3_resized_sheet2.png", images_list)
+
+.. gmicpic:: input_glob tuto3_resized_sheet2.png _document_gmic display
+
+Congratulations !! Your montage is now ready !!!
+
 
 Saving to PNG and printing
 ****************************
 
-You could theoretically output to a pdf: TODO command
-Using Imagemagick's ``convert``, G'MIC could output a PDF file for our image. However, there seems to be canvas or view size misconfigurations.
+Using Imagemagick's ``convert`` and G'MIC's ``output someFile.pdf`` command, you may output a PDF file for our image. However, there seems to be canvas or view size output misconfigurations.
 
-Instead, the PNG output prints well using any regular desktop's printing tools.
+Instead, G'MIC's native PNG output will print well using any regular desktop's printing tools.
 
-TODO output to png command
+The output command is just ``output yourFileName.someFileExtension``.
 
-Three printing tips:
+TODO code-block
+
+🖨️ Three printing tips:
 - print on the thickest paper as you can, as long as your printer can stand it
 - try to disable any kind of page margin in your printing setup, we do not want to squeeze down our frames.
 - page resizing is OK, if your image ratio is respected.

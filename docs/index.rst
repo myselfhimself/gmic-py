@@ -21,7 +21,7 @@ This documentation showcases various uses of ``gmic-py``:
 Head over to the :doc:`gettingstarted` section for examples.
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
 
    installing
    gettingstarted
