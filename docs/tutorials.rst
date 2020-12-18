@@ -902,11 +902,11 @@ Here is a synthetic adaptive version of both ways:
 
     import gmic
     import shutil
-
+    
     g = gmic.Gmic()
     images_list = []
     GIF_FILENAME = '_static/images/tutorial3_moonphases.gif'
-
+    
     # If 'convert' is installed
     if shutil.which('convert'):
         g.run(GIF_FILENAME, images_list)
@@ -915,12 +915,10 @@ Here is a synthetic adaptive version of both ways:
         # PIL and numpy must be installed for this to work
         import numpy
         from PIL import Image, ImageSequence
-
         im = Image.open(GIF_FILENAME)
-
         for frame in ImageSequence.Iterator(im):
             images_list.append(gmic.GmicImage.from_PIL(frame))
-
+    
     g.run("remove[0] output tuto3_gif_separated_images.png", images_list)
 
 .. gmicpic:: input_glob tuto3_gif_separated_images_0*.png _document_gmic
@@ -971,9 +969,8 @@ We have been using them since tutorial 1 more or less explicitly:
     :hide_results:
     :hide_results_caption:
 
-    import gmic
-
-    g.run("input_glob tuto3_gif_separated_images*.png stars , output tuto3_gif_separated_images_stars.png", images_list)
+    # reusing images_list from last execute_code block
+    g.run("stars , output tuto3_gif_separated_images_stars.png", images_list)
 
 
 .. gmicpic:: input_glob tuto3_gif_separated_images_stars_0*.png _document_gmic display
@@ -1002,11 +999,7 @@ Here is a Pythonic not so efficient way to apply a growing blur in place.
     :hide_results:
     :hide_results_caption:
 
-    import gmic
-
-    images_list = []
-    g.run("input_glob tuto3_gif_separated_images_stars_0*.png", images_list)
-
+    # reusing images_list from last execute_code block
     for pos, image in enumerate(images_list):
         single_image_list = [image]
         g.run("blur {strength}".format(strength=(pos*2)), single_image_list)
@@ -1016,7 +1009,7 @@ Here is a Pythonic not so efficient way to apply a growing blur in place.
 
 .. gmicpic:: input_glob tuto3_gif_blurred_pythonic_separated_images_0*.png _document_gmic display
 
-Now, do not believe that G'MIC is slow as hell. It uses OpenMP for parallelization for a growing number of commands.
+Now, do not believe that G'MIC is slow as hell. It uses `OpenMP <https://www.openmp.org/>`_ for parallelization for more and more commands in each new release.
 
 So let us discover a pure-G'MIC syntax instead for looping a growing blur, which gives us a one-liner.
 
@@ -1029,12 +1022,11 @@ So let us discover a pure-G'MIC syntax instead for looping a growing blur, which
     :hide_results:
     :hide_results_caption:
 
-    import gmic
-
+    # discarding images_list from last execute_code block
     images_list = []
     g.run("input_glob tuto3_gif_separated_images_stars_0*.png", images_list)
 
-    g.run("repeat $! blur[$>] {$>*5} done output tuto3_gif_blurred_gmicclike_separated_images.png", images_list)
+    g.run("repeat $! blur[$>] {$>*2} done output tuto3_gif_blurred_gmicclike_separated_images.png", images_list)
 
 .. gmicpic:: input_glob tuto3_gif_blurred_gmicclike_separated_images*.png _document_gmic display
 
