@@ -5,6 +5,13 @@ Here are major changes to the project.
 
 All versions listed here correspond to a [downloadable package release from G'MIC's pypi.org project](https://pypi.org/project/gmic/#history).
 
+## 2.9.2 (2020-12-21)
+
+- nothing new, just wrapping ligbmic 2.9.1
+- the pytest suites are still not green, this is intened and will be fixed for 2.9.4
+- releasing this as a stable version which spares users from specifying a `==<version number>` suffix when pip installing
+- almost synchronous with the [tutorials 1,2 & 3 end of writing](https://gmic-py.readthedocs.io/en/latest/tutorials.html).
+
 ## 2.9.1-alpha6 (2020-12-09)
 
 - discarding libcurl as a dependency, relying on libgmic/CImg's `curl` executable detection https://github.com/myselfhimself/gmic-py/issues/82
