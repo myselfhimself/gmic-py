@@ -1106,7 +1106,7 @@ Build a grid (or sort of montage) :
 
     g.run("append_tiles 4, output tuto3_frame_xy_appended.png", images_list)
 
-.. gmicpic:: input_glob tuto3_frame_xy_appended_0*.png _document_gmic display
+.. gmicpic:: input_glob tuto3_frame_xy_appended.png _document_gmic display
 
 Resize it to fit nicely on an A4 page :
 
@@ -1149,7 +1149,7 @@ Here is a one-liner that spares a bit more space.
 
     # discarding images_list from last execute_code block
     images_list = []
-    g.run("input_glob input_glob tuto3_gif_blurred_gmicclike_separated_images_0*.png", images_list)
+    g.run("input_glob tuto3_gif_blurred_gmicclike_separated_images_0*.png", images_list)
     g.run("frame_xy 40,3 append_tiles ,4 rotate 90 resize_ratio2d 2100,2970 output tuto3_resized_sheet2.png", images_list)
 
 .. gmicpic:: input_glob tuto3_resized_sheet2.png _document_gmic display
@@ -1166,14 +1166,20 @@ Instead, G'MIC's native PNG output will print well using any regular desktop's p
 
 The output command is just ``output yourFileName.someFileExtension``.
 
-TODO code-block
+.. code-block:: python
+
+    print(len(images_list)) # images_list has just 1 item: the montage'd GIF frames
+    g.run("output myGifAsA4Paper.png", images_list) # saves into the current directoy
+
+Note that output works also if you have multiple images in your `images_list` (or left-side resulting images in the G'MIC expression).
+In that case, the filename you provide as `output` parameter will be used as a pattern (eg. `myfilename.png -> myfilename_0000.png`).
 
 🖨️ Three printing tips:
-- print on the thickest paper as you can, as long as your printer can stand it
-- try to disable any kind of page margin in your printing setup, we do not want to squeeze down our frames.
-- page resizing is OK, if your image ratio is respected.
+- print on the thickest paper as you can, as long as your printer can stand it without being stuffed;
+- try to disable any kind of page margin in your printing setup, we do not want to squeeze down our frames;
+- page resizing is OK though as long as your image ratio is respected.
 
-TODO print settings screenshot
+.. image:: _static/images/tutorial3_print_screenshot.png
 
 Cutting and assembling paper frames
 ************************************
@@ -1187,49 +1193,10 @@ Stack your paper frames and bind them on the left or right side with a binder (o
 Time to flip
 ************
 
-This is how my flip book ended up!! Not that bad!!
+This is how my early flip book ended up!! Not that bad!!
 
 .. image:: _static/images/tutorial3_flipbook.gif
 
 To improve it, I could have more frames (spanning on several printed sheets), colors (or laser engraving), thicker paper (>200g/m2) and a proper binder 🐅
 
 📁 In case you missed it, `this tutorial's source code is on Github in the examples folder <https://github.com/myselfhimself/gmic-py/tree/master/examples/tutorial3-animated-files>`_.
-
-
-Tutorial 4 - segmentation and Pygame or tkinter
-#################################################
-
-This tutorial will show you two ways to implement a user interface around ``gmic-py`` using Pygame (a Python module for building video games) or tkinter (a simplistic GUI library).
-Both possibilities are cross-platform, your goal will be to allow users to isolate background from foreground in a window using their mouse.
-
-Thanks to `Pierre Bernard for his labelizerpy project <https://github.com/uftos/labelizerpy>`_, which gave inspiration for the tkinter implementation.
-
-User stories (User scenario)
-******************************
-The user stories (per the agile methodologies) for our application look like this:
-
-User story 0 - startup screen
-
-As a user, when I run the program, I see a black canvas, and the following buttons (or shortcuts info), for:
-
-- loading a file
-- painting foreground points (aka labels)
-- painting background points
-- previewing a split preview
-- saving my results
-
-User story 1 - loading a picture
-
-As a user, I click on a 'load' button and can load a single file, which fills my canvas' background.
-
-User story 2 - toggling foreground and background mode
-
-As a user, I can click the foreground and background mode mutually exclusively. Some text or color change shows me that I am in this mode.
-I can also see a dot below my cursor when it flies over the canvas.
-
-
-
-Tutorial 5 - numpy, PIL, Scikit-image
-#######################################
-
-TODO

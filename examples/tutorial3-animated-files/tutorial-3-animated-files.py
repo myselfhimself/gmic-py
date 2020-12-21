@@ -52,26 +52,18 @@ g.run("repeat $! blur[$>] {$>*2} done animate", images_list)
 # Make a montage for DIN A4 shape with 10 pixels per mm density
 
 # frame_xy and frame G'MIC commands are synonyms
-g.run("frame_xy 40,3 append_tiles 4, resize_ratio2d 2100,2970 display.", images_list)
-# g.run("frame_xy 40,3 append_tiles ,4 rotate 90 resize_ratio2d 2100,2970 output flipbook.png", images_list)
 
-# With implicit subprocess call to ImageMagick's convert if installed
+# simple grid layout variant, easier to understand at first:
+# g.run("frame_xy 40,3 append_tiles 4, resize_ratio2d 2100,2970 display.", images_list)
 
-# gmic https://upload.wikimedia.org/wikipedia/commons/c/cb/2016-09-16_20-30-00_eclipse-lunaire-ann2.gif remove[0] repeat $! blur[$>] {$>*5} stars , done frame 40,3 append_tiles ,4 rotate 90 resize_ratio2d 2100,2970 output flipbook.png
-# Or with PIL sequence editor
-# TODO
-#
-# # Example of a longer GIF requiring multiple pages
-# gmic.run(
-#     "https://gmic.eu/gallery/img/codesamples_full_1.gif remove[0] repeat $! blur[$>] {$>*5} done frame 40,3 append_tiles 2,2 display rotate 90 resize_ratio2d 2100,2970 display"
-# )
-#
-# # Example of live window demo
-# gmic.run(
-#     "w[] https://gmic.eu/gallery/img/codesamples_full_1.gif remove[0] repeat $! blur[$>] {$>*5} w[$>] done"
-# )
-#
-# # ---------------
-#
-# # TODO AVI non-linear video editor example
-# # Using PyAv https://scikit-image.org/docs/dev/user_guide/video.html#pyav which embed libffmpeg on all OSes
+# optimized grid rotated layout variant
+g.run("frame_xy 40,3 append_tiles ,4 rotate 90 resize_ratio2d 2100,2970 display", images_list)
+
+# Output to a single printable file
+g.run("output flipbook.png", images_list)
+
+# Time for printing, cutting and flipping :)
+print("Now is your turn to print this file on paper: flipbook.png")
+
+# Wrap-up one-liner standalone command
+g.run("https://upload.wikimedia.org/wikipedia/commons/c/cb/2016-09-16_20-30-00_eclipse-lunaire-ann2.gif remove[0] stars , repeat $! blur[$>] {$>*2} done frame 40,3 append_tiles ,4 rotate 90 resize_ratio2d 2100,2970 output flipbook_oneliner.png display")
