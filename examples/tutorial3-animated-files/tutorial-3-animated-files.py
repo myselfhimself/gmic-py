@@ -35,7 +35,7 @@ g.run("display", images_list)
 
 # Alternative for debugging
 # Commenting it for now, as it replaces your images_list with a 1-item images list
-#g.run("_document_gmic display", images_list)
+# g.run("_document_gmic display", images_list)
 
 # Playback
 g.run("animate", images_list)
@@ -53,7 +53,7 @@ g.run("repeat $! blur[$>] {$>*2} done animate", images_list)
 
 # frame_xy and frame G'MIC commands are synonyms
 g.run("frame_xy 40,3 append_tiles 4, resize_ratio2d 2100,2970 display.", images_list)
-#g.run("frame_xy 40,3 append_tiles ,4 rotate 90 resize_ratio2d 2100,2970 output flipbook.png", images_list)
+# g.run("frame_xy 40,3 append_tiles ,4 rotate 90 resize_ratio2d 2100,2970 output flipbook.png", images_list)
 
 # With implicit subprocess call to ImageMagick's convert if installed
 
