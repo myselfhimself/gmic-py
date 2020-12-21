@@ -57,7 +57,10 @@ g.run("repeat $! blur[$>] {$>*2} done animate", images_list)
 # g.run("frame_xy 40,3 append_tiles 4, resize_ratio2d 2100,2970 display.", images_list)
 
 # optimized grid rotated layout variant
-g.run("frame_xy 40,3 append_tiles ,4 rotate 90 resize_ratio2d 2100,2970 display", images_list)
+g.run(
+    "frame_xy 40,3 append_tiles ,4 rotate 90 resize_ratio2d 2100,2970 display",
+    images_list,
+)
 
 # Output to a single printable file
 g.run("output flipbook.png", images_list)
@@ -66,4 +69,6 @@ g.run("output flipbook.png", images_list)
 print("Now is your turn to print this file on paper: flipbook.png")
 
 # Wrap-up one-liner standalone command
-g.run("https://upload.wikimedia.org/wikipedia/commons/c/cb/2016-09-16_20-30-00_eclipse-lunaire-ann2.gif remove[0] stars , repeat $! blur[$>] {$>*2} done frame 40,3 append_tiles ,4 rotate 90 resize_ratio2d 2100,2970 output flipbook_oneliner.png display")
+g.run(
+    "https://upload.wikimedia.org/wikipedia/commons/c/cb/2016-09-16_20-30-00_eclipse-lunaire-ann2.gif remove[0] stars , repeat $! blur[$>] {$>*2} done frame 40,3 append_tiles ,4 rotate 90 resize_ratio2d 2100,2970 output flipbook_oneliner.png display"
+)
