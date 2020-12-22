@@ -356,7 +356,6 @@ The Python binding for G'MIC or ``gmic-py`` (although you "pip install gmic" and
 Below you will discover core knowledge of ``gmic-py`` to optimize your scripts' processing speed a bit.
 This will maybe be boring, but investing time there will allow you to spare CPU time and avoid superfluous file reads-writes, especially if you use ``gmic-py`` in some bigger back-end or front-end applications.
 
-One thing which will be dealt with only in :ref:`Tutorial 5 - numpy, PIL, Scikit-image` though, is the interaction of ``gmic-py`` with third-party `numpy <https://numpy.org/>`_-based libraries and `IPython <https://ipython.org/>`_-based environments.
 Note though, that some of knowledge of how the ``GmicImage`` class works is needed, so you might want to read the related section below beforehand.
 
 In this tutorial, let us see how the 3 building blocks of gmic-py can be used together: the interpreter, single images, and images lists.
@@ -561,7 +560,7 @@ For accessing pixels, ``numpy`` provides a ``[]`` coordinates accessor ``numpy.n
 
 The ``GmicImage`` class pixel accessor is just ``\(\)`` parentheses call on a ``GmicImage`` instance. That is to say, each ``GmicImage`` object is callable.
 The signature for this accessor is ``mygmicimage(x=0,y=0,z=0,s=0)``, each parameter is optional and defaults to 0.
-**Important:** for now, the ``GmicImage`` pixel accessor is read-only. You are encouraged to use I/O functions described in :ref:`Tutorial 5 - numpy, PIL, Scikit-image other libraries for writing.
+**Important:** for now, the ``GmicImage`` pixel accessor is read-only. You are encouraged to use I/O functions described in :ref:`Numpy support` or :ref:`PIL support` or :ref:`Scikit-Image support`.
 
 `Side note:` **s** stands for spectrum, it is interchangeable with c for channel in most G'MIC literature.
 
@@ -788,8 +787,8 @@ Now you know more about reusing a G'MIC interpreter handle and calling it severa
 Congratulations!
 
 
-Tutorial 3 - filtering GIF and videos
-#########################################
+Tutorial 3 - filtering a GIF into a flipbook
+#############################################
 
 This tutorial will lead you into filtering frames of animated content using ``gmic-py``:
 
