@@ -24,7 +24,7 @@ copyright = '2020, Jonathan-David Schröder'
 author = 'Jonathan-David Schröder'
 
 # The full version, including alpha/beta/rc tags
-release = '2.9.1'
+release = '2.9.2'
 master_doc = 'index' # Per https://stackoverflow.com/a/56448499/420684
 
 

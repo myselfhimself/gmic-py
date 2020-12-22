@@ -1058,7 +1058,15 @@ An A4 sheet of paper is what we typically print on in any office or house in Eur
 
 Here is a related `montage-making specialists conversation on pixls.us, a community forum <https://discuss.pixls.us/t/gmic-montage-padding/21480>`_.
 
-Let us skip dots-per-inch printing resolution calculation and assume that our final images will be 100 times this ratio in pixels: 2100 x 2970 px.
+We will just multiply the final image dimensions by 10 times the dimensions of the A4 format (``2100x2970``).
+
+For later, let us note the dimensions of a single frame (880x589px):
+
+.. execute_code::
+    :hide_code:
+    :hide_results:
+
+    print(images_list[0])
 
 For our work, the following commands will be used:
 
@@ -1134,6 +1142,19 @@ B - Optimized way paper space
 
 Actually arranging our images in the vertical direction yields use bigger images and less paper space wasting.
 
+Also, if we take a look at each image's dimensions, we can have a wider pixel surface in the end.
+
+Our printable image is ``2100x1406``:
+
+.. execute_code::
+    :hide_results_caption:
+
+    print(images_list[0])
+    print(21/29.7)
+    print(images_list[0]._width/images_list[0]._height)
+
+A4's width/height ratio is ``21/29.7 = 0.7070..`` whereas our actual ratio is ``2100/1406 = 0.669``.
+
 For this we use the G'MIC `rotate <https://gmic.eu/reference/rotate.html>`_ command and swap the ``append_tiles`` columns (y) and rows (x) parameters.
 
 Here is a one-liner that spares a bit more space.
@@ -1153,6 +1174,17 @@ Here is a one-liner that spares a bit more space.
     g.run("frame_xy 40,3 append_tiles ,4 rotate 90 resize_ratio2d 2100,2970 output tuto3_resized_sheet2.png", images_list)
 
 .. gmicpic:: input_glob tuto3_resized_sheet2.png _document_gmic display
+
+Let us check the new dimensions after pixel surface optimization:
+
+.. execute_code::
+    :hide_results_caption:
+
+    print(images_list[0])
+    print(21/29.7)
+    print(images_list[0]._width/images_list[0]._height)
+
+A little better!!!
 
 Congratulations !! Your montage is now ready !!!
 
