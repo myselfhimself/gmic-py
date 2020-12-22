@@ -1,4 +1,4 @@
-Related tutorial is at: https://gmic-py.readthedocs.io/en/latest/tutorials.html#tutorial-3-filtering-gif-and-videos
+Related tutorial is at: https://gmic-py.readthedocs.io/en/latest/tutorials.html#tutorial-3-filtering-a-gif-into-a-flipbook
 
 ## ADVANCED NOTES (EXPERT)
 
