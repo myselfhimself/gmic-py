@@ -138,7 +138,7 @@ setup(
     description="Binary Python3 bindings for the G'MIC C++ image processing library",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/dtschump/gmic-py",
+    url="https://github.com/myselfhimself/gmic-py",
     author="David Tschumperlé, Jonathan-David Schröder G'MIC GREYC IMAGE Team of CNRS, France",
     author_email="David.Tschumperle@ensicaen.fr, jonathan.schroder@gmail.com",
     classifiers=[
@@ -162,10 +162,10 @@ setup(
     python_requires=">=3.0, <4",
     install_requires=["wurlitzer"],  # For Jupyter / IPython notebooks support
     project_urls={
-        "Bug Reports": "https://github.com/dtschump/gmic-py/issues",
+        "Bug Reports": "https://github.com/myselfhimself/gmic-py/issues",
         "Funding": "https://libreart.info/en/projects/gmic",
         "Say Thanks!": "https://twitter.com/gmic_ip",
-        "Source": "https://github.com/dtschump/gmic-py",
+        "Source": "https://github.com/myselfhimself/gmic-py",
         "Documentation": "https://gmic-py.readthedocs.io",
     },
     ext_modules=[gmic_module],
