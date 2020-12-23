@@ -23,7 +23,7 @@ from pathlib import Path
 
 project = 'gmic-py'
 copyright = '2020, Jonathan-David Schröder'
-author = 'Jonathan-David Schröder'
+author = 'Jonathan-David Schröder, David Tschumperlé'
 
 # The full version, including alpha/beta/rc tags
 release = Path('../VERSION').read_text()
