@@ -27,8 +27,6 @@ author = 'Jonathan-David Schröder, David Tschumperlé'
 
 # The full version, including alpha/beta/rc tags
 release = Path('../VERSION').read_text()
-print(release)
-input()
 master_doc = 'index' # Per https://stackoverflow.com/a/56448499/420684
 
 
