@@ -39,7 +39,7 @@ jobs:
           CIBW_BUILD_VERBOSITY: 3
           MACOSX_DEPLOYMENT_TARGET: 10.10
         run: |
-          # llvm 9 (latest) might cause issue with c++20 pre-support, see https://trac.macports.org/ticket/59575 and https://github.com/dtschump/gmic-py/commit/618d9d317d55aa7af3f85e92bfd07f06efea491f/checks?check_suite_id=368364476
+          # llvm 9 (latest) might cause issue with c++20 pre-support, see https://trac.macports.org/ticket/59575 and https://github.com/myselfhimself/gmic-py/commit/618d9d317d55aa7af3f85e92bfd07f06efea491f/checks?check_suite_id=368364476
           # using llvm v6 instead
           brew install pkg-config fftw libpng libomp llvm@6 coreutils
           bash build_tools.bash 1_clean_and_regrab_gmic_src
