@@ -1,6 +1,6 @@
 sphinx==2.2.0 # prevent readthedocs.io to use 1.8.5 which makes pyquickhelper fail
 sphinx_rtd_theme
-gmic==2.9.2
+gmic==2.9.4a1
 Pillow
 numpy
 gmic-sphinx
