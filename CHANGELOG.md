@@ -5,6 +5,12 @@ Here are major changes to the project.
 
 All versions listed here correspond to a [downloadable package release from G'MIC's pypi.org project](https://pypi.org/project/gmic/#history).
 
+## 2.9.4-alpha1 (2020-12-23)
+
+- just wrapping ligbmic 2.9.4
+- replacing uses of `_document_gmic` in docs/ by `_parce_cli_images append x`
+- pytest suite not green yet
+
 ## 2.9.2 (2020-12-21)
 
 - nothing new, just wrapping ligbmic 2.9.1
