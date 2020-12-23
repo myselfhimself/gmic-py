@@ -611,7 +611,7 @@ You may also want to view your image with your own eyes:
     import gmic
     import struct
     im2 = gmic.GmicImage(struct.pack("6f", 1, 2, 3, 4, 5, 6), 3, 2, 1)
-    gmic.run("_document_gmic output tuto2_im2.png", im2)
+    gmic.run("_parse_cli_images append x output tuto2_im2.png", im2)
 
 .. gmicpic:: tuto2_im2.png
 
@@ -661,7 +661,7 @@ Let us call the G'MIC interpreter with both single or lists or images:
     import gmic
     import struct
     im2 = gmic.GmicImage(struct.pack("6f", 1, 2, 3, 4, 5, 6), 3, 2, 1)
-    gmic.run("add 1 _document_gmic output tuto2_im2_add1.png", im2)
+    gmic.run("add 1 _parse_cli_images append x output tuto2_im2_add1.png", im2)
 
 .. gmicpic:: tuto2_im2_add1.png
 
@@ -768,7 +768,9 @@ To prepare this example, the following tricks have been used:
         result_images.append(images_list[0])
 
 
-    g.run("+_document_gmic output. tuto2_stylization.png keep[0-2]", result_images)
+    import copy
+    preview_only_images = [copy.copy(a) for a in result_images]
+    g.run("_parse_cli_images append x output tuto2_stylization.png", preview_only_images)
 
     # II- Montage pass
     # Build a 3x3-bordered pixels frame around images, white, and make an automatic montage, display it and save to file
@@ -826,7 +828,7 @@ Let us try to open and display that GIF renamed ``moonphases.gif`` (download it 
     import gmic
     gmic.run("moonphases.gif display")
 
-.. gmicpic:: _static/images/tutorial3_moonphases.gif _document_gmic
+.. gmicpic:: _static/images/tutorial3_moonphases.gif _parse_cli_images append x
 
 Note that we have a green frame which we do not want.
 Let us remove that first frame systematically.
@@ -836,7 +838,7 @@ Let us remove that first frame systematically.
     import gmic
     gmic.run("moonphases.gif remove[0] display")
 
-.. gmicpic:: _static/images/tutorial3_moonphases.gif remove[0] _document_gmic
+.. gmicpic:: _static/images/tutorial3_moonphases.gif remove[0] _parse_cli_images append x
 
 If this GIF import leveraging ``convert`` does not work on your machine, let us try another way using PIL (or Pillow). (You might otherwise install ``convert``).
 
@@ -920,7 +922,7 @@ Here is a synthetic adaptive version of both ways:
     
     g.run("remove[0] output tuto3_gif_separated_images.png", images_list)
 
-.. gmicpic:: input_glob tuto3_gif_separated_images_0*.png _document_gmic
+.. gmicpic:: input_glob tuto3_gif_separated_images_0*.png _parse_cli_images append x
 
 Now we have the ``images_list`` variable filled with a GIF's frames except for the first void frame.
 
@@ -962,12 +964,12 @@ We have been using them since tutorial 1 more or less explicitly:
     g.run("display", images_list) # The basic one.
     # On Jupyter/Google Colab use 'output somefilename' instead, see known issue: https://github.com/myselfhimself/gmic-py/issues/63#issuecomment-704396555
 
-    # '_document_gmic', for debugging
+    # '_document_gmic' (or '_parse_cli_images append x' from gmic>=2.9.4), for debugging
     # beware this replaces your list's contents with single image!
     # hence the optional backup with copy.copy() (GmicImage objects are copy()-compatible)
     import copy
     images_list_2 = [copy.copy(im) for im in images_list]
-    g.run("_document_gmic display", images_list_2)
+    g.run("_parse_cli_images append x display", images_list_2)
     print(len(images_list_2)) # prints '1'
 
     # 'animate' for playing back images (will not work on Jupyter/Google Colab)
@@ -982,7 +984,7 @@ We have been using them since tutorial 1 more or less explicitly:
     g.run("stars , output tuto3_gif_separated_images_stars.png", images_list)
 
 
-.. gmicpic:: input_glob tuto3_gif_separated_images_stars_0*.png _document_gmic display
+.. gmicpic:: input_glob tuto3_gif_separated_images_stars_0*.png _parse_cli_images append x display
 
 Now let us make things unclear with blurring!!
 
@@ -1018,7 +1020,7 @@ Here is a Pythonic not so short way of applying a growing blur on a list of imag
 
     g.run("output tuto3_gif_blurred_pythonic_separated_images.png", images_list)
 
-.. gmicpic:: input_glob tuto3_gif_blurred_pythonic_separated_images_0*.png _document_gmic display
+.. gmicpic:: input_glob tuto3_gif_blurred_pythonic_separated_images_0*.png _parse_cli_images append x display
 
 Now, do not believe that G'MIC is slow as hell. It uses `OpenMP <https://www.openmp.org/>`_ for parallelization for more and more commands in each new release.
 
@@ -1044,7 +1046,7 @@ Out of curiosity, here is just a pure-G'MIC syntax alternative for the growing b
 
     g.run("repeat $! blur[$>] {$>*2} done output tuto3_gif_blurred_gmicclike_separated_images.png", images_list)
 
-.. gmicpic:: input_glob tuto3_gif_blurred_gmicclike_separated_images_0*.png _document_gmic display
+.. gmicpic:: input_glob tuto3_gif_blurred_gmicclike_separated_images_0*.png _parse_cli_images append x display
 
 You have added two special effects to our animation!!! Congratulations!!!
 
@@ -1086,7 +1088,7 @@ Build frames (padding or margins) :
 
     g.run("frame 40,3 output tuto3_frame_xy.png", images_list)
 
-.. gmicpic:: input_glob tuto3_frame_xy_0*.png _document_gmic display
+.. gmicpic:: input_glob tuto3_frame_xy_0*.png _parse_cli_images append x display
 
 Build a grid (or sort of montage) :
 
@@ -1105,7 +1107,7 @@ Build a grid (or sort of montage) :
 
     g.run("append_tiles 4, output tuto3_frame_xy_appended.png", images_list)
 
-.. gmicpic:: input_glob tuto3_frame_xy_appended.png _document_gmic display
+.. gmicpic:: input_glob tuto3_frame_xy_appended.png _parse_cli_images append x display
 
 Resize it to fit nicely on an A4 page :
 
@@ -1122,7 +1124,7 @@ Resize it to fit nicely on an A4 page :
 
     g.run("resize_ratio2d 2100,2970 output tuto3_resized_sheet.png", images_list)
 
-.. gmicpic:: input_glob tuto3_resized_sheet.png _document_gmic display
+.. gmicpic:: input_glob tuto3_resized_sheet.png _parse_cli_images append x display
 
 As you notice, paper space is not fully used and our image is 2100x1406 pixels big.
 
@@ -1151,7 +1153,7 @@ Here is a one-liner that spares a bit more space.
     g.run("input_glob tuto3_gif_blurred_gmicclike_separated_images_0*.png", images_list)
     g.run("frame_xy 40,3 append_tiles ,4 rotate 90 resize_ratio2d 2100,2970 output tuto3_resized_sheet2.png", images_list)
 
-.. gmicpic:: input_glob tuto3_resized_sheet2.png _document_gmic display
+.. gmicpic:: input_glob tuto3_resized_sheet2.png _parse_cli_images append x display
 
 Congratulations !! Your montage is now ready !!!
 

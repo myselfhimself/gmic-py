@@ -1,5 +1,5 @@
 Jupyter/IPython/GColab support
-===========================
+================================
 Since version 2.9.1, `gmic-py` has been improved so that you can use `gmic` as a daily tool from any the following IPython-based shells and possibly more:
 
 * `IPython <https://ipython.org/>`_ is an open-source framework improving Python shell experience in consoles, web browsers and desktop user interfaces.
