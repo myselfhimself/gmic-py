@@ -1199,6 +1199,7 @@ PyObject *
 PyGmic_new(PyTypeObject *subtype, PyObject *args, PyObject *kwargs)
 {
     PyGmic *self = NULL;
+    T null_T = 0;
 
     self = (PyGmic *)subtype->tp_alloc(subtype, 0);
 
@@ -1212,8 +1213,8 @@ PyGmic_new(PyTypeObject *subtype, PyObject *args, PyObject *kwargs)
     // Since this project is a library the G'MIC "update" command that
     // runs an internet download, is never triggered the user should
     // run it him/herself.
-    self->_gmic->run("m $_path_rc/update$_version.gmic");
-    self->_gmic->run("m $_path_user");
+    self->_gmic->run((const char* const)"m $_path_rc/update$_version.gmic", 0, 0, null_T);
+    self->_gmic->run((const char* const)"m $_path_user", 0, 0, null_T);
 
     // If parameters are provided, pipe them to our run() method, and
     // do only exceptions raising without returning anything if things
