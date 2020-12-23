@@ -15,6 +15,8 @@ import sys
 # sys.path.insert(0, os.path.abspath('.'))
 sys.path.append(os.path.abspath("./_ext"))
 import gmic
+from pathlib import Path
+
 
 
 # -- Project information -----------------------------------------------------
@@ -24,7 +26,9 @@ copyright = '2020, Jonathan-David Schröder'
 author = 'Jonathan-David Schröder'
 
 # The full version, including alpha/beta/rc tags
-release = '2.9.1'
+release = Path('../VERSION').read_text()
+print(release)
+input()
 master_doc = 'index' # Per https://stackoverflow.com/a/56448499/420684
 
 
