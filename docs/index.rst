@@ -26,7 +26,6 @@ Head over to the :doc:`gettingstarted` section for examples.
    installing
    gettingstarted
    cookbook
-   tutorials
    numpy
    PIL
    skimage
