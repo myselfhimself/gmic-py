@@ -21,7 +21,7 @@ pkgconfig_list = ["zlib"]
 # Macros to toggle (gmic or CImg will do C/C++ #ifdef checks on them, testing mostly only their existence)
 # cimg_date and cimg_date are true variables, the value of which is checked in the C/C++ source
 define_macros = [
-    ("gmic_build", None),
+    ("gmic_core", None),
     ("cimg_date", '""'),
     ("cimg_time", '""'),
     ("gmic_is_parallel", None),
@@ -131,6 +131,9 @@ with open(path.join(here, "README.md"), encoding="utf-8") as f:
 # Technique highlighted here: https://packaging.python.org/guides/single-sourcing-package-version/
 with open(path.join(".", "VERSION")) as version_file:
     version = version_file.read().strip()
+    if "pre" in version:
+        version_prerelease = version.split("pre",1)[1]
+        define_macros += [("gmic_prerelease","\""+version_prerelease+"\"")]
 
 setup(
     name="gmic",
