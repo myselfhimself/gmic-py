@@ -23,7 +23,7 @@ fi
 # Guess target G'MIC version from VERSION file's contents
 if [ -f "VERSION" ]; then
     FILE_BASED_GMIC_VERSION=$(cat VERSION)
-    GMIC_SRC_VERSION=$(cat VERSION | grep -oE "[0-9]\.[0-9]\.[0-9][a-z]?(_pre(release)?(0-9+)?)?")
+    GMIC_SRC_VERSION=$(cat VERSION | grep -E "[0-9]\.[0-9]\.[0-9][a-z]?(_pre(release)?(0-9+)?)?")
 fi
 GMIC_VERSION=${GMIC_VERSION:-$GMIC_SRC_VERSION}
 GMIC_PY_PACKAGE_VERSION=${FILE_BASED_GMIC_VERSION:-$GMIC_VERSION}
@@ -84,21 +84,21 @@ function 11_send_to_pypi () {
     export TWINE_PASSWORD="$TWINE_PASSWORD_GITHUB_SECRET" # See: Github Workflow scripts
     export TWINE_REPOSITORY_URL=https://upload.pypi.org/legacy/
     TWINE=twine
-    
+
     # Do not reupload same-version wheels our source archives
     TWINE_OPTIONS="--skip-existing --verbose"
-    
+
     echo "TWINE UPLOAD STEP: Contents of dist/ and wheelhouse directories are:"
     find dist/
     find *wheel*
-    
+
     # Upload sdist source tar.gz archive if found
     if [ -d "dist/" ]; then
       for a in `ls dist/*.tar.gz`; do
         $TWINE upload $a $TWINE_OPTIONS
       done
     fi
-    
+
     # Upload binary python wheels if found
     if [ -d "wheelhouse/" ]; then
       for a in `ls wheelhouse/* | grep -E 'manylinux|macosx'`; do # Keep /* wildcard for proper relative paths!!
@@ -110,6 +110,7 @@ function 11_send_to_pypi () {
 
 function 1_clean_and_regrab_gmic_src () {
     set -x
+    #GMIC_ARCHIVE_GLOB=gmic_3.1.0_pre220419.tar.gz
     GMIC_ARCHIVE_GLOB=gmic_${GMIC_VERSION}.tar.gz
     # GMIC_ARCHIVE_GLOB=gmic_${GMIC_VERSION}*.tar.gz
     if [[ $GMIC_VERSION == *"pre"* ]]; then
@@ -226,7 +227,7 @@ function 33_build_manylinux () {
     then
       PRE_CMD=
     fi
-    
+
     rm wheelhouse/*$PYBIN_PREFIX*$PLAT* -f
     docker pull $DOCKER_IMAGE
     docker run --rm -e PLAT=$PLAT -v `pwd`:/io $DOCKER_IMAGE find /io
@@ -251,7 +252,7 @@ function 3_test_compiled_so () {
     TEST_FILES="${TEST_FILES:-../../tests/test_gmic_py.py ../../tests/test_gmic_numpy.py ../../tests/test_gmic_numpy_toolkits.py ../../tests/test_gmic_py_memfreeing.py}"
     #TEST_FILES="${TEST_FILES:-../../tests/test_gmic_py_memfreeing.py}"
     FAILED_SUITES=0
-    $PIP3 uninstall gmic -y; cd $GMIC_LIB_DIR ; LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH ; $PIP3 install -r ../../dev-requirements.txt ; pwd; ls; 
+    $PIP3 uninstall gmic -y; cd $GMIC_LIB_DIR ; LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH ; $PIP3 install -r ../../dev-requirements.txt ; pwd; ls;
 
     for TEST_FILE in $TEST_FILES; do
         # $PIP3 uninstall gmic -y; cd $GMIC_LIB_DIR ; LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH ; $PIP3 install -r ../../dev-requirements.txt ; pwd; ls; PYTHONMALLOC=malloc valgrind --show-leak-kinds=all --leak-check=full --log-file=/tmp/valgrind-output $PYTHON3 -m pytest $TEST_FILES $PYTEST_EXPRESSION_PARAM -vvv -rxXs || { echo "Fatal error while running pytests" ; exit 1 ; } ; cd ../..
@@ -291,7 +292,7 @@ function 31_test_compiled_so_filters_io () {
     find ~/.config/gmic
     $PIP3 uninstall gmic -y; cd ./build/lib*$PYTHON_VERSION*/ ; LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH ; $PIP3 install -r ../../dev-requirements.txt ; pwd; ls; $PYTHON3 -m pytest ../../tests/test_gmic_py_filters_io.py $PYTEST_EXPRESSION_PARAM $PYTEST_NB_THREADS -vvv -rxXs || { echo "Fatal error while running pytests" ; exit 1 ; } ; cd ../..
     find ~/.config/gmic
-}    
+}
 
 function 4_build_wheel () {
     $PIP3 install wheel || { echo "Fatal wheel package install error" ; exit 1 ; }
@@ -322,7 +323,7 @@ function 6b_make_doc_without_c_recompilation () {
 function --help () {
     # declares an array with the emojis we want to support
     EMOJIS=(🍇 🍈 🍉 🍊 🍋 🍌 🍍 🥭 🍎 🍏 🍐 🍑 🍒 🍓 🥝 🍅 🥥 🥑 🍆 🥔 🥕 🌽 🌶 🥒 🥬 🥦)
-    
+
     # selects a random element from the EMOJIS set
 
     echo "☀️  G'MIC Python Binding Development & Build Tools ☀️ "
