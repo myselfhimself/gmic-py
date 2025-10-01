@@ -1,3 +1,6 @@
+😊 This project is unmaintained has been forked and reimplemented by the GREYC Lab, see here: https://github.com/GreycLab/gmic-py
+2025/10/01 Account ownership transfer of the ['gmic' PyPI repository](https://pypi.org/project/gmic/) in ongoing towards the GREYC Lab team. 
+
 [![G'MIC Logo](https://gmic.eu/img/logo4.jpg)](https://gmic.eu)
 [![Python Logo](https://www.python.org/static/community_logos/python-logo-master-v3-TM-flattened.png)](https://www.python.org)
 
